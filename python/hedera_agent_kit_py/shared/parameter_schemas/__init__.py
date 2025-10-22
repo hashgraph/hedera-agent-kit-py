@@ -29,8 +29,8 @@ from .account_schema import (
 from .common_schema import (
     OptionalScheduledTransactionParams,
     OptionalScheduledTransactionParamsNormalised,
-    SchedulingParamsNormalised,
-    SchedulingParams
+    SchedulingParams,
+    BaseModelWithArbitraryTypes
 )
 from .consensus_schema import (
     GetTopicInfoParameters,

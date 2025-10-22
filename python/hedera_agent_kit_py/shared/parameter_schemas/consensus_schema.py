@@ -2,20 +2,20 @@ from datetime import datetime
 from typing import Optional, Union, Annotated
 
 from hiero_sdk_python import AccountId, PublicKey, TopicId
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from hedera_agent_kit_py.shared.parameter_schemas import OptionalScheduledTransactionParams, \
-    OptionalScheduledTransactionParamsNormalised
+    OptionalScheduledTransactionParamsNormalised, BaseModelWithArbitraryTypes
 
 
-class GetTopicInfoParameters(BaseModel):
+class GetTopicInfoParameters(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         str,
         Field(description="The topic ID to query.")
     ]
 
 
-class DeleteTopicParameters(BaseModel):
+class DeleteTopicParameters(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         str,
         Field(description="The ID of the topic to delete.")
@@ -23,28 +23,28 @@ class DeleteTopicParameters(BaseModel):
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
-class DeleteTopicParametersNormalised(BaseModel):
+class DeleteTopicParametersNormalised(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         TopicId,
         Field(description="The ID of the topic to delete (normalized).")
     ]
 
 
-class CreateTopicParameters(BaseModel):
+class CreateTopicParameters(BaseModelWithArbitraryTypes):
     is_submit_key: Annotated[
-        Optional[bool],
-        Field(default=False, description="Whether to set a submit key for the topic (optional).")
-    ]
+        bool,
+        Field(description="Whether to set a submit key for the topic (optional).")
+    ] = False
 
     topic_memo: Annotated[
         Optional[str],
-        Field(default=None, description="Memo for the topic (optional).")
-    ]
+        Field(description="Memo for the topic (optional).")
+    ] = None
 
     transaction_memo: Annotated[
         Optional[str],
-        Field(default=None, description="An optional memo to include on the submitted transaction.")
-    ]
+        Field(description="An optional memo to include on the submitted transaction.")
+    ] = None
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
@@ -56,13 +56,13 @@ class CreateTopicParametersNormalised(CreateTopicParameters):
 
     submit_key: Annotated[
         Optional[PublicKey],
-        Field(default=None, description="The submit key of the topic.")
-    ]
+        Field(description="The submit key of the topic.")
+    ] = None
 
     admin_key: Annotated[
         Optional[PublicKey],
-        Field(default=None, description="The admin key of the topic.")
-    ]
+        Field(description="The admin key of the topic.")
+    ] = None
 
 
 class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):
@@ -78,8 +78,8 @@ class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):
 
     transaction_memo: Annotated[
         Optional[str],
-        Field(default=None, description="An optional memo to include with the submitted transaction.")
-    ]
+        Field(description="An optional memo to include with the submitted transaction.")
+    ] = None
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
@@ -96,11 +96,11 @@ class SubmitTopicMessageParametersNormalised(OptionalScheduledTransactionParamsN
 
     transaction_memo: Annotated[
         Optional[str],
-        Field(default=None, description="An optional memo to include with the transaction.")
-    ]
+        Field(description="An optional memo to include with the transaction.")
+    ] = None
 
 
-class TopicMessagesQueryParameters(BaseModel):
+class TopicMessagesQueryParameters(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         str,
         Field(description="The topic ID to query.")
@@ -108,21 +108,21 @@ class TopicMessagesQueryParameters(BaseModel):
 
     start_time: Annotated[
         Optional[str],
-        Field(default=None, description="Start timestamp (ISO 8601 format).")
-    ]
+        Field(description="Start timestamp (ISO 8601 format).")
+    ] = None
 
     end_time: Annotated[
         Optional[str],
-        Field(default=None, description="End timestamp (ISO 8601 format).")
-    ]
+        Field(description="End timestamp (ISO 8601 format).")
+    ] = None
 
     limit: Annotated[
         Optional[int],
-        Field(default=None, description="Limit the number of messages returned.")
-    ]
+        Field(description="Limit the number of messages returned.")
+    ] = None
 
 
-class UpdateTopicParameters(BaseModel):
+class UpdateTopicParameters(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         str,
         Field(description="The ID of the topic to update (e.g., 0.0.12345).")
@@ -130,49 +130,47 @@ class UpdateTopicParameters(BaseModel):
 
     topic_memo: Annotated[
         Optional[str],
-        Field(default=None, description="Optional new memo for the topic.")
-    ]
+        Field(description="Optional new memo for the topic.")
+    ] = None
 
     admin_key: Annotated[
         Optional[Union[bool, str]],
         Field(
-            default=None,
             description=(
                 "New admin key. Pass boolean `True` to use the operator/user key, "
                 "or provide a Hedera-compatible public key string."
             ),
         ),
-    ]
+    ] = None
 
     submit_key: Annotated[
         Optional[Union[bool, str]],
         Field(
-            default=None,
             description=(
                 "New submit key. Pass boolean `True` to use the operator/user key, "
                 "or provide a Hedera-compatible public key string."
             ),
         ),
-    ]
+    ] = None
 
     auto_renew_account_id: Annotated[
         Optional[str],
-        Field(default=None, description="Account to automatically pay for topic renewal (Hedera account ID).")
-    ]
+        Field(description="Account to automatically pay for topic renewal (Hedera account ID).")
+    ] = None
 
     auto_renew_period: Annotated[
         Optional[int],
-        Field(default=None, description="Auto renew period in seconds.")
-    ]
+        Field(description="Auto renew period in seconds.")
+    ] = None
 
     expiration_time: Annotated[
         Optional[Union[str, datetime]],
-        Field(default=None, description="New expiration time for the topic (ISO string or datetime).")
-    ]
+        Field(description="New expiration time for the topic (ISO string or datetime).")
+    ] = None
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
-class UpdateTopicParametersNormalised(BaseModel):
+class UpdateTopicParametersNormalised(BaseModelWithArbitraryTypes):
     topic_id: Annotated[
         TopicId,
         Field(description="The ID of the topic to update.")
@@ -180,30 +178,30 @@ class UpdateTopicParametersNormalised(BaseModel):
 
     topic_memo: Annotated[
         Optional[str],
-        Field(default=None, description="New memo for the topic.")
-    ]
+        Field(description="New memo for the topic.")
+    ] = None
 
     admin_key: Annotated[
         Optional[PublicKey],
-        Field(default=None, description="Resolved admin key.")
-    ]
+        Field(description="Resolved admin key.")
+    ] = None
 
     submit_key: Annotated[
         Optional[PublicKey],
-        Field(default=None, description="Resolved submit key.")
-    ]
+        Field(description="Resolved submit key.")
+    ] = None
 
     auto_renew_account_id: Annotated[
         Optional[Union[str, AccountId]],
-        Field(default=None, description="Account paying for topic renewal.")
-    ]
+        Field(description="Account paying for topic renewal.")
+    ] = None
 
     auto_renew_period: Annotated[
         Optional[int],
-        Field(default=None, description="Auto renew period in seconds.")
-    ]
+        Field(description="Auto renew period in seconds.")
+    ] = None
 
     expiration_time: Annotated[
         Optional[datetime],
-        Field(default=None, description="New expiration time for the topic.")
-    ]
+        Field(description="New expiration time for the topic.")
+    ] = None

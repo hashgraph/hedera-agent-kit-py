@@ -18,6 +18,7 @@ aiohttp = ">=3.13.1,<4.0.0"
 # Local editable package
 hiero-sdk-python = { path = "../../hiero-sdk-python", develop = true }
 pydantic = "^2.12.3"
+langchain-openai = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 black = ">=25.9.0,<26.0.0"

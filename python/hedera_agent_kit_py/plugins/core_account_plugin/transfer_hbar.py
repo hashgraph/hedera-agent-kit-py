@@ -2,7 +2,8 @@ from typing import Any, Dict
 
 from hiero_sdk_python import Client
 
-from hedera_agent_kit_py.shared import Context
+from hedera_agent_kit_py.shared import Tool
+from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
 from hedera_agent_kit_py.shared.parameter_schemas import TransferHbarParameters
@@ -73,14 +74,13 @@ async def transfer_hbar(
 TRANSFER_HBAR_TOOL = "transfer_hbar_tool"
 
 
-def get_transfer_hbar_tool(context: Context) -> Dict[str, Any]:
-    """
-    Return a tool definition compatible with the tool registry.
-    """
-    return {
-        "method": TRANSFER_HBAR_TOOL,
-        "name": "Transfer HBAR",
-        "description": transfer_hbar_prompt(context),
-        "parameters": TransferHbarParameters,
-        "execute": transfer_hbar,
-    }
+class TransferHbarTool(Tool):
+    def __init__(self, context: Context):
+        self.method = TRANSFER_HBAR_TOOL
+        self.name = "Transfer HBAR"
+        self.description = transfer_hbar_prompt(context)
+        self.parameters = TransferHbarParameters
+
+    async def execute(self, client: Client, context: Context, params: Any) -> Any:
+        return await transfer_hbar(client, context, params)
+

@@ -12,7 +12,7 @@ class HederaAgentAPI:
 
     def __init__(self, client: Client, context: Optional[Context] = None, tools: Optional[List[Tool]] = None):
         self.client = client
-        if not getattr(self.client, "ledgerId", None):
+        if self.client.network is None:
             raise ValueError("Client must be connected to a network")
         self.context = context or Context()
         self.tools = tools or []

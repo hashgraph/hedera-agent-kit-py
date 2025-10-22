@@ -1,6 +1,5 @@
 from .account_resolver import AccountResolver
-from .. import Context
-from ..configuration import AgentMode
+from ..configuration import AgentMode, Context
 
 
 class PromptGenerator:

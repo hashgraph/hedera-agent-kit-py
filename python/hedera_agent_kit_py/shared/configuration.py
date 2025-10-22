@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from enum import Enum
 from typing import Optional, List
 
 from .hedera_utils.mirrornode.hedera_mirrornode_service_interface import IHederaMirrornodeService
-from .plugin import Plugin
 
 
 class AgentMode(str, Enum):
@@ -32,6 +33,7 @@ class Context:
 
 
 class Configuration:
+    from .plugin import Plugin
     def __init__(
             self,
             tools: Optional[List[str]] = None,

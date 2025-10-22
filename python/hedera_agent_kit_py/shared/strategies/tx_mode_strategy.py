@@ -7,8 +7,7 @@ from hiero_sdk_python import Client, AccountId, TransactionId, TokenId, TopicId
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit_py.shared import Context
-from hedera_agent_kit_py.shared.configuration import AgentMode
+from hedera_agent_kit_py.shared.configuration import AgentMode, Context
 
 
 class RawTransactionResponse:
