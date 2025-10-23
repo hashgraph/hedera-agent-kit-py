@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional, Dict
 
-from hiero_sdk_python import Client, AccountId, TransactionId, TokenId, TopicId
+from hiero_sdk_python import Client, AccountId, TransactionId, TokenId, TopicId, TransactionReceipt
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python.transaction.transaction import Transaction
 
@@ -29,12 +29,12 @@ class RawTransactionResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "status": self.status,
-            "accountId": self.account_id,
-            "tokenId": self.token_id,
-            "transactionId": self.transaction_id,
-            "topicId": self.topic_id,
-            "scheduleId": self.schedule_id,
+            "status": str(self.status),
+            "accountId": str(self.account_id),
+            "tokenId": str(self.token_id),
+            "transactionId": str(self.transaction_id),
+            "topicId": str(self.topic_id),
+            "scheduleId": str(self.schedule_id),
         }
 
 
@@ -63,18 +63,17 @@ class ExecuteStrategy(TxModeStrategy):
             post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
     ) -> Dict[str, Any]:
         post_process = post_process or self.default_post_process
-        submit = tx.execute(client)
-        receipt = await submit.get_receipt(client)
+        receipt: TransactionReceipt = tx.execute(client)
         raw_transaction_response = RawTransactionResponse(
             status=str(receipt.status),
             account_id=getattr(receipt, "account_id", None),
             token_id=getattr(receipt, "token_id", None),
-            transaction_id=str(tx.transaction_id) if tx.transaction_id else "",
+            transaction_id=getattr(receipt, "transaction_id", None),
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
         )
         return {
-            "raw": raw_transaction_response,
+            "raw": raw_transaction_response.to_dict(),
             "humanMessage": post_process(raw_transaction_response),
         }
 

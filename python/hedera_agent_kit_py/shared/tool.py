@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Type
 from hiero_sdk_python import Client
+from pydantic import BaseModel
+
 from .configuration import Context
 
 
@@ -12,7 +14,7 @@ class Tool(ABC):
     method: str
     name: str
     description: str
-    parameters: Any # TODO: define a type for this. This depends on the langchain implementation!!
+    parameters: Type[BaseModel]
 
     @abstractmethod
     async def execute(self, client: Client, context: Context, params: Any) -> Any:

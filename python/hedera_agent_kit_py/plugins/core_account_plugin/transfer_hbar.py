@@ -20,7 +20,7 @@ def transfer_hbar_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 
-This tool will transfer HBAR to an account.
+This async tool will transfer HBAR to an account.
 
 Parameters:
 - transfers (list of dicts, required): Each dict must contain:
@@ -77,7 +77,7 @@ TRANSFER_HBAR_TOOL = "transfer_hbar_tool"
 class TransferHbarTool(Tool):
     def __init__(self, context: Context):
         self.method = TRANSFER_HBAR_TOOL
-        self.name = "Transfer HBAR"
+        self.name = TRANSFER_HBAR_TOOL
         self.description = transfer_hbar_prompt(context)
         self.parameters = TransferHbarParameters
 

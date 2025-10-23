@@ -1,7 +1,6 @@
 from .account_schema import (
     TransferHbarEntry,
     TransferHbarParameters,
-    TransferHbarEntryNormalised,
     TransferHbarParametersNormalised,
     CreateAccountParameters,
     CreateAccountParametersNormalised,

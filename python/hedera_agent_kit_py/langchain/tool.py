@@ -1,32 +1,38 @@
-# ./langchain/tool.py
-
 from typing import Any, Type
 
-from langchain_core.tools import StructuredTool
-from pydantic import BaseModel
+from langchain_core.callbacks import AsyncCallbackManagerForToolRun
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from hedera_agent_kit_py import HederaAgentAPI
 
 
-class HederaAgentKitTool(StructuredTool):
+class HederaAgentKitTool(BaseTool):
+    """Custom LangChain tool that wraps Hedera Agent Kit API methods."""
+
+    hedera_api: HederaAgentAPI = Field(exclude=True)
+    method: str
+
     def __init__(
         self,
         hedera_api: Any,
         method: str,
-        description: str,
         schema: Type[BaseModel],
+        description: str,
+        name: str,
     ):
-        # Keep reference to API and metadata
-        self.hedera_api = hedera_api
-        self.method = method
-        self.schema = schema
-        self.description = description
-
-        # Initialize the StructuredTool
         super().__init__(
-            name=method,
+            name=name,
             description=description,
             args_schema=schema,
-            func=self._run,  # main callable
+            hedera_api=hedera_api,
+            method=method,
         )
 
-    def  _run(self, **kwargs) -> Any:
-        return self.hedera_api.run(self.method, kwargs)
+    async def _run(self, **kwargs: Any) -> Any:
+        """Run the Hedera API method synchronously."""
+        return await self.hedera_api.run(self.method, kwargs)
+
+    async def _arun(self, **kwargs: Any) -> Any:
+        """Run the Hedera API method asynchronously (optional)."""
+        return await self.hedera_api.run(self.method, kwargs)

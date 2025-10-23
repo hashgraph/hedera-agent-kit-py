@@ -22,6 +22,7 @@ class HederaLangchainToolkit:
                 method=tool.method,
                 description=tool.description,
                 schema=tool.parameters,
+                name=tool.name,
             )
             for tool in all_tools
         ]

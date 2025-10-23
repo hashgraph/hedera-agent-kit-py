@@ -79,7 +79,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_hbar(params: TransferHbarParametersNormalised):
-        tx = TransferTransaction(hbar_transfers=params.hbar_transfers)  # FIXME
+        tx = TransferTransaction(hbar_transfers=params.hbar_transfers)
         return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
 
     @staticmethod

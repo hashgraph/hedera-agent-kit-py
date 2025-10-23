@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, List, Union, Annotated
 
-from hiero_sdk_python import AccountId, PublicKey, Hbar, TokenAllowance, HbarAllowance
+from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance
 from pydantic import Field
 
 # Local import avoids circular import
@@ -14,7 +14,7 @@ class TransferHbarEntry(BaseModelWithArbitraryTypes):
     amount: float = Field(description="Amount of HBAR to transfer. Given in display units.")
 
 
-class TransferHbarParameters(OptionalScheduledTransactionParams):
+class TransferHbarParameters(OptionalScheduledTransactionParams, BaseModelWithArbitraryTypes):
     transfers: Annotated[
         List[TransferHbarEntry],
         Field(min_length=1, description="Array of HBAR transfers (in display units)")
@@ -29,19 +29,8 @@ class TransferHbarParameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
-class TransferHbarEntryNormalised(BaseModelWithArbitraryTypes):
-    account_id: 'AccountId'
-    amount: 'Hbar'
-
-    model_config = {
-        "arbitrary_types_allowed": True
-    }
-
-
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransferHbarParametersNormalised(OptionalScheduledTransactionParams):
-    hbar_transfers: List[TransferHbarEntryNormalised]
+    hbar_transfers: dict['AccountId', int]  # tinybars
     transaction_memo: Optional[str] = None
 
 
@@ -199,10 +188,10 @@ class TransferHbarWithAllowanceParameters(TransferHbarParameters):
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
-class TransferHbarWithAllowanceParametersNormalised(BaseModelWithArbitraryTypes):
-    hbar_transfers: List[TransferHbarEntryNormalised]
-    hbar_approved_transfer: dict = Field(
-        description="Owner account ID and HBAR amount approved for transfer"
+class TransferHbarWithAllowanceParametersNormalised(OptionalScheduledTransactionParams):
+    hbar_transfers: dict['AccountId', int]  # tinybars to recipient accounts
+    hbar_approved_transfer: dict['AccountId', int] = Field(
+        description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )
     transaction_memo: Optional[str] = None
 

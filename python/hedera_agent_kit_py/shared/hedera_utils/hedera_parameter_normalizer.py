@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import Hbar, AccountId, PublicKey, Timestamp, Client
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
@@ -10,7 +10,7 @@ from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
-    TransferHbarParametersNormalised, SchedulingParams, TransferHbarEntryNormalised,
+    TransferHbarParametersNormalised, SchedulingParams,
 )
 
 
@@ -49,34 +49,25 @@ class HederaParameterNormaliser:
             )
         )
 
+        # Resolve source account
         source_account_id = AccountResolver.resolve_account(
             parsed_params.source_account_id, context, client
         )
 
-        hbar_transfers: list[TransferHbarEntryNormalised] = []
+        # Convert transfers to dict[AccountId, int]
+        hbar_transfers: dict['AccountId', int] = {}
         total_tinybars = 0
 
         for transfer in parsed_params.transfers:
-            transfer_value_in_tinybars = to_tinybars(Decimal(transfer.amount))
-            amount_hbar = Hbar.from_tinybars(transfer_value_in_tinybars)
-            if amount_hbar.to_tinybars() <= 0:
+            tinybars = to_tinybars(Decimal(transfer.amount))
+            if tinybars <= 0:
                 raise ValueError(f"Invalid transfer amount: {transfer.amount}")
 
-            total_tinybars += transfer_value_in_tinybars
-            hbar_transfers.append(
-                TransferHbarEntryNormalised(
-                    account_id=AccountId.from_string(parsed_params.account_id),
-                    amount=amount_hbar
-                )
-            )
+            hbar_transfers[AccountId.from_string(transfer.account_id)] = tinybars
+            total_tinybars += tinybars
 
-        # Add a negative total to a source account
-        hbar_transfers.append(
-            TransferHbarEntryNormalised(
-                account_id=AccountId.from_string(source_account_id),
-                amount=Hbar.from_tinybars(-total_tinybars)
-            )
-        )
+        # Subtract total from the source account
+        hbar_transfers[AccountId.from_string(source_account_id)] = -total_tinybars
 
         # Handle scheduling
         scheduling_params = None
