@@ -10,7 +10,12 @@ class HederaAgentAPI:
     A wrapper for executing tools against a Hedera client within a given context.
     """
 
-    def __init__(self, client: Client, context: Optional[Context] = None, tools: Optional[List[Tool]] = None):
+    def __init__(
+        self,
+        client: Client,
+        context: Optional[Context] = None,
+        tools: Optional[List[Tool]] = None,
+    ):
         self.client = client
         if self.client.network is None:
             raise ValueError("Client must be connected to a network")

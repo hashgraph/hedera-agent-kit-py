@@ -1,5 +1,6 @@
 from typing import TypedDict, Optional
 
+
 class MirrornodeKeyInfo(TypedDict, total=False):
     description: Optional[str]
     _type: Optional[str]

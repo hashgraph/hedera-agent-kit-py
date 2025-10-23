@@ -29,7 +29,7 @@ from .common_schema import (
     OptionalScheduledTransactionParams,
     OptionalScheduledTransactionParamsNormalised,
     SchedulingParams,
-    BaseModelWithArbitraryTypes
+    BaseModelWithArbitraryTypes,
 )
 from .consensus_schema import (
     GetTopicInfoParameters,
@@ -43,9 +43,7 @@ from .consensus_schema import (
     UpdateTopicParameters,
     UpdateTopicParametersNormalised,
 )
-from .core_misc_schema import (
-    ExchangeRateQueryParameters
-)
+from .core_misc_schema import ExchangeRateQueryParameters
 from .evm_schema import (
     ContractExecuteTransactionParametersNormalised,
     TransferERC20Parameters,
@@ -81,7 +79,7 @@ from .token_schema import (
     ApproveNftAllowanceParameters,
     ApproveNftAllowanceParametersNormalised,
     DeleteTokenParameters,
-    DeleteTokenParametersNormalised
+    DeleteTokenParametersNormalised,
 )
 from .transaction_schema import (
     TransactionRecordQueryParameters,

@@ -5,6 +5,7 @@ getcontext().prec = 100
 
 ## TODO: this must match SDK transaction responses - might require adjustment later
 
+
 def to_base_unit(amount: float | Decimal, decimals: int) -> Decimal:
     """
     Converts a token amount to base units (the smallest denomination).

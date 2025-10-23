@@ -5,51 +5,58 @@ from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance
 from pydantic import Field
 
 # Local import avoids circular import
-from hedera_agent_kit_py.shared.parameter_schemas.common_schema import OptionalScheduledTransactionParams, \
-    BaseModelWithArbitraryTypes
+from hedera_agent_kit_py.shared.parameter_schemas.common_schema import (
+    OptionalScheduledTransactionParams,
+    BaseModelWithArbitraryTypes,
+)
 
 
 class TransferHbarEntry(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="Recipient account ID")
-    amount: float = Field(description="Amount of HBAR to transfer. Given in display units.")
+    amount: float = Field(
+        description="Amount of HBAR to transfer. Given in display units."
+    )
 
 
-class TransferHbarParameters(OptionalScheduledTransactionParams, BaseModelWithArbitraryTypes):
+class TransferHbarParameters(
+    OptionalScheduledTransactionParams, BaseModelWithArbitraryTypes
+):
     transfers: Annotated[
         List[TransferHbarEntry],
-        Field(min_length=1, description="Array of HBAR transfers (in display units)")
+        Field(min_length=1, description="Array of HBAR transfers (in display units)"),
     ]
     source_account_id: Annotated[
         Optional[str],
-        Field(description="Account ID of the HBAR owner — the balance will be deducted from this account")
+        Field(
+            description="Account ID of the HBAR owner — the balance will be deducted from this account"
+        ),
     ] = None
     transaction_memo: Annotated[
-        Optional[str],
-        Field(description="Memo to include with the transaction")
+        Optional[str], Field(description="Memo to include with the transaction")
     ] = None
 
 
 class TransferHbarParametersNormalised(OptionalScheduledTransactionParams):
-    hbar_transfers: dict['AccountId', int]  # tinybars
+    hbar_transfers: dict["AccountId", int]  # tinybars
     transaction_memo: Optional[str] = None
 
 
 class CreateAccountParameters(OptionalScheduledTransactionParams):
     public_key: Annotated[
         Optional[str],
-        Field(description="Account public key. If not provided, the operator's public key will be used.")
+        Field(
+            description="Account public key. If not provided, the operator's public key will be used."
+        ),
     ] = None
     account_memo: Annotated[
-        Optional[str],
-        Field(description="Optional memo for the account.")
+        Optional[str], Field(description="Optional memo for the account.")
     ] = None
     initial_balance: Annotated[
         float,
-        Field(description="Initial HBAR balance to fund the account (defaults to 0).")
+        Field(description="Initial HBAR balance to fund the account (defaults to 0)."),
     ] = 0
     max_automatic_token_associations: Annotated[
-        int,
-        Field(description="Max automatic token associations (-1 for unlimited).")
+        int, Field(description="Max automatic token associations (-1 for unlimited).")
     ] = -1
 
 
@@ -60,16 +67,16 @@ class CreateAccountParametersNormalised(OptionalScheduledTransactionParams):
     key: Optional[PublicKey] = None
     max_automatic_token_associations: Optional[Union[int, Decimal]] = None
 
-    model_config = {
-        "arbitrary_types_allowed": True
-    }
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class DeleteAccountParameters(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="The account ID to delete.")
     transfer_account_id: Annotated[
         Optional[str],
-        Field(description="Account to transfer remaining funds to. Defaults to operator account if omitted.")
+        Field(
+            description="Account to transfer remaining funds to. Defaults to operator account if omitted."
+        ),
     ] = None
 
 
@@ -82,11 +89,13 @@ class DeleteAccountParametersNormalised(BaseModelWithArbitraryTypes):
 class UpdateAccountParameters(OptionalScheduledTransactionParams):
     account_id: Annotated[
         Optional[str],
-        Field(description="Account ID to update. Defaults to operator account ID.")
+        Field(description="Account ID to update. Defaults to operator account ID."),
     ] = None
     max_automatic_token_associations: Annotated[
         Optional[int],
-        Field(description="Max automatic token associations, positive, zero, or -1 for unlimited.")
+        Field(
+            description="Max automatic token associations, positive, zero, or -1 for unlimited."
+        ),
     ] = None
     staked_account_id: Optional[str] = None
     account_memo: Optional[str] = None
@@ -108,8 +117,7 @@ class AccountQueryParameters(BaseModelWithArbitraryTypes):
 
 class AccountBalanceQueryParameters(BaseModelWithArbitraryTypes):
     account_id: Annotated[
-        Optional[str],
-        Field(description="The account ID to query.")
+        Optional[str], Field(description="The account ID to query.")
     ] = None
 
 
@@ -120,13 +128,11 @@ class AccountBalanceQueryParametersNormalised(BaseModelWithArbitraryTypes):
 
 class AccountTokenBalancesQueryParameters(BaseModelWithArbitraryTypes):
     account_id: Annotated[
-        Optional[str],
-        Field(description="The account ID to query.")
+        Optional[str], Field(description="The account ID to query.")
     ] = None
-    token_id: Annotated[
-        Optional[str],
-        Field(description="The token ID to query.")
-    ] = None
+    token_id: Annotated[Optional[str], Field(description="The token ID to query.")] = (
+        None
+    )
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
@@ -140,19 +146,24 @@ class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: str = Field(description="The ID of the scheduled transaction to delete.")
+    schedule_id: str = Field(
+        description="The ID of the scheduled transaction to delete."
+    )
 
 
 class ApproveHbarAllowanceParameters(BaseModelWithArbitraryTypes):
     owner_account_id: Annotated[
         Optional[str],
-        Field(description="Owner account ID (defaults to operator account ID if omitted)")
+        Field(
+            description="Owner account ID (defaults to operator account ID if omitted)"
+        ),
     ] = None
     spender_account_id: str = Field(description="Spender account ID")
-    amount: Annotated[float, Field(ge=0, description="Amount of HBAR to approve as allowance")]
+    amount: Annotated[
+        float, Field(ge=0, description="Amount of HBAR to approve as allowance")
+    ]
     transaction_memo: Annotated[
-        Optional[str],
-        Field(description="Memo to include with the transaction")
+        Optional[str], Field(description="Memo to include with the transaction")
     ] = None
 
 
@@ -164,7 +175,12 @@ class ApproveHbarAllowanceParametersNormalised(BaseModelWithArbitraryTypes):
 
 class TokenApproval(BaseModelWithArbitraryTypes):
     token_id: str = Field(description="Token ID")
-    amount: Annotated[int, Field(ge=0, description="Amount of tokens to approve (must be positive integer)")]
+    amount: Annotated[
+        int,
+        Field(
+            ge=0, description="Amount of tokens to approve (must be positive integer)"
+        ),
+    ]
 
 
 class ApproveTokenAllowanceParameters(BaseModelWithArbitraryTypes):
@@ -189,8 +205,8 @@ class TransferHbarWithAllowanceParameters(TransferHbarParameters):
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransferHbarWithAllowanceParametersNormalised(OptionalScheduledTransactionParams):
-    hbar_transfers: dict['AccountId', int]  # tinybars to recipient accounts
-    hbar_approved_transfer: dict['AccountId', int] = Field(
+    hbar_transfers: dict["AccountId", int]  # tinybars to recipient accounts
+    hbar_approved_transfer: dict["AccountId", int] = Field(
         description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )
     transaction_memo: Optional[str] = None

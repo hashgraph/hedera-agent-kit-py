@@ -1,6 +1,9 @@
 from typing import TypedDict, Optional
 
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types.common import MirrornodeKeyInfo, TimestampRange
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types.common import (
+    MirrornodeKeyInfo,
+    TimestampRange,
+)
 
 
 class ContractInfo(TypedDict, total=False):
@@ -20,5 +23,3 @@ class ContractInfo(TypedDict, total=False):
     permanent_removal: Optional[bool]
     proxy_account_id: Optional[str]
     timestamp: Optional[TimestampRange]
-
-

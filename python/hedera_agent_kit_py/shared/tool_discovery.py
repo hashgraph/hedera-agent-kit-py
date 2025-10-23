@@ -11,7 +11,9 @@ class ToolDiscovery:
             for plugin in plugins:
                 self.plugin_registry.register(plugin)
 
-    def get_all_tools(self, context: Context, configuration: Optional[Configuration] = None) -> List[Tool]:
+    def get_all_tools(
+        self, context: Context, configuration: Optional[Configuration] = None
+    ) -> List[Tool]:
         # Get plugin tools
         plugin_tools = self.plugin_registry.get_tools(context)
 
@@ -24,7 +26,9 @@ class ToolDiscovery:
                 all_tools.append(plugin_tool)
                 all_tool_names.add(plugin_tool.method)
             else:
-                print(f'Warning: Plugin tool "{plugin_tool.method}" conflicts with core tool. Using core tool.')
+                print(
+                    f'Warning: Plugin tool "{plugin_tool.method}" conflicts with core tool. Using core tool.'
+                )
 
         # Apply tool filtering if specified in the configuration
         if configuration and configuration.tools and len(configuration.tools) > 0:

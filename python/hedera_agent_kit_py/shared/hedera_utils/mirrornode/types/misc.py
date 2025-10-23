@@ -8,6 +8,7 @@ class ExchangeRate(TypedDict):
     cent_equivalent: int
     expiration_time: int
 
+
 class ExchangeRateResponse(TypedDict):
     current_rate: ExchangeRate
     next_rate: ExchangeRate
@@ -15,6 +16,6 @@ class ExchangeRateResponse(TypedDict):
 
 
 LedgerIdToBaseUrl: Dict[str, str] = {
-    LedgerId.MAINNET.value: 'https://mainnet-public.mirrornode.hedera.com/api/v1',
-    LedgerId.TESTNET.value: 'https://testnet.mirrornode.hedera.com/api/v1',
+    LedgerId.MAINNET.value: "https://mainnet-public.mirrornode.hedera.com/api/v1",
+    LedgerId.TESTNET.value: "https://testnet.mirrornode.hedera.com/api/v1",
 }

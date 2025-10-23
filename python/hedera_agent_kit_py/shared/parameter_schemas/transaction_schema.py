@@ -10,9 +10,9 @@ class TransactionRecordQueryParameters(BaseModelWithArbitraryTypes):
         str,
         Field(
             description=(
-                'The transaction ID to fetch details for. '
+                "The transaction ID to fetch details for. "
                 'Should be in format "shard.realm.num-sss-nnn" '
-                'where sss are seconds and nnn are nanoseconds'
+                "where sss are seconds and nnn are nanoseconds"
             ),
         ),
     ]
@@ -20,7 +20,7 @@ class TransactionRecordQueryParameters(BaseModelWithArbitraryTypes):
         Optional[int],
         Field(
             ge=0,
-            description='Optional nonnegative nonce value for the transaction',
+            description="Optional nonnegative nonce value for the transaction",
         ),
     ] = None
 
@@ -28,4 +28,5 @@ class TransactionRecordQueryParameters(BaseModelWithArbitraryTypes):
 ## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransactionRecordQueryParametersNormalised(TransactionRecordQueryParameters):
     """Normalized form of TransactionRecordQueryParameters. Currently identical."""
+
     pass

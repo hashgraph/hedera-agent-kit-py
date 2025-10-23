@@ -8,6 +8,4 @@ __all__ = [
 from .core_account_plugin import core_account_plugin, core_account_plugin_tool_names
 
 # Convenience collection of core plugins that can be registered if desired
-CORE_PLUGINS = (
-    core_account_plugin,
-)
+CORE_PLUGINS = (core_account_plugin,)

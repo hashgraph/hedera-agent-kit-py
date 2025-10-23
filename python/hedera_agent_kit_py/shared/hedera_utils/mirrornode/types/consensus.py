@@ -1,6 +1,8 @@
 from typing import TypedDict, List, Optional
 
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types.common import MirrornodeKeyInfo
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types.common import (
+    MirrornodeKeyInfo,
+)
 
 
 class TopicMessage(TypedDict):

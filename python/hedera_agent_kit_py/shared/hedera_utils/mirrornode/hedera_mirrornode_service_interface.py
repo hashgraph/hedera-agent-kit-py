@@ -30,11 +30,15 @@ class IHederaMirrornodeService(ABC):
         pass
 
     @abstractmethod
-    async def get_account_token_balances(self, account_id: str) -> TokenBalancesResponse:
+    async def get_account_token_balances(
+        self, account_id: str
+    ) -> TokenBalancesResponse:
         pass
 
     @abstractmethod
-    async def get_topic_messages(self, query_params: TopicMessagesQueryParams) -> TopicMessagesResponse:
+    async def get_topic_messages(
+        self, query_params: TopicMessagesQueryParams
+    ) -> TopicMessagesResponse:
         pass
 
     @abstractmethod
@@ -50,12 +54,15 @@ class IHederaMirrornodeService(ABC):
         pass
 
     @abstractmethod
-    async def get_transaction_record(self, transaction_id: str,
-                                     nonce: Optional[int] = None) -> TransactionDetailsResponse:
+    async def get_transaction_record(
+        self, transaction_id: str, nonce: Optional[int] = None
+    ) -> TransactionDetailsResponse:
         pass
 
     @abstractmethod
-    async def get_exchange_rate(self, timestamp: Optional[str] = None) -> ExchangeRateResponse:
+    async def get_exchange_rate(
+        self, timestamp: Optional[str] = None
+    ) -> ExchangeRateResponse:
         pass
 
     @abstractmethod
@@ -67,7 +74,9 @@ class IHederaMirrornodeService(ABC):
         pass
 
     @abstractmethod
-    async def get_token_allowances(self, owner_account_id: str, spender_account_id: str) -> TokenAllowanceResponse:
+    async def get_token_allowances(
+        self, owner_account_id: str, spender_account_id: str
+    ) -> TokenAllowanceResponse:
         pass
 
     @abstractmethod
@@ -75,5 +84,7 @@ class IHederaMirrornodeService(ABC):
         pass
 
     @abstractmethod
-    async def get_scheduled_transaction_details(self, schedule_id: str) -> ScheduledTransactionDetailsResponse:
+    async def get_scheduled_transaction_details(
+        self, schedule_id: str
+    ) -> ScheduledTransactionDetailsResponse:
         pass

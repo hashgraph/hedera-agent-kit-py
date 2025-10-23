@@ -5,15 +5,15 @@ from pydantic import BaseModel, Field
 
 
 class BaseModelWithArbitraryTypes(BaseModel):
-    model_config = {
-        "arbitrary_types_allowed": True
-    }
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class SchedulingParams(BaseModelWithArbitraryTypes):
     """Optional scheduling parameters for transactions."""
 
-    is_scheduled: Annotated[bool, Field(description="If true, the transaction will be scheduled")] = False
+    is_scheduled: Annotated[
+        bool, Field(description="If true, the transaction will be scheduled")
+    ] = False
 
     admin_key: Annotated[
         Union[bool, str],

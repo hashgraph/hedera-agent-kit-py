@@ -5,8 +5,7 @@ from .types import LedgerId
 
 
 def get_mirrornode_service(
-    mirrornode_service: Optional[IHederaMirrornodeService],
-    ledger_id: LedgerId
+    mirrornode_service: Optional[IHederaMirrornodeService], ledger_id: LedgerId
 ) -> IHederaMirrornodeService:
     if mirrornode_service is not None:
         return mirrornode_service

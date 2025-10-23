@@ -55,9 +55,12 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 # FIXME: Most of these methods are not implemented and typed correctly yet.
 #  The python implementation has more types build into the SDK than the TS one and we need to align our approach to reuse them
 
+
 class HederaBuilder:
     @staticmethod
-    def maybe_wrap_in_schedule(tx, scheduling_params: Optional[ScheduleCreateParams] = None):
+    def maybe_wrap_in_schedule(
+        tx, scheduling_params: Optional[ScheduleCreateParams] = None
+    ):
         if scheduling_params is not None:
             return ScheduleCreateTransaction(
                 scheduling_params
@@ -70,20 +73,28 @@ class HederaBuilder:
             token_params=params.token_params,
             keys=params.keys,
         )
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def create_non_fungible_token(params: CreateNonFungibleTokenParametersNormalised):
         tx = TokenCreateTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def transfer_hbar(params: TransferHbarParametersNormalised):
         tx = TransferTransaction(hbar_transfers=params.hbar_transfers)
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
-    def transfer_hbar_with_allowance(params: TransferHbarWithAllowanceParametersNormalised):
+    def transfer_hbar_with_allowance(
+        params: TransferHbarWithAllowanceParametersNormalised,
+    ):
         tx = TransferTransaction(**params.dict())  # FIXME
         tx.add_approved_hbar_transfer(
             params.hbar_approved_transfer.owner_account_id,
@@ -95,18 +106,20 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_non_fungible_token_with_allowance(
-            params: TransferNonFungibleTokenWithAllowanceParametersNormalised
+        params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
     ):
         tx = TransferTransaction()
         for transfer in params.transfers:
-            tx.add_approved_nft_transfer(transfer.nft_id, params.source_account_id, transfer.receiver)
+            tx.add_approved_nft_transfer(
+                transfer.nft_id, params.source_account_id, transfer.receiver
+            )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
         return tx
 
     @staticmethod
     def transfer_fungible_token_with_allowance(
-            params: TransferFungibleTokenWithAllowanceParametersNormalised
+        params: TransferFungibleTokenWithAllowanceParametersNormalised,
     ):
         tx = TransferTransaction()
         tx.add_approved_token_transfer(
@@ -118,7 +131,9 @@ class HederaBuilder:
             tx.add_token_transfer(t.token_id, t.account_id, t.amount)
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def airdrop_fungible_token(params: AirdropFungibleTokenParametersNormalised):
@@ -131,12 +146,16 @@ class HederaBuilder:
     @staticmethod
     def mint_fungible_token(params: MintFungibleTokenParametersNormalised):
         tx = TokenMintTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def mint_non_fungible_token(params: MintNonFungibleTokenParametersNormalised):
         tx = TokenMintTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def dissociate_token(params: DissociateTokenParametersNormalised):
@@ -145,7 +164,9 @@ class HederaBuilder:
     @staticmethod
     def create_account(params: CreateAccountParametersNormalised):
         tx = AccountCreateTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def delete_account(params: DeleteAccountParametersNormalised):
@@ -154,7 +175,9 @@ class HederaBuilder:
     @staticmethod
     def update_account(params: UpdateAccountParametersNormalised):
         tx = AccountUpdateTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def delete_token(params: DeleteTokenParametersNormalised):
@@ -204,7 +227,9 @@ class HederaBuilder:
     @staticmethod
     def execute_transaction(params: ContractExecuteTransactionParametersNormalised):
         tx = ContractExecuteTransaction(**params.dict())  # FIXME
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def create_topic(params: CreateTopicParametersNormalised):
@@ -220,7 +245,9 @@ class HederaBuilder:
         tx = TopicMessageSubmitTransaction(**tx_params)
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
-        return HederaBuilder.maybe_wrap_in_schedule(tx, getattr(params, "scheduling_params", None))
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def update_topic(params: UpdateTopicParametersNormalised):

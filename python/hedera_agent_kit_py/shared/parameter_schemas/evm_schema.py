@@ -2,12 +2,15 @@ from typing import Optional, Annotated
 from pydantic import Field
 from hedera_agent_kit_py.shared.parameter_schemas import (
     OptionalScheduledTransactionParams,
-    OptionalScheduledTransactionParamsNormalised, BaseModelWithArbitraryTypes,
+    OptionalScheduledTransactionParamsNormalised,
+    BaseModelWithArbitraryTypes,
 )
 
 
 ## TODO: adapt to the Python SDK Transaction Constructor impl
-class ContractExecuteTransactionParametersNormalised(OptionalScheduledTransactionParamsNormalised):
+class ContractExecuteTransactionParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
     contract_id: Annotated[str, Field(description="The ID of the contract to execute.")]
     function_parameters: Annotated[
         bytes,
@@ -18,7 +21,9 @@ class ContractExecuteTransactionParametersNormalised(OptionalScheduledTransactio
 
 class TransferERC20Parameters(OptionalScheduledTransactionParams):
     contract_id: Annotated[str, Field(description="The id of the ERC20 contract.")]
-    recipient_address: Annotated[str, Field(description="Address to which the tokens will be transferred.")]
+    recipient_address: Annotated[
+        str, Field(description="Address to which the tokens will be transferred.")
+    ]
     amount: Annotated[float, Field(description="The amount of tokens to transfer.")]
 
 
@@ -47,7 +52,9 @@ class TransferERC721Parameters(OptionalScheduledTransactionParams):
         Optional[str],
         Field(description="Address from which the token will be transferred."),
     ] = None
-    to_address: Annotated[str, Field(description="Address to which the token will be transferred.")]
+    to_address: Annotated[
+        str, Field(description="Address to which the token will be transferred.")
+    ]
     token_id: Annotated[int, Field(description="The ID of the token to transfer.")]
 
 

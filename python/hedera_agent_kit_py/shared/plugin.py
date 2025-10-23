@@ -6,11 +6,11 @@ from .tool import Tool
 
 class Plugin:
     def __init__(
-            self,
-            name: str,
-            tools: Callable[[Context], List[Tool]],
-            version: str | None = None,
-            description: str | None = None,
+        self,
+        name: str,
+        tools: Callable[[Context], List[Tool]],
+        version: str | None = None,
+        description: str | None = None,
     ):
         self.name = name
         self.version = version
@@ -29,7 +29,9 @@ class PluginRegistry:
 
     def register(self, plugin: Plugin) -> None:
         if plugin.name in self.plugins:
-            print(f'Warning: Plugin "{plugin.name}" is already registered. Overwriting.')
+            print(
+                f'Warning: Plugin "{plugin.name}" is already registered. Overwriting.'
+            )
         self.plugins[plugin.name] = plugin
 
     def get_plugins(self) -> List[Plugin]:

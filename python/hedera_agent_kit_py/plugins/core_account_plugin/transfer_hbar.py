@@ -1,21 +1,30 @@
 from typing import Any, Dict
 
-from hiero_sdk_python import Client
+from hiero_sdk_python import Client, ResponseCode
 
 from hedera_agent_kit_py.shared import Tool
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import TransferHbarParameters
-from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import handle_transaction, RawTransactionResponse
+from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
+    handle_transaction,
+    RawTransactionResponse,
+)
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
 def transfer_hbar_prompt(context: Context = {}) -> str:
     context_snippet = PromptGenerator.get_context_snippet(context)
-    source_account_desc = PromptGenerator.get_account_parameter_description("source_account_id", context)
+    source_account_desc = PromptGenerator.get_account_parameter_description(
+        "source_account_id", context
+    )
     usage_instructions = PromptGenerator.get_parameter_usage_instructions()
-    scheduled_desc = PromptGenerator.get_scheduled_transaction_params_description(context)
+    scheduled_desc = PromptGenerator.get_scheduled_transaction_params_description(
+        context
+    )
 
     return f"""
 {context_snippet}
@@ -45,16 +54,18 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def transfer_hbar(
-        client: Client,
-        context: Context,
-        params: TransferHbarParameters,
+    client: Client,
+    context: Context,
+    params: TransferHbarParameters,
 ) -> Dict[str, Any]:
     """
     Execute an HBAR transfer.
     """
     try:
         # Normalize parameters
-        normalised_params = await HederaParameterNormaliser.normalise_transfer_hbar(params, context, client)
+        normalised_params = await HederaParameterNormaliser.normalise_transfer_hbar(
+            params, context, client
+        )
 
         # Build transaction
         tx = HederaBuilder.transfer_hbar(normalised_params)
@@ -66,8 +77,11 @@ async def transfer_hbar(
         message = f"Failed to transfer HBAR: {str(e)}"
         print("[transfer_hbar_tool]", message)
         return {
-            "raw": {"status": 'invalid transaction', "error": message},  # TODO: Python SDK seems to lack status enum
-            "human_message": message
+            "raw": {
+                "status": str(ResponseCode.INVALID_TRANSACTION),
+                "error": message,
+            },
+            "human_message": message,
         }
 
 
@@ -83,4 +97,3 @@ class TransferHbarTool(Tool):
 
     async def execute(self, client: Client, context: Context, params: Any) -> Any:
         return await transfer_hbar(client, context, params)
-

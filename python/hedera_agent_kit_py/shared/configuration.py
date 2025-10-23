@@ -3,7 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional, List
 
-from .hedera_utils.mirrornode.hedera_mirrornode_service_interface import IHederaMirrornodeService
+from .hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 
 
 class AgentMode(str, Enum):
@@ -13,11 +15,11 @@ class AgentMode(str, Enum):
 
 class Context:
     def __init__(
-            self,
-            account_id: Optional[str] = None,
-            account_public_key: Optional[str] = None,
-            mode: Optional[AgentMode] = None,
-            mirrornode_service: Optional[IHederaMirrornodeService] = None,
+        self,
+        account_id: Optional[str] = None,
+        account_public_key: Optional[str] = None,
+        mode: Optional[AgentMode] = None,
+        mirrornode_service: Optional[IHederaMirrornodeService] = None,
     ):
         # Account is a Connected Account ID.
         self.account_id = account_id
@@ -34,11 +36,12 @@ class Context:
 
 class Configuration:
     from .plugin import Plugin
+
     def __init__(
-            self,
-            tools: Optional[List[str]] = None,
-            plugins: Optional[List[Plugin]] = None,
-            context: Optional[Context] = None,
+        self,
+        tools: Optional[List[str]] = None,
+        plugins: Optional[List[Plugin]] = None,
+        context: Optional[Context] = None,
     ):
         self.tools = tools  # if empty, all tools will be used.
         self.plugins = plugins  # external plugins to load

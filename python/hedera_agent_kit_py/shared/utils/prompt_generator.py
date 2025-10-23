@@ -16,18 +16,28 @@ class PromptGenerator:
         lines = ["Context:"]
 
         if context.mode == AgentMode.RETURN_BYTES:
-            lines.append("- Mode: Return Bytes (preparing transactions for user signing)")
+            lines.append(
+                "- Mode: Return Bytes (preparing transactions for user signing)"
+            )
             if context.account_id:
-                lines.append(f"- User Account: {context.account_id} (default for transaction parameters)")
-                lines.append(f"- When no account is specified, {context.account_id} will be used")
+                lines.append(
+                    f"- User Account: {context.account_id} (default for transaction parameters)"
+                )
+                lines.append(
+                    f"- When no account is specified, {context.account_id} will be used"
+                )
             else:
                 lines.append("- User Account: Not specified")
-                lines.append("- When no account is specified, the operator account will be used")
+                lines.append(
+                    "- When no account is specified, the operator account will be used"
+                )
         elif context.mode == AgentMode.AUTONOMOUS:
             lines.append("- Mode: Autonomous (agent executes transactions directly)")
             if context.account_id:
                 lines.append(f"- User Account: {context.account_id}")
-            lines.append("- When no account is specified, the operator account will be used")
+            lines.append(
+                "- When no account is specified, the operator account will be used"
+            )
         else:
             lines.append(f"- Mode: {context.mode or 'Not specified'}")
             if context.account_id:
@@ -37,7 +47,9 @@ class PromptGenerator:
         return "\n".join(lines)
 
     @staticmethod
-    def get_any_address_parameter_description(param_name: str, context: Context, is_required: bool = False) -> str:
+    def get_any_address_parameter_description(
+        param_name: str, context: Context, is_required: bool = False
+    ) -> str:
         """
         Generates a description for any account/EVM address parameter.
         """
@@ -48,7 +60,9 @@ class PromptGenerator:
         return f"{param_name} (str, optional): The Hedera account ID or EVM address. If not provided, defaults to the {default_desc}"
 
     @staticmethod
-    def get_account_parameter_description(param_name: str, context: Context, is_required: bool = False) -> str:
+    def get_account_parameter_description(
+        param_name: str, context: Context, is_required: bool = False
+    ) -> str:
         """
         Generates a consistent description for optional account parameters.
         """

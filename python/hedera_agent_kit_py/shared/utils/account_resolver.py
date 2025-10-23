@@ -2,8 +2,9 @@ from hiero_sdk_python import Client, PublicKey
 
 from hedera_agent_kit_py.shared.configuration import Context, AgentMode
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import \
-    IHederaMirrornodeService
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 
 
@@ -26,7 +27,9 @@ class AccountResolver:
         # Use operator account if context.account_id is not set
         operator_account = getattr(client, "operatorAccountId", None)
         if not operator_account:
-            raise ValueError("No account available: neither context.account_id nor operator account")
+            raise ValueError(
+                "No account available: neither context.account_id nor operator account"
+            )
 
         return str(operator_account)
 
@@ -41,7 +44,9 @@ class AccountResolver:
             return client.operator_private_key.public_key()
 
         default_account = AccountResolver.get_default_account(context, client)
-        mirrornode_service = get_mirrornode_service(context.mirrornode_service, ledger_id_from_network(client.network))
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
 
         default_account_details = await mirrornode_service.get_account(default_account)
 
@@ -51,7 +56,9 @@ class AccountResolver:
         return PublicKey.from_string(default_account_details["account_public_key"])
 
     @staticmethod
-    def resolve_account(provided_account: str | None, context: Context, client: Client) -> str:
+    def resolve_account(
+        provided_account: str | None, context: Context, client: Client
+    ) -> str:
         """
         Resolves an account ID, using the provided account or falling back to the default.
         """
@@ -74,7 +81,9 @@ class AccountResolver:
         return address.startswith("0.") or address.startswith("0.0.")
 
     @staticmethod
-    async def get_hedera_evm_address(address: str, mirror_node: IHederaMirrornodeService) -> str:
+    async def get_hedera_evm_address(
+        address: str, mirror_node: IHederaMirrornodeService
+    ) -> str:
         """
         Converts a Hedera address to its corresponding EVM address if applicable.
         """

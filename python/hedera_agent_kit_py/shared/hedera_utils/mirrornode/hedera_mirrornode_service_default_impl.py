@@ -7,7 +7,10 @@ import aiohttp
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import LedgerIdToBaseUrl, TopicMessage
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
+    LedgerIdToBaseUrl,
+    TopicMessage,
+)
 from hedera_agent_kit_py.shared.utils.ledger_id import LedgerId
 from .types import (
     AccountResponse,
@@ -22,7 +25,7 @@ from .types import (
     TokenAllowanceResponse,
     NftBalanceResponse,
     ScheduledTransactionDetailsResponse,
-    ExchangeRateResponse
+    ExchangeRateResponse,
 )
 
 
@@ -52,7 +55,9 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
 
     async def get_account(self, account_id: str) -> AccountResponse:
         url = f"{self.base_url}/accounts/{account_id}"
-        raw_data: Dict[str, Any] = await self._fetch_json(url, context=f"account {account_id}")
+        raw_data: Dict[str, Any] = await self._fetch_json(
+            url, context=f"account {account_id}"
+        )
         print(raw_data)
 
         if not raw_data.get("account") or "balance" not in raw_data:
@@ -78,11 +83,13 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
         return Decimal(account["balance"]["balance"])
 
     async def get_account_token_balances(
-            self, account_id: str, token_id: Optional[str] = None
+        self, account_id: str, token_id: Optional[str] = None
     ) -> TokenBalancesResponse:
         token_param = f"&token.id={token_id}" if token_id else ""
         url = f"{self.base_url}/accounts/{account_id}/tokens?{token_param}"
-        res: TokenBalancesResponse = await self._fetch_json(url, context=f"token balances for account {account_id}")
+        res: TokenBalancesResponse = await self._fetch_json(
+            url, context=f"token balances for account {account_id}"
+        )
 
         # Fetch token symbols in parallel
         tasks = []
@@ -107,24 +114,41 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
     # ------------------------- TOPIC / CONSENSUS ------------------------- #
 
     async def get_topic_messages(
-            self, query_params: TopicMessagesQueryParams
+        self, query_params: TopicMessagesQueryParams
     ) -> TopicMessagesResponse:
-        lower = f"&timestamp=gte:{query_params.get('lowerTimestamp')}" if query_params.get("lowerTimestamp") else ""
-        upper = f"&timestamp=lte:{query_params.get('upperTimestamp')}" if query_params.get("upperTimestamp") else ""
+        lower = (
+            f"&timestamp=gte:{query_params.get('lowerTimestamp')}"
+            if query_params.get("lowerTimestamp")
+            else ""
+        )
+        upper = (
+            f"&timestamp=lte:{query_params.get('upperTimestamp')}"
+            if query_params.get("upperTimestamp")
+            else ""
+        )
         url = f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit=100"
 
         messages: List[TopicMessage] = []
         fetched_pages = 0
 
         while url:
-            data: Dict[str, Any] = await self._fetch_json(url, context=f"topic messages for {query_params['topic_id']}")
+            data: Dict[str, Any] = await self._fetch_json(
+                url, context=f"topic messages for {query_params['topic_id']}"
+            )
             messages.extend(data.get("messages", []))
             fetched_pages += 1
             if fetched_pages >= 100:
                 break
-            url = f"{self.base_url}{data['links']['next']}" if data.get("links", {}).get("next") else None
+            url = (
+                f"{self.base_url}{data['links']['next']}"
+                if data.get("links", {}).get("next")
+                else None
+            )
 
-        return {"topic_id": query_params["topic_id"], "messages": messages[: query_params.get("limit", 100)]}
+        return {
+            "topic_id": query_params["topic_id"],
+            "messages": messages[: query_params.get("limit", 100)],
+        }
 
     async def get_topic_info(self, topic_id: str) -> TopicInfo:
         url = f"{self.base_url}/topics/{topic_id}"
@@ -138,33 +162,44 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
 
     async def get_pending_airdrops(self, account_id: str) -> TokenAirdropsResponse:
         url = f"{self.base_url}/accounts/{account_id}/airdrops/pending"
-        return await self._fetch_json(url, context=f"pending airdrops for account {account_id}")
+        return await self._fetch_json(
+            url, context=f"pending airdrops for account {account_id}"
+        )
 
     async def get_outstanding_airdrops(self, account_id: str) -> TokenAirdropsResponse:
         url = f"{self.base_url}/accounts/{account_id}/airdrops/outstanding"
-        return await self._fetch_json(url, context=f"outstanding airdrops for account {account_id}")
+        return await self._fetch_json(
+            url, context=f"outstanding airdrops for account {account_id}"
+        )
 
     async def get_token_allowances(
-            self, owner_account_id: str, spender_account_id: str
+        self, owner_account_id: str, spender_account_id: str
     ) -> TokenAllowanceResponse:
         url = f"{self.base_url}/accounts/{owner_account_id}/allowances/tokens?spender.id={spender_account_id}"
-        return await self._fetch_json(url, context=f"token allowances from {owner_account_id} to {spender_account_id}")
+        return await self._fetch_json(
+            url,
+            context=f"token allowances from {owner_account_id} to {spender_account_id}",
+        )
 
     # ------------------------- TRANSACTION ------------------------- #
 
     async def get_transaction_record(
-            self, transaction_id: str, nonce: Optional[int] = None
+        self, transaction_id: str, nonce: Optional[int] = None
     ) -> TransactionDetailsResponse:
         url = f"{self.base_url}/transactions/{transaction_id}"
         if nonce is not None:
             url += f"?nonce={nonce}"
-        return await self._fetch_json(url, context=f"transaction record {transaction_id}")
+        return await self._fetch_json(
+            url, context=f"transaction record {transaction_id}"
+        )
 
     async def get_scheduled_transaction_details(
-            self, schedule_id: str
+        self, schedule_id: str
     ) -> ScheduledTransactionDetailsResponse:
         url = f"{self.base_url}/schedules/{schedule_id}"
-        return await self._fetch_json(url, context=f"scheduled transaction {schedule_id}")
+        return await self._fetch_json(
+            url, context=f"scheduled transaction {schedule_id}"
+        )
 
     async def get_contract_info(self, contract_id: str) -> ContractInfo:
         url = f"{self.base_url}/contracts/{contract_id}"
@@ -172,7 +207,11 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
 
     # ------------------------- NETWORK / MISC ------------------------- #
 
-    async def get_exchange_rate(self, timestamp: Optional[str] = None) -> ExchangeRateResponse:
+    async def get_exchange_rate(
+        self, timestamp: Optional[str] = None
+    ) -> ExchangeRateResponse:
         ts_param = f"?timestamp={timestamp}" if timestamp else ""
         url = f"{self.base_url}/network/exchangerate{ts_param}"
-        return await self._fetch_json(url, context=f"exchange rate{f' at {timestamp}' if timestamp else ''}")
+        return await self._fetch_json(
+            url, context=f"exchange rate{f' at {timestamp}' if timestamp else ''}"
+        )

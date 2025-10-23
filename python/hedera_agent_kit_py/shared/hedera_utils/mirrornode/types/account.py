@@ -4,6 +4,7 @@ from typing import TypedDict, Optional, List, Dict
 from .common import MirrornodeKeyInfo
 from .token import TokenBalance
 
+
 class AccountBalanceResponse(TypedDict):
     balance: Decimal
     timestamp: str
