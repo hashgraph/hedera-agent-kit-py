@@ -70,6 +70,5 @@ class OptionalScheduledTransactionParams(BaseModelWithArbitraryTypes):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class OptionalScheduledTransactionParamsNormalised(ScheduleCreateParams):
     """Wrapper model for normalised scheduling parameters."""

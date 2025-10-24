@@ -1,4 +1,6 @@
 from typing import Optional, Annotated
+
+from hiero_sdk_python.contract.contract_id import ContractId
 from pydantic import Field
 from hedera_agent_kit_py.shared.parameter_schemas import (
     OptionalScheduledTransactionParams,
@@ -7,16 +9,12 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class ContractExecuteTransactionParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    contract_id: Annotated[str, Field(description="The ID of the contract to execute.")]
-    function_parameters: Annotated[
-        bytes,
-        Field(description="The parameters of the function to execute."),
-    ]
-    gas: Annotated[int, Field(description="The gas limit for the contract call.")]
+    contract_id: ContractId
+    function_parameters: bytes
+    gas: int
 
 
 class TransferERC20Parameters(OptionalScheduledTransactionParams):
@@ -66,7 +64,6 @@ class MintERC721Parameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class EvmContractCallParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     contract_id: Annotated[str, Field(description="The ID of the contract to call.")]
     function_parameters: Annotated[

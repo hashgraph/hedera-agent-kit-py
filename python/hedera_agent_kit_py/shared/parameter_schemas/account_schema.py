@@ -1,7 +1,9 @@
 from decimal import Decimal
 from typing import Optional, List, Union, Annotated
 
-from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance
+from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance, Hbar
+from hiero_sdk_python.account.account_update_transaction import AccountUpdateParams
+from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from pydantic import Field
 
 # Local import avoids circular import
@@ -60,14 +62,11 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
     ] = -1
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class CreateAccountParametersNormalised(OptionalScheduledTransactionParams):
-    account_memo: Optional[str] = None
-    initial_balance: Optional[Union[str, float]] = None
+    memo: Optional[str] = None
+    initial_balance: Union[Hbar, int] = 0
     key: Optional[PublicKey] = None
-    max_automatic_token_associations: Optional[Union[int, Decimal]] = None
-
-    model_config = {"arbitrary_types_allowed": True}
+    # max_automatic_token_associations: Optional[Union[int, Decimal]] = None FIXME: currently not supported by the Python SDK
 
 
 class DeleteAccountParameters(BaseModelWithArbitraryTypes):
@@ -80,7 +79,6 @@ class DeleteAccountParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class DeleteAccountParametersNormalised(BaseModelWithArbitraryTypes):
     account_id: AccountId
     transfer_account_id: AccountId
@@ -102,13 +100,8 @@ class UpdateAccountParameters(OptionalScheduledTransactionParams):
     decline_staking_reward: Optional[bool] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class UpdateAccountParametersNormalised(OptionalScheduledTransactionParams):
-    account_id: AccountId
-    max_automatic_token_associations: Optional[Union[int, Decimal]] = None
-    staked_account_id: Optional[Union[str, AccountId]] = None
-    account_memo: Optional[str] = None
-    decline_staking_reward: Optional[bool] = None
+    account_params: AccountUpdateParams
 
 
 class AccountQueryParameters(BaseModelWithArbitraryTypes):
@@ -121,7 +114,6 @@ class AccountBalanceQueryParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class AccountBalanceQueryParametersNormalised(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="The account ID to query.")
 
@@ -135,18 +127,17 @@ class AccountTokenBalancesQueryParameters(BaseModelWithArbitraryTypes):
     )
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class AccountTokenBalancesQueryParametersNormalised(BaseModelWithArbitraryTypes):
     account_id: str
     token_id: Optional[str] = None
 
 
 class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: str = Field(description="The ID of the scheduled transaction to sign.")
+    schedule_id: ScheduleId = Field(description="The ID of the scheduled transaction to sign.")
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: str = Field(
+    schedule_id: ScheduleId  = Field(
         description="The ID of the scheduled transaction to delete."
     )
 
@@ -167,9 +158,8 @@ class ApproveHbarAllowanceParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class ApproveHbarAllowanceParametersNormalised(BaseModelWithArbitraryTypes):
-    hbar_approvals: Optional[List[HbarAllowance]] = None
+    hbar_allowances: List[HbarAllowance]
     transaction_memo: Optional[str] = None
 
 
@@ -193,9 +183,8 @@ class ApproveTokenAllowanceParameters(BaseModelWithArbitraryTypes):
     transaction_memo: Optional[str] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class ApproveTokenAllowanceParametersNormalised(BaseModelWithArbitraryTypes):
-    token_approvals: Optional[List[TokenAllowance]] = None
+    token_allowances: List[TokenAllowance]
     transaction_memo: Optional[str] = None
 
 
@@ -203,9 +192,7 @@ class TransferHbarWithAllowanceParameters(TransferHbarParameters):
     """Same as TransferHbarParameters — used when allowance applies."""
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransferHbarWithAllowanceParametersNormalised(OptionalScheduledTransactionParams):
-    hbar_transfers: dict["AccountId", int]  # tinybars to recipient accounts
     hbar_approved_transfer: dict["AccountId", int] = Field(
         description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )

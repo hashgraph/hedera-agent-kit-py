@@ -1,6 +1,6 @@
-from typing import Optional, List, Union, Annotated
+from typing import Optional, List, Union, Annotated, Dict, Tuple
 
-from hiero_sdk_python import AccountId, PublicKey, TokenId
+from hiero_sdk_python import AccountId, PublicKey, TokenId, TokenNftAllowance
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from pydantic import Field
@@ -59,12 +59,8 @@ class AirdropFungibleTokenParameters(OptionalScheduledTransactionParams):
     ]
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class AirdropFungibleTokenParametersNormalised(BaseModelWithArbitraryTypes):
-    token_transfers: Annotated[
-        List[TokenTransfer],
-        Field(description="Array of token transfers constructed from recipients."),
-    ]
+    token_transfers: List[TokenTransfer]
 
 
 class MintFungibleTokenParameters(OptionalScheduledTransactionParams):
@@ -72,12 +68,11 @@ class MintFungibleTokenParameters(OptionalScheduledTransactionParams):
     amount: Annotated[float, Field(description="Amount of tokens to mint.")]
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class MintFungibleTokenParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    token_id: Annotated[str, Field(description="The id of the token.")]
-    amount: Annotated[float, Field(description="Amount of tokens to mint.")]
+    token_id: TokenId
+    amount: int
 
 
 class MintNonFungibleTokenParameters(OptionalScheduledTransactionParams):
@@ -88,14 +83,11 @@ class MintNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     ]
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class MintNonFungibleTokenParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    token_id: Annotated[str, Field(description="The id of the NFT class.")]
-    metadata: Annotated[
-        Optional[List[bytes]], Field(description="NFT metadata in bytes.")
-    ] = None
+    token_id: TokenId
+    metadata: Optional[List[bytes]] = None
 
 
 class TransferNonFungibleTokenWithAllowanceParameters(
@@ -114,19 +106,11 @@ class TransferNonFungibleTokenWithAllowanceParameters(
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    source_account_id: Annotated[
-        AccountId, Field(description="Resolved account ID of token owner.")
-    ]
-    transaction_memo: Annotated[
-        Optional[str], Field(description="Optional transaction memo.")
-    ] = None
-    transfers: Annotated[
-        List[dict], Field(description="List of NFT ID and receiver pairs.")
-    ]
+    nft_approved_transfer: Dict[TokenId, List[Tuple[AccountId, AccountId, int, bool]]]
+    transaction_memo: Optional[str] = None
 
 
 class TransferFungibleTokenWithAllowanceParameters(OptionalScheduledTransactionParams):
@@ -142,20 +126,11 @@ class TransferFungibleTokenWithAllowanceParameters(OptionalScheduledTransactionP
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransferFungibleTokenWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    token_id: Annotated[TokenId, Field(description="Token ID to transfer.")]
-    token_transfers: Annotated[
-        List[TokenTransfer], Field(description="Resolved token transfers.")
-    ]
-    approved_transfer: Annotated[
-        dict, Field(description="Approved owner account and amount.")
-    ]
-    transaction_memo: Annotated[
-        Optional[str], Field(description="Optional transaction memo.")
-    ] = None
+    ft_approved_transfer: Dict[TokenId, Dict[AccountId, int]]
+    transaction_memo: Optional[str] = None
 
 
 class DissociateTokenParameters(OptionalScheduledTransactionParams):
@@ -171,10 +146,9 @@ class DissociateTokenParameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class DissociateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
-    token_ids: Annotated[List[TokenId], Field(description="Resolved Hedera Token IDs")]
-    account_id: Annotated[AccountId, Field(description="Resolved account ID")]
+    token_ids: List[TokenId]
+    account_id: AccountId
 
 
 class UpdateTokenParameters(OptionalScheduledTransactionParams):
@@ -203,31 +177,10 @@ class UpdateTokenParameters(OptionalScheduledTransactionParams):
     )
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class UpdateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
-    token_id: Annotated[TokenId, Field(description="Resolved Token ID")]
-    token_name: Annotated[Optional[str], Field(description="New token name")] = None
-    token_symbol: Annotated[Optional[str], Field(description="New token symbol")] = None
-    token_memo: Annotated[Optional[str], Field(description="New token memo")] = None
-    metadata: Annotated[Optional[bytes], Field(description="New token metadata")] = None
-    treasury_account_id: Annotated[
-        Optional[AccountId], Field(description="Resolved treasury account ID")
-    ] = None
-    auto_renew_account_id: Annotated[
-        Optional[AccountId], Field(description="Resolved auto renew account ID")
-    ] = None
-    admin_key: Annotated[Optional[PublicKey], Field(description="Admin key")] = None
-    supply_key: Annotated[Optional[PublicKey], Field(description="Supply key")] = None
-    wipe_key: Annotated[Optional[PublicKey], Field(description="Wipe key")] = None
-    freeze_key: Annotated[Optional[PublicKey], Field(description="Freeze key")] = None
-    kyc_key: Annotated[Optional[PublicKey], Field(description="KYC key")] = None
-    fee_schedule_key: Annotated[
-        Optional[PublicKey], Field(description="Fee schedule key")
-    ] = None
-    pause_key: Annotated[Optional[PublicKey], Field(description="Pause key")] = None
-    metadata_key: Annotated[Optional[PublicKey], Field(description="Metadata key")] = (
-        None
-    )
+    token_keys: Optional[TokenKeys] = None
+    token_params: Optional[TokenParams] = None
+    token_id: TokenId
 
 
 class CreateNonFungibleTokenParameters(OptionalScheduledTransactionParams):
@@ -239,30 +192,11 @@ class CreateNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class CreateNonFungibleTokenParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    token_name: Annotated[str, Field(description="The name of the token")]
-    token_symbol: Annotated[str, Field(description="The symbol of the token")]
-    max_supply: Annotated[int, Field(description="Maximum supply of NFTs")]
-    treasury_account_id: Annotated[
-        str, Field(description="Resolved treasury account ID")
-    ]
-    auto_renew_account_id: Annotated[
-        str, Field(description="Resolved auto renew account ID")
-    ]
-    supply_key: Annotated[PublicKey, Field(description="Supply key")]
-    supply_type: Annotated[int, Field(description="Must be finite for NFT")] = 1
-    token_type: Annotated[int, Field(description="Non-fungible unique")] = 2
-    admin_key: Annotated[Optional[PublicKey], Field(description="Admin key")] = None
-    kyc_key: Annotated[Optional[PublicKey], Field(description="KYC key")] = None
-    freeze_key: Annotated[Optional[PublicKey], Field(description="Freeze key")] = None
-    wipe_key: Annotated[Optional[PublicKey], Field(description="Wipe key")] = None
-    pause_key: Annotated[Optional[PublicKey], Field(description="Pause key")] = None
-    token_memo: Annotated[Optional[str], Field(description="Optional token memo")] = (
-        None
-    )
+    token_params: TokenParams
+    keys: Optional[TokenKeys] = None
 
 
 class AssociateTokenParameters(OptionalScheduledTransactionParams):
@@ -274,10 +208,9 @@ class AssociateTokenParameters(OptionalScheduledTransactionParams):
     ]
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class AssociateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
-    account_id: Annotated[AccountId, Field(description="Resolved account ID")]
-    token_ids: Annotated[List[TokenId], Field(description="Resolved token IDs")]
+    account_id: AccountId
+    token_ids: List[TokenId]
 
 
 class ApproveNftAllowanceParameters(OptionalScheduledTransactionParams):
@@ -295,22 +228,16 @@ class ApproveNftAllowanceParameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class ApproveNftAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    nft_approvals: Annotated[
-        Optional[List[dict]], Field(description="Resolved NFT approvals")
-    ] = None
-    transaction_memo: Annotated[
-        Optional[str], Field(description="Optional transaction memo")
-    ] = None
+    nft_allowances: List[TokenNftAllowance]
+    transaction_memo: Optional[str] = None
 
 
 class DeleteTokenParameters(OptionalScheduledTransactionParams):
     token_id: Annotated[str, Field(description="The ID of the token to delete")]
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class DeleteTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
-    token_id: Annotated[TokenId, Field(description="Resolved Token ID to delete")]
+    token_id: TokenId
