@@ -2,6 +2,7 @@ from typing import Callable, List, Dict
 
 from .configuration import Context
 from .tool import Tool
+from ..plugins import core_account_plugin
 
 
 class Plugin:
@@ -19,7 +20,8 @@ class Plugin:
 
 
 CORE_PLUGINS: List[Plugin] = [
-    # Add core plugins here
+    core_account_plugin
+    # TODO: Add more core plugins here
 ]
 
 

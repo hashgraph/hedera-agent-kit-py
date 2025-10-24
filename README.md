@@ -30,7 +30,8 @@ Planned features include:
 git clone https://github.com/hashgraph/hedera-agent-kit-py
 cd hedera-agent-kit-py
 poetry install
-poetry run python -m hedera_agent_kit.examples.langchain.plugin_tool_calling_agent
+cd python/examples/langchain/
+poetry python3 plugin_tool_calling_agent.py 
 ```
 
 > Those steps are just a placeholder. The tool calling agent is not yet implemented.
