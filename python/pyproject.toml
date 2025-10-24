@@ -3,7 +3,7 @@ name = "hedera-agent-kit-py"
 version = "3.0.0"
 description = "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like"
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "Hashgraph"}
 ]
 license = {text = "Apache-2.0"}
 readme = "../README.md"
