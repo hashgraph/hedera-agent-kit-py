@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "hedera-agent-kit-examples"
+version = "3.0.0"
+description = "Example applications using hedera-agent-kit-py"
+packages = [{ include = "examples" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+hedera-agent-kit-py = { path = "..", develop = true } # reference local version of a package
+poetry-core = "^2.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
