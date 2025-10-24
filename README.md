@@ -24,12 +24,16 @@ Planned features include:
 
 ## Getting Started
 
+[Install Poetry](https://python-poetry.org/docs/#installation) and run the following commands:
+
 ```bash
 git clone https://github.com/hashgraph/hedera-agent-kit-py
 cd hedera-agent-kit-py
 poetry install
 poetry run python -m hedera_agent_kit.examples.langchain.plugin_tool_calling_agent
 ```
+
+> Those steps are just a placeholder. The tool calling agent is not yet implemented.
 
 ## Plugins and Available Tools
 
