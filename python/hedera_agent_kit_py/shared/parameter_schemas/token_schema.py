@@ -133,6 +133,13 @@ class TransferFungibleTokenWithAllowanceParametersNormalised(
     transaction_memo: Optional[str] = None
 
 
+class TransferFungibleTokenParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    ft_transfers: Dict[TokenId, Dict[AccountId, int]]
+    transaction_memo: Optional[str] = None
+
+
 class DissociateTokenParameters(OptionalScheduledTransactionParams):
     token_ids: Annotated[
         List[str], Field(description="List of Hedera token IDs to dissociate")

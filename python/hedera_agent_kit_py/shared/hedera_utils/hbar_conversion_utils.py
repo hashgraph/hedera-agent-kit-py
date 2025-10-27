@@ -9,4 +9,4 @@ def to_hbar(tinybars: Decimal) -> Decimal:
 
 
 def to_tinybars(hbar: Decimal) -> int:
-    return hbar * Decimal("100000000")
+    return int(hbar * Decimal("100000000"))

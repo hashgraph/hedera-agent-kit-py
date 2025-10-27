@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Optional, List, Union, Annotated
 
 from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance, Hbar
@@ -133,11 +132,13 @@ class AccountTokenBalancesQueryParametersNormalised(BaseModelWithArbitraryTypes)
 
 
 class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: ScheduleId = Field(description="The ID of the scheduled transaction to sign.")
+    schedule_id: ScheduleId = Field(
+        description="The ID of the scheduled transaction to sign."
+    )
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: ScheduleId  = Field(
+    schedule_id: ScheduleId = Field(
         description="The ID of the scheduled transaction to delete."
     )
 

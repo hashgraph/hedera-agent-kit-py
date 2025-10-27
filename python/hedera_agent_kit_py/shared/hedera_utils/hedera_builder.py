@@ -49,9 +49,14 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
     SubmitTopicMessageParametersNormalised,
     UpdateTopicParametersNormalised,
-    ContractExecuteTransactionParametersNormalised, SignScheduleTransactionParameters,
+    ContractExecuteTransactionParametersNormalised,
+    SignScheduleTransactionParameters,
     ScheduleDeleteTransactionParameters,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    TransferFungibleTokenParametersNormalised,
+)
+
 
 class HederaBuilder:
     @staticmethod
@@ -128,6 +133,23 @@ class HederaBuilder:
         for token_id, transfers in params.ft_approved_transfer.items():
             for account_id, amount in transfers.items():
                 tx.add_approved_token_transfer(token_id, account_id, amount)
+
+        if getattr(params, "transaction_memo", None):
+            tx.set_transaction_memo(params.transaction_memo)
+
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
+
+    @staticmethod
+    def transfer_fungible_token(
+        params: TransferFungibleTokenParametersNormalised,
+    ):
+        tx = TransferTransaction()
+
+        for token_id, transfers in params.ft_transfers.items():
+            for account_id, amount in transfers.items():
+                tx.add_token_transfer(token_id, account_id, amount)
 
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)

@@ -81,7 +81,7 @@ class ExecuteStrategy(TxModeStrategy):
             schedule_id=getattr(receipt, "schedule_id", None),
         )
         return {
-            "raw": raw_transaction_response.to_dict(),
+            "raw": raw_transaction_response,
             "humanMessage": post_process(raw_transaction_response),
         }
 

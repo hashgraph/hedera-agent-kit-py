@@ -21,7 +21,9 @@ class DeleteTopicParameters(BaseModelWithArbitraryTypes):
 
 
 class DeleteTopicParametersNormalised(BaseModelWithArbitraryTypes):
-    topic_id: basic_types_pb2.TopicID  # FIXME TopicDeleteTransaction uses basic_types_pb2.TopicID instead of TopicId
+    topic_id: (
+        basic_types_pb2.TopicID
+    )  # FIXME TopicDeleteTransaction uses basic_types_pb2.TopicID instead of TopicId
 
 
 class CreateTopicParameters(BaseModelWithArbitraryTypes):
@@ -70,7 +72,9 @@ class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):
 class SubmitTopicMessageParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    topic_id: basic_types_pb2.TopicID # FIXME: uses basic_types_pb2.TopicID instead of TopicId
+    topic_id: (
+        basic_types_pb2.TopicID
+    )  # FIXME: uses basic_types_pb2.TopicID instead of TopicId
 
     message: Optional[str] = (None,)
 
@@ -137,12 +141,14 @@ class UpdateTopicParameters(BaseModelWithArbitraryTypes):
         Optional[Union[str, datetime]],
         Field(
             description="New expiration time for the topic (ISO string or datetime)."
-        )
+        ),
     ] = None
 
 
 class UpdateTopicParametersNormalised(BaseModelWithArbitraryTypes):
-    topic_id: Optional[basic_types_pb2.TopicID] = None # FIXME: uses basic_types_pb2.TopicID instead of TopicId
+    topic_id: Optional[basic_types_pb2.TopicID] = (
+        None  # FIXME: uses basic_types_pb2.TopicID instead of TopicId
+    )
 
     memo: Optional[str] = None
 
