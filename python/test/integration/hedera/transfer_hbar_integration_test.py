@@ -124,8 +124,8 @@ async def test_multiple_hbar_transfer(setup_accounts):
 
     balance_after1 = w.get_account_hbar_balance(str(recipient1))
     balance_after2 = w.get_account_hbar_balance(str(recipient2))
-    assert balance_after1 - balance_before1 == 0.05
-    assert balance_after2 - balance_before2 == 0.05
+    assert balance_after1 - balance_before1 == to_tinybars(Decimal(0.05))
+    assert balance_after2 - balance_before2 == to_tinybars(Decimal(0.05))
 
 
 @pytest.mark.asyncio
@@ -147,7 +147,7 @@ async def test_transfer_with_explicit_source(setup_accounts):
     await tool.execute(executor_client, context, params)
 
     balance_after = w.get_account_hbar_balance(str(recipient))
-    assert balance_after - balance_before == amount
+    assert balance_after - balance_before == to_tinybars(Decimal(amount))
 
 
 @pytest.mark.asyncio
@@ -167,7 +167,7 @@ async def test_transfer_without_memo(setup_accounts):
     await tool.execute(executor_client, context, params)
 
     balance_after = w.get_account_hbar_balance(str(recipient))
-    assert balance_after - balance_before == amount
+    assert balance_after - balance_before == to_tinybars(Decimal(amount))
 
 
 @pytest.mark.asyncio
@@ -181,6 +181,5 @@ async def test_invalid_transfer_zero_amount(setup_accounts):
         transfers=[TransferHbarEntry(account_id=str(recipient), amount=0)]
     )
     result = await tool.execute(executor_client, context, params)
-    pprint(result)
 
-    assert "status" in result and result["status"] != "SUCCESS"
+    assert "Failed to transfer HBAR" in result["raw"]["error"]
