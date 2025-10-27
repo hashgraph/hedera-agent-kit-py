@@ -28,9 +28,9 @@ Planned features include:
 
 ```bash
 git clone https://github.com/hashgraph/hedera-agent-kit-py
-cd hedera-agent-kit-py
+cd hedera-agent-kit-py/python
 poetry install
-cd python/examples/langchain/
+cd examples/langchain/
 poetry python3 plugin_tool_calling_agent.py 
 ```
 
