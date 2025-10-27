@@ -1,10 +1,7 @@
 import os
 
-from dotenv import load_dotenv
 from hiero_sdk_python import AccountId, PrivateKey, Client, Network
 from pydantic import BaseModel, Field, ValidationError
-
-load_dotenv(dotenv_path=".env.test.local")
 
 
 class EnvConfig(BaseModel):

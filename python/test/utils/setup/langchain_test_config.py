@@ -5,10 +5,11 @@ from typing import List
 from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
     core_account_plugin,
+    TRANSFER_HBAR_TOOL,
 )
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
-from . import LLMProvider, LLMOptions
+from .llm_factory import LLMProvider, LLMOptions
 
 
 @dataclass
@@ -18,11 +19,13 @@ class LangchainTestOptions:
     agent_mode: AgentMode
 
 
-PROVIDER_API_KEY_MAP: dict[LLMProvider, str | None] = {
-    LLMProvider.OPENAI: os.environ.get("OPENAI_API_KEY"),
-    LLMProvider.ANTHROPIC: os.environ.get("ANTHROPIC_API_KEY"),
-    LLMProvider.GROQ: os.environ.get("GROQ_API_KEY"),
-}
+def get_provider_api_key_map() -> dict:
+    """Load provider API keys lazily, after dotenv is loaded."""
+    return {
+        LLMProvider.OPENAI: os.getenv("OPENAI_API_KEY"),
+        LLMProvider.ANTHROPIC: os.getenv("ANTHROPIC_API_KEY"),
+        LLMProvider.GROQ: os.getenv("GROQ_API_KEY"),
+    }
 
 DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
     provider=LLMProvider.OPENAI,
@@ -38,7 +41,7 @@ DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
 )
 
 TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
-    tools=[core_account_plugin_tool_names.TRANSFER_HBAR_TOOL],
+    tools=[TRANSFER_HBAR_TOOL],
     plugins=[core_account_plugin],
     agent_mode=AgentMode.AUTONOMOUS,
 )

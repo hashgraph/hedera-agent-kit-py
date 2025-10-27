@@ -3,7 +3,6 @@ from .langchain_test_config import (
     LangchainTestOptions,
     DEFAULT_LLM_OPTIONS,
     TOOLKIT_OPTIONS,
-    PROVIDER_API_KEY_MAP,
 )
 from .langchain_test_setup import get_provider_api_key_map
 from .llm_factory import LLMProvider, LLMOptions, LLMFactory
@@ -19,5 +18,4 @@ __all__ = [
     "LLMOptions",
     "LLMFactory",
     "get_provider_api_key_map",
-    "PROVIDER_API_KEY_MAP",
 ]

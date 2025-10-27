@@ -5,8 +5,8 @@ from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
-from hedera_agent_kit_py.shared import AccountResolver
 from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,

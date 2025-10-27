@@ -5,7 +5,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field, field_validator, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 
 
 class LLMProvider(str, Enum):
@@ -35,11 +35,6 @@ class LLMOptions(BaseModel):
         "", description="System prompt for initialization"
     )
 
-    @field_validator("api_key")
-    def ensure_api_key_present(cls, v, values):
-        if not v:
-            raise ValueError(f"Missing API key for provider: {values.get('provider')}")
-        return v
 
 
 class LLMFactory:
