@@ -1,34 +1,23 @@
-[project]
+[tool.poetry]
 name = "hedera-agent-kit-py"
 version = "3.0.0"
 description = "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like"
-authors = [
-    {name = "Hashgraph"}
-]
-license = {text = "Apache-2.0"}
+authors = ["Hashgraph"]
+license = "Apache-2.0"
 readme = "../README.md"
-requires-python =">=3.10,<4.0.0"
-dependencies = [
-    "langchain (==1.0.0rc2)",
-    "hiero-sdk-python (==0.1.4)",
-    "python-dotenv (>=1,<2)"
-]
-
-[tool.poetry]
 packages = [{ include = "hedera_agent_kit_py" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
-langchain = "==1.0.1"
+langchain = "==1.0.2"
+langchain-openai = "^1.0.1"
 python-dotenv = ">=1,<2"
 aiohttp = ">=3.13.1,<4.0.0"
-
+pydantic = "^2.12.3"
 # Local editable package
 hiero-sdk-python = { path = "../../hiero-sdk-python", develop = true }
-pydantic = "^2.12.3"
-langchain-openai = "^1.0.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = ">=25.9.0,<26.0.0"
 pytest = ">=8.4.2,<9.0.0"
 mypy = ">=1.18.2,<2.0.0"
@@ -37,13 +26,3 @@ ruff = ">=0.14.1,<0.15.0"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]
-packages = [{ include = "hedera_agent_kit_py" }]
-[dependency-groups]
-dev = [
-    "black (>=25.9.0,<26.0.0)",
-    "pytest (>=8.4.2,<9.0.0)",
-    "mypy (>=1.18.2,<2.0.0)",
-    "ruff (>=0.14.1,<0.15.0)"
-]
