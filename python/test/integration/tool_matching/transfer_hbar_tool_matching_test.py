@@ -40,10 +40,9 @@ async def test_simple_transfer(agent_executor, toolkit, monkeypatch):
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     # Invoke agent
-    resp = await agent_executor.ainvoke({
+    await agent_executor.ainvoke({
         "messages": [{"role": "user", "content": input_text}]
     }, config=config)
-    pprint(resp)
 
     # Assert call
     mock_run.assert_awaited_once()

@@ -247,7 +247,7 @@ class HederaOperationsWrapper:
         info = self.get_account_info(account_id)
         balance = getattr(info, "balance", None)
         if hasattr(balance, "to_tinybars"):
-            return int(balance.to_tinybars().to_number())
+            return int(balance.to_tinybars())
         return int(balance or 0)
 
     # ---------------------------

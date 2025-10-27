@@ -100,8 +100,6 @@ async def create_langchain_test_setup(
         ),
     )
 
-    pprint(toolkit.get_tools())
-
     # Prepare tools and create agent
     tools = toolkit.get_tools()
     agent = create_agent(

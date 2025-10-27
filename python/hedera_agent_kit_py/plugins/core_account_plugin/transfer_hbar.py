@@ -68,8 +68,6 @@ async def transfer_hbar(
             params, context, client
         )
 
-        pprint(f"normalised_params: {normalised_params}")
-
         # Build transaction
         tx = HederaBuilder.transfer_hbar(normalised_params)
 
