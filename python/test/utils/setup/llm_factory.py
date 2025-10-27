@@ -36,7 +36,6 @@ class LLMOptions(BaseModel):
     )
 
 
-
 class LLMFactory:
     """Factory for creating configured LangChain LLMs across different providers."""
 

@@ -4,7 +4,9 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_account_plugin import core_account_plugin_tool_names
+from hedera_agent_kit_py.plugins.core_account_plugin import (
+    core_account_plugin_tool_names,
+)
 from test.utils import create_langchain_test_setup
 
 (TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
@@ -40,9 +42,9 @@ async def test_simple_transfer(agent_executor, toolkit, monkeypatch):
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     # Invoke agent
-    await agent_executor.ainvoke({
-        "messages": [{"role": "user", "content": input_text}]
-    }, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     # Assert call
     mock_run.assert_awaited_once()
@@ -61,9 +63,9 @@ async def test_transfer_with_memo(agent_executor, toolkit, monkeypatch):
     mock_run = AsyncMock(return_value="")
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
-    await agent_executor.ainvoke({
-        "messages": [{"role": "user", "content": input_text}]
-    }, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     mock_run.assert_awaited_once()
     args, kwargs = mock_run.call_args
@@ -85,7 +87,7 @@ async def test_transfer_with_memo(agent_executor, toolkit, monkeypatch):
     ],
 )
 async def test_natural_language_variations(
-        agent_executor, toolkit, monkeypatch, input_text, account_id, amount
+    agent_executor, toolkit, monkeypatch, input_text, account_id, amount
 ):
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
@@ -93,9 +95,9 @@ async def test_natural_language_variations(
     mock_run = AsyncMock(return_value="")
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
-    await agent_executor.ainvoke({
-        "messages": [{"role": "user", "content": input_text}]
-    }, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     mock_run.assert_awaited_once()
     args, kwargs = mock_run.call_args

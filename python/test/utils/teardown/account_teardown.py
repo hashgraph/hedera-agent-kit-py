@@ -12,9 +12,9 @@ from .. import HederaOperationsWrapper
 
 
 async def return_hbars_and_delete_account(
-        account_wrapper: HederaOperationsWrapper,
-        account_to_delete: AccountId,
-        account_to_return: AccountId,
+    account_wrapper: HederaOperationsWrapper,
+    account_to_delete: AccountId,
+    account_to_return: AccountId,
 ) -> None:
     """
     Attempts to delete a test account and return its HBAR balance to a specified account.

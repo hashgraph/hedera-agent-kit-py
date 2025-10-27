@@ -27,6 +27,7 @@ def get_provider_api_key_map() -> dict:
         LLMProvider.GROQ: os.getenv("GROQ_API_KEY"),
     }
 
+
 DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
     provider=LLMProvider.OPENAI,
     model="gpt-4o-mini",

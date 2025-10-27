@@ -12,7 +12,8 @@ from .client_setup import get_operator_client_for_tests
 from .langchain_test_config import (
     TOOLKIT_OPTIONS,
     DEFAULT_LLM_OPTIONS,
-    LangchainTestOptions, get_provider_api_key_map,
+    LangchainTestOptions,
+    get_provider_api_key_map,
 )
 from .llm_factory import LLMFactory, LLMOptions
 
@@ -25,11 +26,11 @@ class LangchainTestSetup:
     """Container for LangChain test setup components."""
 
     def __init__(
-            self,
-            client: Client,
-            agent: Any,
-            toolkit: HederaLangchainToolkit,
-            cleanup: Callable[[], None],
+        self,
+        client: Client,
+        agent: Any,
+        toolkit: HederaLangchainToolkit,
+        cleanup: Callable[[], None],
     ):
         self.client = client
         self.agent = agent
@@ -38,9 +39,9 @@ class LangchainTestSetup:
 
 
 async def create_langchain_test_setup(
-        toolkit_options: Optional[LangchainTestOptions] = TOOLKIT_OPTIONS,
-        llm_options: Optional[LLMOptions] = DEFAULT_LLM_OPTIONS,
-        custom_client: Optional[Client] = None,
+    toolkit_options: Optional[LangchainTestOptions] = TOOLKIT_OPTIONS,
+    llm_options: Optional[LLMOptions] = DEFAULT_LLM_OPTIONS,
+    custom_client: Optional[Client] = None,
 ) -> LangchainTestSetup:
     """
     Creates a full LangChain test setup for Hedera integration testing.
@@ -59,14 +60,8 @@ async def create_langchain_test_setup(
     operator_account_id = getattr(client, "operator_account_id", None)
 
     # Resolve provider, model, and API key
-    provider = (
-            llm_options.provider
-            or os.getenv("E2E_LLM_PROVIDER")
-    )
-    model = (
-            llm_options.model
-            or os.getenv("E2E_LLM_MODEL")
-    )
+    provider = llm_options.provider or os.getenv("E2E_LLM_PROVIDER")
+    model = llm_options.model or os.getenv("E2E_LLM_MODEL")
 
     api_key_map = get_provider_api_key_map()
 

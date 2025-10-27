@@ -62,7 +62,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
 class HederaBuilder:
     @staticmethod
     def maybe_wrap_in_schedule(
-            tx, scheduling_params: Optional[ScheduleCreateParams] = None
+        tx, scheduling_params: Optional[ScheduleCreateParams] = None
     ):
         if scheduling_params is not None:
             return ScheduleCreateTransaction(
@@ -93,7 +93,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_hbar_with_allowance(
-            params: TransferHbarWithAllowanceParametersNormalised,
+        params: TransferHbarWithAllowanceParametersNormalised,
     ):
         tx = TransferTransaction()
         for approved_transfer in params.hbar_approved_transfers:
@@ -108,7 +108,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_non_fungible_token_with_allowance(
-            params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
+        params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
     ):
         tx = TransferTransaction()
 
@@ -127,7 +127,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_fungible_token_with_allowance(
-            params: TransferFungibleTokenWithAllowanceParametersNormalised,
+        params: TransferFungibleTokenWithAllowanceParametersNormalised,
     ):
         tx = TransferTransaction()
 
@@ -144,7 +144,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_fungible_token(
-            params: TransferFungibleTokenParametersNormalised,
+        params: TransferFungibleTokenParametersNormalised,
     ):
         tx = TransferTransaction()
 
