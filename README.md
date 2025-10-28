@@ -31,7 +31,7 @@ git clone https://github.com/hashgraph/hedera-agent-kit-py
 cd hedera-agent-kit-py/python
 poetry install
 cd examples/langchain/
-poetry python3 plugin_tool_calling_agent.py 
+poetry run python3 plugin_tool_calling_agent.py 
 ```
 
 > Those steps are just a placeholder. The tool calling agent is not yet implemented.

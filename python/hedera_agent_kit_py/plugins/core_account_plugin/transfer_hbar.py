@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from hiero_sdk_python import Client, ResponseCode
 
-from hedera_agent_kit_py.shared import Tool
+from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (

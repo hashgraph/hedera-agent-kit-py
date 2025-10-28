@@ -1,7 +1,6 @@
 from typing import Any, List, Optional
 from hiero_sdk_python import Client
 from .configuration import Context
-from .tool import Tool
 import json
 
 
@@ -9,6 +8,7 @@ class HederaAgentAPI:
     """
     A wrapper for executing tools against a Hedera client within a given context.
     """
+    from .tool import Tool
 
     def __init__(
         self,
