@@ -3,8 +3,12 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_account_plugin import core_account_plugin_tool_names
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.plugins.core_account_plugin import (
+    core_account_plugin_tool_names,
+)
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
@@ -32,7 +36,6 @@ async def toolkit(test_setup):
     return test_setup.toolkit
 
 
-
 @pytest.fixture
 async def executor_wrapper():
     """Return the HederaOperationsWrapper to the executor account."""
@@ -52,7 +55,6 @@ async def executor_wrapper():
 
     executor_client = get_custom_client(executor_account_id, executor_key_pair)
     return HederaOperationsWrapper(executor_client)
-
 
 
 @pytest.fixture
@@ -79,7 +81,9 @@ async def test_simple_transfer(agent_executor, recipient_account, executor_wrapp
 
     input_text = f"Transfer {amount} HBAR to {recipient_account}"
     config = RunnableConfig(configurable={"thread_id": "1"})
-    await agent_executor.ainvoke({"messages": [{"role": "user", "content": input_text}]}, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert balance_after - balance_before == to_tinybars(Decimal(amount))
@@ -93,7 +97,9 @@ async def test_transfer_with_memo(agent_executor, recipient_account, executor_wr
 
     input_text = f'Transfer {amount} HBAR to {recipient_account} with memo "{memo}"'
     config = RunnableConfig(configurable={"thread_id": "1"})
-    await agent_executor.ainvoke({"messages": [{"role": "user", "content": input_text}]}, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert balance_after - balance_before == to_tinybars(Decimal(amount))
@@ -108,12 +114,16 @@ async def test_transfer_with_memo(agent_executor, recipient_account, executor_wr
         ("Can you move 10 HBAR to 0.0.9999?", "0.0.9999", 10),
     ],
 )
-async def test_natural_language_variations(agent_executor, executor_wrapper, input_text, account_id, amount):
+async def test_natural_language_variations(
+    agent_executor, executor_wrapper, input_text, account_id, amount
+):
     """Test multiple ways of specifying HBAR transfers in natural language."""
     balance_before = executor_wrapper.get_account_hbar_balance(account_id)
 
     config = RunnableConfig(configurable={"thread_id": "1"})
-    await agent_executor.ainvoke({"messages": [{"role": "user", "content": input_text}]}, config=config)
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
 
     balance_after = executor_wrapper.get_account_hbar_balance(account_id)
     assert balance_after - balance_before == to_tinybars(Decimal(amount))

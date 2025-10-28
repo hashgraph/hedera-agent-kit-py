@@ -48,11 +48,27 @@ class RawTransactionResponse:
     def from_dict(cls, data: Dict[str, Any]) -> RawTransactionResponse:
         return cls(
             status=data.get("status"),
-            account_id=AccountId.from_string(data["accountId"]) if data.get("accountId") and data["accountId"] != "None" else None,
-            token_id=TokenId.from_string(data["tokenId"]) if data.get("tokenId") and data["tokenId"] != "None" else None,
+            account_id=(
+                AccountId.from_string(data["accountId"])
+                if data.get("accountId") and data["accountId"] != "None"
+                else None
+            ),
+            token_id=(
+                TokenId.from_string(data["tokenId"])
+                if data.get("tokenId") and data["tokenId"] != "None"
+                else None
+            ),
             transaction_id=data.get("transactionId"),
-            topic_id=TopicId.from_string(data["topicId"]) if data.get("topicId") and data["topicId"] != "None" else None,
-            schedule_id=ScheduleId.from_string(data["scheduleId"]) if data.get("scheduleId") and data["scheduleId"] != "None" else None,
+            topic_id=(
+                TopicId.from_string(data["topicId"])
+                if data.get("topicId") and data["topicId"] != "None"
+                else None
+            ),
+            schedule_id=(
+                ScheduleId.from_string(data["scheduleId"])
+                if data.get("scheduleId") and data["scheduleId"] != "None"
+                else None
+            ),
         )
 
 
@@ -94,7 +110,7 @@ class ExecuteStrategy(TxModeStrategy):
         )
 
         return {
-            "raw": raw_transaction_response.to_dict(), # python cannot serialize the object
+            "raw": raw_transaction_response.to_dict(),  # python cannot serialize the object
             "humanMessage": post_process(raw_transaction_response),
         }
 
