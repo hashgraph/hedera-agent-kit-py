@@ -133,11 +133,13 @@ class AccountTokenBalancesQueryParametersNormalised(BaseModelWithArbitraryTypes)
 
 
 class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: ScheduleId = Field(description="The ID of the scheduled transaction to sign.")
+    schedule_id: ScheduleId = Field(
+        description="The ID of the scheduled transaction to sign."
+    )
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
-    schedule_id: ScheduleId  = Field(
+    schedule_id: ScheduleId = Field(
         description="The ID of the scheduled transaction to delete."
     )
 

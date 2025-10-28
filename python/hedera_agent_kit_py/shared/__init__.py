@@ -4,7 +4,7 @@ __all__ = [
     "ToolDiscovery",
     "Tool",
     "HederaAgentAPI",
-    "Plugin"
+    "Plugin",
 ]
 
 from .api import HederaAgentAPI

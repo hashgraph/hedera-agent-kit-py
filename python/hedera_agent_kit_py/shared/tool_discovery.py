@@ -5,7 +5,6 @@ from .plugin import Plugin
 from .plugin_registry import PluginRegistry
 
 
-
 class ToolDiscovery:
     def __init__(self, plugins: Optional[List[Plugin]] = None):
         self.plugin_registry = PluginRegistry()
