@@ -3,13 +3,13 @@ from typing import Any, Type
 from hiero_sdk_python import Client
 from pydantic import BaseModel
 
-from .configuration import Context
-
 
 class Tool(ABC):
     """
     Abstract base class representing a Tool definition.
     """
+
+    from .configuration import Context
 
     method: str
     name: str

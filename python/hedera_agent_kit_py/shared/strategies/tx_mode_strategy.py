@@ -26,6 +26,7 @@ class RawTransactionResponse:
         transaction_id: str,
         topic_id: Optional[TopicId],
         schedule_id: Optional[ScheduleId],
+        error: Optional[str] = None,
     ):
         self.status = status
         self.account_id = account_id
@@ -33,6 +34,7 @@ class RawTransactionResponse:
         self.transaction_id = transaction_id
         self.topic_id = topic_id
         self.schedule_id = schedule_id
+        self.error = error
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -42,7 +44,36 @@ class RawTransactionResponse:
             "transactionId": str(self.transaction_id),
             "topicId": str(self.topic_id),
             "scheduleId": str(self.schedule_id),
+            "error": self.error,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> RawTransactionResponse:
+        return cls(
+            status=data.get("status"),
+            account_id=(
+                AccountId.from_string(data["accountId"])
+                if data.get("accountId") and data["accountId"] != "None"
+                else None
+            ),
+            token_id=(
+                TokenId.from_string(data["tokenId"])
+                if data.get("tokenId") and data["tokenId"] != "None"
+                else None
+            ),
+            transaction_id=data.get("transactionId"),
+            topic_id=(
+                TopicId.from_string(data["topicId"])
+                if data.get("topicId") and data["topicId"] != "None"
+                else None
+            ),
+            schedule_id=(
+                ScheduleId.from_string(data["scheduleId"])
+                if data.get("scheduleId") and data["scheduleId"] != "None"
+                else None
+            ),
+            error=data.get("error"),
+        )
 
 
 class TxModeStrategy(ABC):
@@ -72,6 +103,7 @@ class ExecuteStrategy(TxModeStrategy):
     ) -> Dict[str, Any]:
         post_process = post_process or self.default_post_process
         receipt: TransactionReceipt = tx.execute(client)
+
         raw_transaction_response = RawTransactionResponse(
             status=str(receipt.status),
             account_id=getattr(receipt, "account_id", None),
@@ -80,8 +112,9 @@ class ExecuteStrategy(TxModeStrategy):
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
         )
+
         return {
-            "raw": raw_transaction_response.to_dict(),
+            "raw": raw_transaction_response.to_dict(),  # python cannot serialize the object
             "humanMessage": post_process(raw_transaction_response),
         }
 

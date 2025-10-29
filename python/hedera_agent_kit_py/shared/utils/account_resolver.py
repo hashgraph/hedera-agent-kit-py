@@ -1,6 +1,6 @@
 from hiero_sdk_python import Client, PublicKey
 
-from hedera_agent_kit_py.shared.configuration import Context, AgentMode
+from hedera_agent_kit_py.shared.configuration import AgentMode
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
@@ -12,6 +12,8 @@ class AccountResolver:
     """
     Utility class for resolving Hedera account information based on context and agent mode.
     """
+
+    from hedera_agent_kit_py.shared.configuration import Context
 
     @staticmethod
     def get_default_account(context: Context, client: Client) -> str:
