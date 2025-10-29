@@ -59,7 +59,6 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
 )
 
 
-
 class HederaBuilder:
     @staticmethod
     def maybe_wrap_in_schedule(

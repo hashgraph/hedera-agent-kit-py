@@ -18,8 +18,8 @@ from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 class HederaParameterNormaliser:
     @staticmethod
     def parse_params_with_schema(
-            params: Any,
-            schema: Type[BaseModel],
+        params: Any,
+        schema: Type[BaseModel],
     ) -> BaseModel:
         """
         Validate and parse parameters using a pydantic schema.
@@ -39,9 +39,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar(
-            params: TransferHbarParameters,
-            context: Context,
-            client: Client,
+        params: TransferHbarParameters,
+        context: Context,
+        client: Client,
     ) -> TransferHbarParametersNormalised:
         parsed_params: TransferHbarParameters = cast(
             TransferHbarParameters,
@@ -87,9 +87,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_scheduled_transaction_params(
-            scheduling: SchedulingParams,
-            context: Context,
-            client: Client,
+        scheduling: SchedulingParams,
+        context: Context,
+        client: Client,
     ) -> ScheduleCreateParams:
         """
         Normalises SchedulingParams to ScheduleCreateParams compatible with Python SDK.
@@ -128,8 +128,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def resolve_key(
-            raw_value: Union[str, bool, None],
-            user_key: PublicKey,
+        raw_value: Union[str, bool, None],
+        user_key: PublicKey,
     ) -> Optional[PublicKey]:
         if raw_value is None:
             return None
