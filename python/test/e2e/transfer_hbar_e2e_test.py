@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
@@ -14,6 +15,7 @@ from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from test.utils.teardown import return_hbars_and_delete_account
+from test.utils.verification import extract_tool_response
 
 (TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
 
@@ -103,6 +105,22 @@ async def test_transfer_with_memo(agent_executor, recipient_account, executor_wr
 
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert balance_after - balance_before == to_tinybars(Decimal(amount))
+
+
+@pytest.mark.asyncio
+async def test_invalid_params(agent_executor, executor_wrapper):
+    amount = 0.05
+    memo = "Payment for services"
+
+    input_text = f'Transfer {amount} HBAR to 0.0.0 with memo "{memo}"'
+    config = RunnableConfig(configurable={"thread_id": "1"})
+    response = await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
+    tool_response_obj = extract_tool_response(response, "transfer_hbar_tool")
+
+    # Validate error
+    assert "Failed" in tool_response_obj.error
 
 
 @pytest.mark.asyncio

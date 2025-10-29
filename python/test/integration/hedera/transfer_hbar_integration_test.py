@@ -13,6 +13,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarEntry,
 )
+from hedera_agent_kit_py.shared.strategies import RawTransactionResponse
 from test import HederaOperationsWrapper
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
@@ -181,5 +182,6 @@ async def test_invalid_transfer_zero_amount(setup_accounts):
         transfers=[TransferHbarEntry(account_id=str(recipient), amount=0)]
     )
     result = await tool.execute(executor_client, context, params)
+    result_obj = RawTransactionResponse.from_dict(result["raw"])
 
-    assert "Failed to transfer HBAR" in result["raw"]["error"]
+    assert "Failed to transfer HBAR" in result_obj.error

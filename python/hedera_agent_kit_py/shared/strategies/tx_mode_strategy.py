@@ -26,6 +26,7 @@ class RawTransactionResponse:
         transaction_id: str,
         topic_id: Optional[TopicId],
         schedule_id: Optional[ScheduleId],
+        error: Optional[str] = None,
     ):
         self.status = status
         self.account_id = account_id
@@ -33,6 +34,7 @@ class RawTransactionResponse:
         self.transaction_id = transaction_id
         self.topic_id = topic_id
         self.schedule_id = schedule_id
+        self.error = error
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -42,6 +44,7 @@ class RawTransactionResponse:
             "transactionId": str(self.transaction_id),
             "topicId": str(self.topic_id),
             "scheduleId": str(self.schedule_id),
+            "error": self.error,
         }
 
     @classmethod
@@ -69,6 +72,7 @@ class RawTransactionResponse:
                 if data.get("scheduleId") and data["scheduleId"] != "None"
                 else None
             ),
+            error=data.get("error"),
         )
 
 

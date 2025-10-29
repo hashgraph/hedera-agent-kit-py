@@ -77,6 +77,30 @@ async def test_transfer_with_memo(agent_executor, toolkit, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_incorrect_params(agent_executor, toolkit, monkeypatch):
+    # should match the tool anyway
+    # the validation is performed on a tool level - not LLM level
+    input_text = 'Transfer 1 HBAR to 0.0.0 with memo "Payment for services"'
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(return_value="")
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
+
+    mock_run.assert_awaited_once()
+    args, kwargs = mock_run.call_args
+    payload = args[1]
+    transfers = payload["transfers"]
+    assert args[0] == TRANSFER_HBAR_TOOL
+    assert any(t.account_id == "0.0.0" and t.amount == 1 for t in transfers)
+    assert payload["transaction_memo"] == "Payment for services"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "input_text, account_id, amount",
     [
