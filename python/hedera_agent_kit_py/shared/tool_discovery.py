@@ -1,8 +1,8 @@
 from typing import List, Optional, Set, Any
 from .configuration import Context, Configuration
 from .tool import Tool
-from .plugin_registry import PluginRegistry
 from .plugin import Plugin
+from .plugin_registry import PluginRegistry
 
 
 class ToolDiscovery:

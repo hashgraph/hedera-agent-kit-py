@@ -14,10 +14,10 @@ class HederaAgentAPI:
     from .tool import Tool
 
     def __init__(
-        self,
-        client: Client,
-        context: Optional[Context] = None,
-        tools: Optional[List[Tool]] = None,
+            self,
+            client: Client,
+            context: Optional[Context] = None,
+            tools: Optional[List[Tool]] = None,
     ):
         self.client = client
         if self.client.network is None:

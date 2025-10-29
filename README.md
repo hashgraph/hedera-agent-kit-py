@@ -22,19 +22,118 @@ Planned features include:
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
-[Install Poetry](https://python-poetry.org/docs/#installation) and run the following commands:
+Before you begin, make sure you have **Python ≥3.10** and [**Poetry**](https://python-poetry.org/docs/#installation) installed.
+
+> **Note:**
+> This project currently depends on a **not-yet-released version** of the [**Hiero SDK for Python**](https://github.com/hiero-ledger/hiero-sdk-python).
+> You’ll need to clone and set it up locally before installing the Hedera Agent Kit.
+
+---
+
+### 1️⃣ Clone the Repositories
 
 ```bash
-git clone https://github.com/hashgraph/hedera-agent-kit-py
-cd hedera-agent-kit-py
-poetry install
-cd python/examples/langchain/
-poetry python3 plugin_tool_calling_agent.py 
+# Clone both repositories into the same directory
+git clone https://github.com/hiero-ledger/hiero-sdk-python.git
+git clone https://github.com/hashgraph/hedera-agent-kit-py.git
 ```
 
-> Those steps are just a placeholder. The tool calling agent is not yet implemented.
+Your directory structure should look like this:
+
+```
+.
+├── hiero-sdk-python/
+└── hedera-agent-kit-py/
+    └── python/
+        ├── hedera_agent_kit_py/
+        │   └── ... (core SDK modules)
+        ├── examples/
+        │   └── langchain/
+        │       ├── plugin_tool_calling_agent.py
+        │       └── pyproject.toml   ← LangChain example project
+        ├── pyproject.toml           ← Main SDK project
+        └── poetry.lock
+```
+
+---
+
+### 2️⃣ Set Up the Hiero SDK (Local Dependency)
+
+```bash
+cd hiero-sdk-python
+
+# Upgrade pip and install dependencies in editable mode
+pip install --upgrade pip
+pip install -e .
+
+# Generate protocol buffer files (required)
+python generate_proto.py
+# or, if using uv
+# uv run python generate_proto.py
+```
+
+This prepares the Hiero SDK so it can be used as a local dependency by the Hedera Agent Kit.
+
+---
+
+### 3️⃣ Install the Hedera Agent Kit SDK
+
+```bash
+cd ../hedera-agent-kit-py/python
+poetry install
+```
+
+This will:
+
+* Create a Poetry-managed virtual environment
+* Install all dependencies
+* Link the local `hiero-sdk-python` in editable mode
+
+---
+
+### 4️⃣ Configure Environment Variables
+
+The LangChain example requires API keys and credentials to connect to Hedera and OpenAI.
+
+Copy the example file and edit your own `.env`:
+
+```bash
+cd examples/langchain
+cp .env.example .env
+```
+
+Then open `.env` and fill in your details:
+
+```dotenv
+ACCOUNT_ID="0.0."        # your operator account ID from https://portal.hedera.com/dashboard
+PRIVATE_KEY="303..."     # ECDSA encoded private key
+OPENAI_API_KEY="sk-proj-"  # your OpenAI API key
+```
+
+> ⚠️ Never commit your `.env` file — it contains sensitive credentials.
+
+---
+
+### 5️⃣ Run the LangChain Example
+
+```bash
+poetry install
+poetry run python plugin_tool_calling_agent.py
+```
+
+This launches the example agent, demonstrating how to use the Hedera Agent Kit with LangChain tools and plugins.
+
+---
+
+### 🧩 Dependency Structure
+
+```
+hedera-agent-kit-py/python/examples/langchain  →  hedera-agent-kit-py/python/hedera_agent_kit_py  →  ../hiero-sdk-python
+```
+
+---
 
 ## Plugins and Available Tools
 

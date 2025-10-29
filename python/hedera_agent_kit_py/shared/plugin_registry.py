@@ -3,7 +3,7 @@ from typing import List, Dict
 from .configuration import Context
 from .plugin import Plugin
 from .tool import Tool
-from ..plugins import core_account_plugin
+from ..plugins.core_account_plugin import core_account_plugin
 
 CORE_PLUGINS: List[Plugin] = [
     core_account_plugin
