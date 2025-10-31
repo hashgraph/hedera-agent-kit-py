@@ -1,12 +1,28 @@
-from typing import List, Optional, Set, Any
+from __future__ import annotations
+
+from typing import Optional, Any
+
 from .configuration import Context, Configuration
-from .tool import Tool
 from .plugin import Plugin
 from .plugin_registry import PluginRegistry
+from .tool import Tool
 
 
 class ToolDiscovery:
-    def __init__(self, plugins: Optional[List[Plugin]] = None):
+    """Utility class for discovering and managing available tools from plugins.
+
+    This class aggregates tools from registered plugins and optionally filters them
+    based on the provided configuration. Core tools take precedence over plugin tools
+    in case of name conflicts.
+    """
+
+    def __init__(self, plugins: Optional[list[Plugin]] = None):
+        """
+        Initialize the ToolDiscovery instance with optional plugins.
+
+        Args:
+            plugins (Optional[list[Plugin]]): List of Plugin instances to register.
+        """
         self.plugin_registry = PluginRegistry()
         if plugins:
             for plugin in plugins:
@@ -14,13 +30,27 @@ class ToolDiscovery:
 
     def get_all_tools(
         self, context: Context, configuration: Optional[Configuration] = None
-    ) -> List[Tool]:
+    ) -> list[Tool]:
+        """Retrieve all available tools, optionally filtered by configuration.
+
+        This method:
+            1. Fetches tools from registered plugins.
+            2. Merges them with core tools, ensuring core tools take precedence on conflicts.
+            3. Filters tools based on the configuration's tool list if specified.
+
+        Args:
+            context (Context): Runtime context used by plugins to determine available tools.
+            configuration (Optional[Configuration]): Configuration specifying tool filtering.
+
+        Returns:
+            list[Tool]: List of resolved Tool instances ready for use.
+        """
         # Get plugin tools
-        plugin_tools = self.plugin_registry.get_tools(context)
+        plugin_tools: list[Tool] = self.plugin_registry.get_tools(context)
 
         # Merge all tools (core tools take precedence in case of name conflicts)
-        all_tools: List[Any] = []
-        all_tool_names: Set[str] = set()
+        all_tools: list[Any] = []
+        all_tool_names: set[str] = set()
 
         for plugin_tool in plugin_tools:
             if plugin_tool.method not in all_tool_names:
@@ -38,5 +68,13 @@ class ToolDiscovery:
         return all_tools
 
     @staticmethod
-    def create_from_configuration(configuration: Configuration) -> "ToolDiscovery":
+    def create_from_configuration(configuration: Configuration) -> ToolDiscovery:
+        """Create a ToolDiscovery instance from a Configuration object.
+
+        Args:
+            configuration (Configuration): Configuration containing optional plugins.
+
+        Returns:
+            ToolDiscovery: New ToolDiscovery instance with plugins registered.
+        """
         return ToolDiscovery(configuration.plugins or [])

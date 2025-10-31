@@ -25,6 +25,7 @@ from hiero_sdk_python import (
     NftId,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
+from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.parameter_schemas import (
     ApproveHbarAllowanceParametersNormalised,
@@ -60,10 +61,26 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
 
 
 class HederaBuilder:
+    """Helper class to build Hedera SDK transactions with optional scheduling support.
+
+    This class provides static methods to construct transactions for accounts, tokens,
+    NFTs, topics, HBAR transfers, and contract executions. Methods automatically wrap
+    transactions in a ScheduleCreateTransaction if scheduling parameters are provided.
+    """
+
     @staticmethod
     def maybe_wrap_in_schedule(
         tx, scheduling_params: Optional[ScheduleCreateParams] = None
-    ):
+    ) -> ScheduleCreateTransaction:
+        """Wrap a transaction in a schedule if scheduling parameters are provided.
+
+        Args:
+            tx: The transaction to wrap.
+            scheduling_params (Optional[ScheduleCreateParams]): Optional schedule creation parameters.
+
+        Returns:
+            Transaction: Either the original transaction or a ScheduleCreateTransaction.
+        """
         if scheduling_params is not None:
             return ScheduleCreateTransaction(
                 scheduling_params
@@ -71,22 +88,52 @@ class HederaBuilder:
         return tx
 
     @staticmethod
-    def create_fungible_token(params: CreateFungibleTokenParametersNormalised):
-        tx = TokenCreateTransaction(**vars(params))
+    def create_fungible_token(
+        params: CreateFungibleTokenParametersNormalised,
+    ) -> Transaction:
+        """Build a TokenCreateTransaction for a fungible token.
+
+        Args:
+            params: Normalised parameters for creating a fungible token.
+
+        Returns:
+            Transaction: TokenCreateTransaction, optionally wrapped in a schedule.
+        """
+        tx: TokenCreateTransaction = TokenCreateTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def create_non_fungible_token(params: CreateNonFungibleTokenParametersNormalised):
-        tx = TokenCreateTransaction(**vars(params))
+    def create_non_fungible_token(
+        params: CreateNonFungibleTokenParametersNormalised,
+    ) -> Transaction:
+        """Build a TokenCreateTransaction for a non-fungible token.
+
+        Args:
+            params: Normalised parameters for creating a non-fungible token.
+
+        Returns:
+            Transaction: TokenCreateTransaction, optionally wrapped in a schedule.
+        """
+        tx: TokenCreateTransaction = TokenCreateTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def transfer_hbar(params: TransferHbarParametersNormalised):
-        tx = TransferTransaction(hbar_transfers=params.hbar_transfers)
+    def transfer_hbar(params: TransferHbarParametersNormalised) -> Transaction:
+        """Build a TransferTransaction for transferring HBAR.
+
+        Args:
+            params: Normalised HBAR transfer parameters.
+
+        Returns:
+            Transaction: TransferTransaction, optionally wrapped in a schedule.
+        """
+        tx: TransferTransaction = TransferTransaction(
+            hbar_transfers=params.hbar_transfers
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -94,8 +141,16 @@ class HederaBuilder:
     @staticmethod
     def transfer_hbar_with_allowance(
         params: TransferHbarWithAllowanceParametersNormalised,
-    ):
-        tx = TransferTransaction()
+    ) -> TransferTransaction:
+        """Build a TransferTransaction using approved HBAR allowances.
+
+        Args:
+            params: Normalised HBAR transfer-with-allowance parameters.
+
+        Returns:
+            TransferTransaction: Transaction including all approved HBAR transfers.
+        """
+        tx: TransferTransaction = TransferTransaction()
         for approved_transfer in params.hbar_approved_transfers:
             tx.add_approved_hbar_transfer(
                 approved_transfer.owner_account_id,
@@ -109,13 +164,21 @@ class HederaBuilder:
     @staticmethod
     def transfer_non_fungible_token_with_allowance(
         params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
-    ):
-        tx = TransferTransaction()
+    ) -> Transaction:
+        """Build a TransferTransaction for NFTs using approved allowances.
+
+        Args:
+            params: Normalised NFT transfer-with-allowance parameters.
+
+        Returns:
+            Transaction: TransferTransaction including all approved NFT transfers,
+            optionally wrapped in a schedule.
+        """
+        tx: TransferTransaction = TransferTransaction()
 
         for token_id, transfers in params.nft_approved_transfer.items():
-            for sender_id, receiver_id, serial_number, is_approved in transfers:
-                nft_id = NftId(token_id, serial_number)
-
+            for sender_id, receiver_id, serial_number, _is_approved in transfers:
+                nft_id: NftId = NftId(token_id, serial_number)
                 tx.add_approved_nft_transfer(nft_id, sender_id, receiver_id)
 
         if getattr(params, "transaction_memo", None):
@@ -128,8 +191,17 @@ class HederaBuilder:
     @staticmethod
     def transfer_fungible_token_with_allowance(
         params: TransferFungibleTokenWithAllowanceParametersNormalised,
-    ):
-        tx = TransferTransaction()
+    ) -> Transaction:
+        """Build a TransferTransaction for fungible tokens using approved allowances.
+
+        Args:
+            params: Normalised fungible token transfer-with-allowance parameters.
+
+        Returns:
+            Transaction: TransferTransaction including all approved token transfers,
+            optionally wrapped in a schedule.
+        """
+        tx: TransferTransaction = TransferTransaction()
 
         for token_id, transfers in params.ft_approved_transfer.items():
             for account_id, amount in transfers.items():
@@ -160,108 +232,280 @@ class HederaBuilder:
         )
 
     @staticmethod
-    def airdrop_fungible_token(params: AirdropFungibleTokenParametersNormalised):
+    def airdrop_fungible_token(
+        params: AirdropFungibleTokenParametersNormalised,
+    ) -> TokenAirdropTransaction:
+        """Build a TokenAirdropTransaction for fungible tokens.
+
+        Args:
+            params: Normalised airdrop parameters.
+
+        Returns:
+            TokenAirdropTransaction: Transaction ready for submission.
+        """
         return TokenAirdropTransaction(**vars(params))
 
     @staticmethod
-    def update_token(params: UpdateTokenParametersNormalised):
+    def update_token(params: UpdateTokenParametersNormalised) -> TokenUpdateTransaction:
+        """Build a TokenUpdateTransaction.
+
+        Args:
+            params: Normalised token update parameters.
+
+        Returns:
+            TokenUpdateTransaction: Transaction ready for submission.
+        """
         return TokenUpdateTransaction(**vars(params))
 
     @staticmethod
-    def mint_fungible_token(params: MintFungibleTokenParametersNormalised):
-        tx = TokenMintTransaction(**vars(params))
+    def mint_fungible_token(
+        params: MintFungibleTokenParametersNormalised,
+    ) -> Transaction:
+        """Build a TokenMintTransaction for fungible tokens.
+
+        Args:
+            params: Normalised mint parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+        tx: TokenMintTransaction = TokenMintTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def mint_non_fungible_token(params: MintNonFungibleTokenParametersNormalised):
-        tx = TokenMintTransaction(**vars(params))
+    def mint_non_fungible_token(
+        params: MintNonFungibleTokenParametersNormalised,
+    ) -> Transaction:
+        """Build a TokenMintTransaction for non-fungible tokens.
+
+        Args:
+            params: Normalised mint parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+        tx: TokenMintTransaction = TokenMintTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def dissociate_token(params: DissociateTokenParametersNormalised):
+    def dissociate_token(
+        params: DissociateTokenParametersNormalised,
+    ) -> TokenDissociateTransaction:
+        """Build a TokenDissociateTransaction.
+
+        Args:
+            params: Normalised dissociate token parameters.
+
+        Returns:
+            TokenDissociateTransaction: Transaction ready for submission.
+        """
         return TokenDissociateTransaction(**vars(params))
 
     @staticmethod
     def create_account(params: CreateAccountParametersNormalised):
+        """Build an AccountCreateTransaction.
+
+        Args:
+            params: Normalised account creation parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+
         params_dict = dict(vars(params))
         params_dict.pop("scheduling_params", None)
 
-        tx = AccountCreateTransaction(**params_dict)
+        tx: AccountCreateTransaction = AccountCreateTransaction(**params_dict)
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def delete_account(params: DeleteAccountParametersNormalised):
+    def delete_account(
+        params: DeleteAccountParametersNormalised,
+    ) -> AccountDeleteTransaction:
+        """Build an AccountDeleteTransaction.
+
+        Args:
+            params: Normalised account deletion parameters.
+
+        Returns:
+            AccountDeleteTransaction: Transaction ready for submission.
+        """
         return AccountDeleteTransaction(**vars(params))
 
     @staticmethod
-    def update_account(params: UpdateAccountParametersNormalised):
-        tx = AccountUpdateTransaction(params.account_params)
+    def update_account(params: UpdateAccountParametersNormalised) -> Transaction:
+        """Build an AccountUpdateTransaction.
+
+        Args:
+            params: Normalised account update parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+        tx: AccountUpdateTransaction = AccountUpdateTransaction(params.account_params)
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def delete_token(params: DeleteTokenParametersNormalised):
+    def delete_token(params: DeleteTokenParametersNormalised) -> TokenDeleteTransaction:
+        """Build a TokenDeleteTransaction.
+
+        Args:
+            params: Normalised token deletion parameters.
+
+        Returns:
+            TokenDeleteTransaction: Transaction ready for submission.
+        """
         return TokenDeleteTransaction(**vars(params))
 
     @staticmethod
-    def delete_topic(params: DeleteTopicParametersNormalised):
+    def delete_topic(params: DeleteTopicParametersNormalised) -> TopicDeleteTransaction:
+        """Build a TopicDeleteTransaction.
+
+        Args:
+            params: Normalised topic deletion parameters.
+
+        Returns:
+            TopicDeleteTransaction: Transaction ready for submission.
+        """
         return TopicDeleteTransaction(**vars(params))
 
     @staticmethod
-    def sign_schedule_transaction(params: SignScheduleTransactionParameters):
+    def sign_schedule_transaction(
+        params: SignScheduleTransactionParameters,
+    ) -> ScheduleSignTransaction:
+        """Build a ScheduleSignTransaction.
+
+        Args:
+            params: Normalised schedule signing parameters.
+
+        Returns:
+            ScheduleSignTransaction: Transaction ready for submission.
+        """
         return ScheduleSignTransaction(**vars(params))
 
     @staticmethod
-    def delete_schedule_transaction(params: ScheduleDeleteTransactionParameters):
+    def delete_schedule_transaction(
+        params: ScheduleDeleteTransactionParameters,
+    ) -> ScheduleDeleteTransaction:
+        """Build a ScheduleDeleteTransaction.
+
+        Args:
+            params: Normalised schedule deletion parameters.
+
+        Returns:
+            ScheduleDeleteTransaction: Transaction ready for submission.
+        """
         return ScheduleDeleteTransaction(**vars(params))
 
     @staticmethod
-    def associate_token(params: AssociateTokenParametersNormalised):
+    def associate_token(
+        params: AssociateTokenParametersNormalised,
+    ) -> TokenAssociateTransaction:
+        """Build a TokenAssociateTransaction.
+
+        Args:
+            params: Normalised token association parameters.
+
+        Returns:
+            TokenAssociateTransaction: Transaction ready for submission.
+        """
         return TokenAssociateTransaction(**vars(params))
 
     @staticmethod
-    def _build_account_allowance_approve_tx(params):
-        tx = AccountAllowanceApproveTransaction(**vars(params))
+    def _build_account_allowance_approve_tx(
+        params,
+    ) -> AccountAllowanceApproveTransaction:
+        """Helper to build an AccountAllowanceApproveTransaction with optional memo.
+
+        Args:
+            params: Normalised allowance approval parameters.
+
+        Returns:
+            AccountAllowanceApproveTransaction: Transaction ready for submission.
+        """
+        tx: AccountAllowanceApproveTransaction = AccountAllowanceApproveTransaction(
+            **vars(params)
+        )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
         return tx
 
     @staticmethod
-    def approve_hbar_allowance(params: ApproveHbarAllowanceParametersNormalised):
+    def approve_hbar_allowance(
+        params: ApproveHbarAllowanceParametersNormalised,
+    ) -> AccountAllowanceApproveTransaction:
+        """Build an HBAR allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
-    def approve_nft_allowance(params: ApproveNftAllowanceParametersNormalised):
+    def approve_nft_allowance(
+        params: ApproveNftAllowanceParametersNormalised,
+    ) -> AccountAllowanceApproveTransaction:
+        """Build an NFT allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
-    def approve_token_allowance(params: ApproveTokenAllowanceParametersNormalised):
+    def approve_token_allowance(
+        params: ApproveTokenAllowanceParametersNormalised,
+    ) -> AccountAllowanceApproveTransaction:
+        """Build a fungible token allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
-    def execute_transaction(params: ContractExecuteTransactionParametersNormalised):
-        tx = ContractExecuteTransaction(**vars(params))
+    def execute_transaction(
+        params: ContractExecuteTransactionParametersNormalised,
+    ) -> Transaction:
+        """Build a ContractExecuteTransaction.
+
+        Args:
+            params: Normalised contract execution parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+        tx: ContractExecuteTransaction = ContractExecuteTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
-    def create_topic(params: CreateTopicParametersNormalised):
-        tx = TopicCreateTransaction(**vars(params))
+    def create_topic(params: CreateTopicParametersNormalised) -> TopicCreateTransaction:
+        """Build a TopicCreateTransaction with optional memo.
+
+        Args:
+            params: Normalised topic creation parameters.
+
+        Returns:
+            TopicCreateTransaction: Transaction ready for submission.
+        """
+        tx: TopicCreateTransaction = TopicCreateTransaction(**vars(params))
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
         return tx
 
     @staticmethod
-    def submit_topic_message(params: SubmitTopicMessageParametersNormalised):
-        tx = TopicMessageSubmitTransaction(**vars(params))
+    def submit_topic_message(
+        params: SubmitTopicMessageParametersNormalised,
+    ) -> Transaction:
+        """Build a TopicMessageSubmitTransaction.
+
+        Args:
+            params: Normalised message submission parameters.
+
+        Returns:
+            Transaction: Transaction optionally wrapped in a schedule.
+        """
+        tx: TopicMessageSubmitTransaction = TopicMessageSubmitTransaction(
+            **vars(params)
+        )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
         return HederaBuilder.maybe_wrap_in_schedule(
@@ -269,5 +513,13 @@ class HederaBuilder:
         )
 
     @staticmethod
-    def update_topic(params: UpdateTopicParametersNormalised):
+    def update_topic(params: UpdateTopicParametersNormalised) -> TopicUpdateTransaction:
+        """Build a TopicUpdateTransaction.
+
+        Args:
+            params: Normalised topic update parameters.
+
+        Returns:
+            TopicUpdateTransaction: Transaction ready for submission.
+        """
         return TopicUpdateTransaction(**vars(params))

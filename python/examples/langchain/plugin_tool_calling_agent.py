@@ -8,6 +8,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
+from hedera_agent_kit_py.langchain import HederaAgentKitTool
 from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
 from hedera_agent_kit_py.plugins import core_account_plugin
 from hedera_agent_kit_py.plugins.core_account_plugin import (
@@ -22,28 +23,32 @@ load_dotenv(".env")
 
 async def bootstrap():
     # Initialize LLM
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
 
     # Hedera Client setup (Testnet)
-    operator_id = AccountId.from_string(os.getenv("ACCOUNT_ID"))
-    operator_key = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
+    operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
+    operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
 
-    network = Network(network="testnet")  # ensure this matches SDK expectations
-    client = Client(network)
+    network: Network = Network(
+        network="testnet"
+    )  # ensure this matches SDK expectations
+    client: Client = Client(network)
     client.set_operator(operator_id, operator_key)
 
     # Configuration placeholder
-    configuration = Configuration(
+    configuration: Configuration = Configuration(
         tools=[TRANSFER_HBAR_TOOL],
         plugins=[core_account_plugin],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
     # Prepare Hedera LangChain toolkit
-    hedera_toolkit = HederaLangchainToolkit(client=client, configuration=configuration)
+    hedera_toolkit: HederaLangchainToolkit = HederaLangchainToolkit(
+        client=client, configuration=configuration
+    )
 
     # Fetch LangChain tools from toolkit
-    tools = hedera_toolkit.get_tools()
+    tools: list[HederaAgentKitTool] = hedera_toolkit.get_tools()
 
     # Create the underlying tool-calling agent
     agent = create_agent(
@@ -83,8 +88,8 @@ async def bootstrap():
                 context=configuration.context,
                 config=config,
             )
-
-            print(f"AI: {response}")
+            final_message = response["messages"][-1]
+            print(f"AI: {final_message.content}")
         except Exception as e:
             print("Error:", e)
 
