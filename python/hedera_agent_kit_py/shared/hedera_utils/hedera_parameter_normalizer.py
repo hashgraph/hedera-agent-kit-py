@@ -28,7 +28,7 @@ class HederaParameterNormaliser:
         try:
             return schema.model_validate(params)
         except ValidationError as e:
-            issues = HederaParameterNormaliser.format_validation_errors(e)
+            issues: str = HederaParameterNormaliser.format_validation_errors(e)
             raise ValueError(f"Invalid parameters: {issues}") from e
 
     @staticmethod
@@ -51,13 +51,13 @@ class HederaParameterNormaliser:
         )
 
         # Resolve source account
-        source_account_id = AccountResolver.resolve_account(
+        source_account_id: str = AccountResolver.resolve_account(
             parsed_params.source_account_id, context, client
         )
 
         # Convert transfers to dict[AccountId, int]
         hbar_transfers: dict["AccountId", int] = {}
-        total_tinybars = 0
+        total_tinybars: int = 0
 
         for transfer in parsed_params.transfers:
             tinybars = to_tinybars(Decimal(transfer.amount))
@@ -101,19 +101,19 @@ class HederaParameterNormaliser:
         )
 
         # Resolve admin key
-        admin_key = HederaParameterNormaliser.resolve_key(
+        admin_key: Optional[PublicKey] = HederaParameterNormaliser.resolve_key(
             scheduling.admin_key, user_public_key
         )
 
         # Resolve payer account ID
-        payer_account_id = (
+        payer_account_id: Optional[AccountId] = (
             AccountId.from_string(scheduling.payer_account_id)
             if scheduling.payer_account_id
             else None
         )
 
         # Resolve expiration time
-        expiration_time = (
+        expiration_time: Optional[Timestamp] = (
             Timestamp.from_date(scheduling.expiration_time)
             if scheduling.expiration_time
             else None

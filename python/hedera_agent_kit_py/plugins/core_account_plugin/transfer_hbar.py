@@ -1,28 +1,36 @@
-from typing import Any, Dict
+from __future__ import annotations
 
 from hiero_sdk_python import Client, ResponseCode
+from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import TransferHbarParameters
+from hedera_agent_kit_py.shared.models import (
+    ExecutedTransactionToolResponse,
+    ToolResponse,
+)
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    TransferHbarParameters,
+    TransferHbarParametersNormalised,
+)
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
     RawTransactionResponse,
 )
+from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
 def transfer_hbar_prompt(context: Context = {}) -> str:
-    context_snippet = PromptGenerator.get_context_snippet(context)
-    source_account_desc = PromptGenerator.get_account_parameter_description(
+    context_snippet: str = PromptGenerator.get_context_snippet(context)
+    source_account_desc: str = PromptGenerator.get_account_parameter_description(
         "source_account_id", context
     )
-    usage_instructions = PromptGenerator.get_parameter_usage_instructions()
-    scheduled_desc = PromptGenerator.get_scheduled_transaction_params_description(
+    usage_instructions: str = PromptGenerator.get_parameter_usage_instructions()
+    scheduled_desc: str = PromptGenerator.get_scheduled_transaction_params_description(
         context
     )
 
@@ -57,43 +65,46 @@ async def transfer_hbar(
     client: Client,
     context: Context,
     params: TransferHbarParameters,
-) -> Dict[str, Any]:
+) -> ToolResponse:
     """
     Execute an HBAR transfer.
     """
     try:
         # Normalize parameters
-        normalised_params = await HederaParameterNormaliser.normalise_transfer_hbar(
-            params, context, client
+        normalised_params: TransferHbarParametersNormalised = (
+            await HederaParameterNormaliser.normalise_transfer_hbar(
+                params, context, client
+            )
         )
 
         # Build transaction
-        tx = HederaBuilder.transfer_hbar(normalised_params)
+        tx: Transaction = HederaBuilder.transfer_hbar(normalised_params)
 
         # Execute transaction and post-process result
         return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
-        message = f"Failed to transfer HBAR: {str(e)}"
+        message: str = f"Failed to transfer HBAR: {str(e)}"
         print("[transfer_hbar_tool]", message)
-        return {
-            "raw": {
-                "status": str(ResponseCode.INVALID_TRANSACTION),
-                "error": message,
-            },
-            "human_message": message,
-        }
+        return ExecutedTransactionToolResponse(
+            raw=RawTransactionResponse(
+                status=str(ResponseCode.INVALID_TRANSACTION), error=message
+            ),
+            human_message=message,
+        )
 
 
-TRANSFER_HBAR_TOOL = "transfer_hbar_tool"
+TRANSFER_HBAR_TOOL: str = "transfer_hbar_tool"
 
 
 class TransferHbarTool(Tool):
     def __init__(self, context: Context):
-        self.method = TRANSFER_HBAR_TOOL
-        self.name = TRANSFER_HBAR_TOOL
-        self.description = transfer_hbar_prompt(context)
-        self.parameters = TransferHbarParameters
+        self.method: str = TRANSFER_HBAR_TOOL
+        self.name: str = TRANSFER_HBAR_TOOL
+        self.description: str = transfer_hbar_prompt(context)
+        self.parameters: type[TransferHbarParameters] = TransferHbarParameters
 
-    async def execute(self, client: Client, context: Context, params: Any) -> Any:
+    async def execute(
+        self, client: Client, context: Context, params: TransferHbarParameters
+    ) -> ToolResponse:
         return await transfer_hbar(client, context, params)

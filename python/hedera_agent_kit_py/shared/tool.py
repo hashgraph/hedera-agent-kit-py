@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any, Type
+
 from hiero_sdk_python import Client
 from pydantic import BaseModel
 
 from .configuration import Context
+from .models import ToolResponse
 
 
 class Tool(ABC):
@@ -17,7 +21,7 @@ class Tool(ABC):
     parameters: Type[BaseModel]
 
     @abstractmethod
-    async def execute(self, client: Client, context: Context, params: Any) -> Any:
+    async def execute(self, client: Client, context: Context, params: Any) -> ToolResponse:
         """
         Execute the tool’s main logic.
         Must be implemented by all subclasses.

@@ -7,42 +7,17 @@ from hiero_sdk_python import (
     Client,
     AccountId,
     TransactionId,
-    TokenId,
-    TopicId,
     TransactionReceipt,
 )
-from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context
-
-
-class RawTransactionResponse:
-    def __init__(
-        self,
-        status: str,
-        account_id: Optional[AccountId],
-        token_id: Optional[TokenId],
-        transaction_id: str,
-        topic_id: Optional[TopicId],
-        schedule_id: Optional[ScheduleId],
-    ):
-        self.status = status
-        self.account_id = account_id
-        self.token_id = token_id
-        self.transaction_id = transaction_id
-        self.topic_id = topic_id
-        self.schedule_id = schedule_id
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "status": str(self.status),
-            "accountId": str(self.account_id),
-            "tokenId": str(self.token_id),
-            "transactionId": str(self.transaction_id),
-            "topicId": str(self.topic_id),
-            "scheduleId": str(self.schedule_id),
-        }
+from hedera_agent_kit_py.shared.models import (
+    RawTransactionResponse,
+    ExecutedTransactionToolResponse,
+    ReturnBytesToolResponse,
+    ToolResponse,
+)
 
 
 class TxModeStrategy(ABC):
@@ -53,7 +28,7 @@ class TxModeStrategy(ABC):
         client: Client,
         context: Context,
         post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
-    ) -> Any:
+    ) -> ToolResponse:
         pass
 
 
@@ -69,7 +44,7 @@ class ExecuteStrategy(TxModeStrategy):
         client: Client,
         context: Context,
         post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
-    ) -> Dict[str, Any]:
+    ) -> ExecutedTransactionToolResponse:
         post_process = post_process or self.default_post_process
         receipt: TransactionReceipt = tx.execute(client)
         raw_transaction_response = RawTransactionResponse(
@@ -80,10 +55,10 @@ class ExecuteStrategy(TxModeStrategy):
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
         )
-        return {
-            "raw": raw_transaction_response.to_dict(),
-            "humanMessage": post_process(raw_transaction_response),
-        }
+        return ExecutedTransactionToolResponse(
+            raw=raw_transaction_response,
+            human_message=post_process(raw_transaction_response),
+        )
 
 
 class ReturnBytesStrategy(TxModeStrategy):
@@ -93,15 +68,13 @@ class ReturnBytesStrategy(TxModeStrategy):
         _client: Client,
         context: Context,
         post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
-    ) -> Dict[str, bytes]:
+    ) -> ReturnBytesToolResponse:
         if not context.account_id:
             raise ValueError("Context account_id is required for RETURN_BYTES mode")
         tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
-        # tx.set_transaction_id(tx_id).freeze() FIXME: Transaction.freeze() is not yet implemented in the SDK
+        # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
         # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
-        return {
-            "bytes": b"bytes"
-        }  # TODO: Remove this placeholder once the above methods are implemented
+        return ReturnBytesToolResponse(bytes_data=b"bytes")  # temporary placeholder
 
 
 def get_strategy_from_context(context: Context) -> TxModeStrategy:
@@ -115,6 +88,6 @@ async def handle_transaction(
     client: Client,
     context: Context,
     post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
-) -> Any:
+) -> ToolResponse:
     strategy = get_strategy_from_context(context)
     return await strategy.handle(tx, client, context, post_process)

@@ -1,9 +1,10 @@
-from pprint import pprint
+from __future__ import annotations
+
 from typing import List, Dict
 
+from hedera_agent_kit_py.shared.tool import Tool
 from .configuration import Context
 from .plugin import Plugin
-from .tool import Tool
 from ..plugins.core_account_plugin import core_account_plugin
 
 CORE_PLUGINS: List[Plugin] = [
@@ -30,7 +31,7 @@ class PluginRegistry:
         plugin_tools: List[Tool] = []
         for plugin in CORE_PLUGINS:
             try:
-                tools = plugin.tools(context)
+                tools: list[Tool] = plugin.tools(context)
                 plugin_tools.extend(tools)
             except Exception as error:
                 print(f'Error loading tools from core plugin "{plugin.name}": {error}')
@@ -40,7 +41,7 @@ class PluginRegistry:
         plugin_tools: List[Tool] = []
         for plugin in self.plugins.values():
             try:
-                tools = plugin.tools(context)
+                tools: list[Tool] = plugin.tools(context)
                 plugin_tools.extend(tools)
             except Exception as error:
                 print(f'Error loading tools from plugin "{plugin.name}": {error}')

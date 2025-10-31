@@ -1,9 +1,11 @@
+import json
 from typing import Any, Type
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from hedera_agent_kit_py import HederaAgentAPI
+from hedera_agent_kit_py.shared.models import ToolResponse
 
 
 class HederaAgentKitTool(BaseTool):
@@ -14,7 +16,7 @@ class HederaAgentKitTool(BaseTool):
 
     def __init__(
         self,
-        hedera_api: Any,
+        hedera_api: HederaAgentAPI,
         method: str,
         schema: Type[BaseModel],
         description: str,
@@ -28,10 +30,12 @@ class HederaAgentKitTool(BaseTool):
             method=method,
         )
 
-    async def _run(self, **kwargs: Any) -> Any:
+    async def _run(self, **kwargs: Any) -> str:
         """Run the Hedera API method synchronously."""
-        return await self.hedera_api.run(self.method, kwargs)
+        result: ToolResponse = await self.hedera_api.run(self.method, kwargs)
+        return json.dumps(result.to_dict(), indent=2)
 
-    async def _arun(self, **kwargs: Any) -> Any:
+    async def _arun(self, **kwargs: Any) -> str:
         """Run the Hedera API method asynchronously (optional)."""
-        return await self.hedera_api.run(self.method, kwargs)
+        result: ToolResponse = await self.hedera_api.run(self.method, kwargs)
+        return json.dumps(result.to_dict(), indent=2)

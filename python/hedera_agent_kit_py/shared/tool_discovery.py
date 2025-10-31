@@ -1,12 +1,15 @@
-from typing import List, Optional, Set, Any
+from __future__ import annotations
+
+from typing import Optional, Any
+
 from .configuration import Context, Configuration
-from .tool import Tool
 from .plugin import Plugin
 from .plugin_registry import PluginRegistry
+from .tool import Tool
 
 
 class ToolDiscovery:
-    def __init__(self, plugins: Optional[List[Plugin]] = None):
+    def __init__(self, plugins: Optional[list[Plugin]] = None):
         self.plugin_registry = PluginRegistry()
         if plugins:
             for plugin in plugins:
@@ -14,13 +17,13 @@ class ToolDiscovery:
 
     def get_all_tools(
         self, context: Context, configuration: Optional[Configuration] = None
-    ) -> List[Tool]:
+    ) -> list[Tool]:
         # Get plugin tools
-        plugin_tools = self.plugin_registry.get_tools(context)
+        plugin_tools: list[Tool] = self.plugin_registry.get_tools(context)
 
         # Merge all tools (core tools take precedence in case of name conflicts)
-        all_tools: List[Any] = []
-        all_tool_names: Set[str] = set()
+        all_tools: list[Any] = []
+        all_tool_names: set[str] = set()
 
         for plugin_tool in plugin_tools:
             if plugin_tool.method not in all_tool_names:
@@ -38,5 +41,5 @@ class ToolDiscovery:
         return all_tools
 
     @staticmethod
-    def create_from_configuration(configuration: Configuration) -> "ToolDiscovery":
+    def create_from_configuration(configuration: Configuration) -> ToolDiscovery:
         return ToolDiscovery(configuration.plugins or [])

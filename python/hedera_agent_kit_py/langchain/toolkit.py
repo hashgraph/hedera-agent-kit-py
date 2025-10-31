@@ -1,22 +1,25 @@
-from typing import List, Any
+from hiero_sdk_python import Client
 
-from hedera_agent_kit_py import Configuration
+from hedera_agent_kit_py import Configuration, Tool
 from hedera_agent_kit_py.langchain.tool import HederaAgentKitTool
 from hedera_agent_kit_py.shared import ToolDiscovery, HederaAgentAPI
+from hedera_agent_kit_py.shared.configuration import Context
 
 
 class HederaLangchainToolkit:
 
-    def __init__(self, client: Any, configuration: Configuration):
-        context = configuration.context or {}
+    def __init__(self, client: Client, configuration: Configuration):
+        context: Context = configuration.context or {}
 
         # Discover tools based on configuration
-        tool_discovery = ToolDiscovery.create_from_configuration(configuration)
-        all_tools = tool_discovery.get_all_tools(context, configuration)
+        tool_discovery: ToolDiscovery = ToolDiscovery.create_from_configuration(
+            configuration
+        )
+        all_tools: list[Tool] = tool_discovery.get_all_tools(context, configuration)
 
         # Create API wrapper and LangChain-compatible tools
         self._hedera_agentkit = HederaAgentAPI(client, context, all_tools)
-        self.tools: List[HederaAgentKitTool] = [
+        self.tools: list[HederaAgentKitTool] = [
             HederaAgentKitTool(
                 hedera_api=self._hedera_agentkit,
                 method=tool.method,
@@ -27,7 +30,7 @@ class HederaLangchainToolkit:
             for tool in all_tools
         ]
 
-    def get_tools(self) -> List[HederaAgentKitTool]:
+    def get_tools(self) -> list[HederaAgentKitTool]:
         """Return all registered LangChain-compatible tools."""
         return self.tools
 
