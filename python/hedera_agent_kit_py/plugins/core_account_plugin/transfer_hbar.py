@@ -17,8 +17,8 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import 
     HederaParameterNormaliser,
 )
 from hedera_agent_kit_py.shared.models import (
-    ExecutedTransactionToolResponse,
     ToolResponse,
+    RawTransactionResponse,
 )
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
@@ -26,7 +26,6 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
-    RawTransactionResponse,
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
@@ -126,11 +125,9 @@ async def transfer_hbar(
     except Exception as e:
         message: str = f"Failed to transfer HBAR: {str(e)}"
         print("[transfer_hbar_tool]", message)
-        return ExecutedTransactionToolResponse(
-            raw=RawTransactionResponse(
-                status=str(ResponseCode.INVALID_TRANSACTION), error=message
-            ),
+        return ToolResponse(
             human_message=message,
+            error=message,
         )
 
 
@@ -163,6 +160,6 @@ class TransferHbarTool(Tool):
 
         Returns:
             The result of the transfer as a ToolResponse, including a human-readable
-            message and the raw transaction response.
+            message and error information if applicable.
         """
         return await transfer_hbar(client, context, params)

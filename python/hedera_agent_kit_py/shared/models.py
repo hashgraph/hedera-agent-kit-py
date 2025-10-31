@@ -8,30 +8,44 @@ All models provide `to_dict`/`from_dict` helpers for JSON-friendly transport.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from hiero_sdk_python import AccountId, TokenId, TopicId, TransactionId
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
 
 
-class ToolResponse(ABC):
-    """Base class for all transaction tool responses."""
+@dataclass(kw_only=True)
+class ToolResponse:
+    """Base class for all tool responses.
 
-    @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize to a dictionary."""
-        pass
+    Attributes:
+        human_message: A human-readable description of the result.
+        error: Optional error message if something went wrong.
+    """
+
+    human_message: str
+    error: Optional[str] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the base fields for all tool responses."""
+        return {
+            "human_message": self.human_message,
+            "error": self.error,
+        }
 
     @classmethod
-    @abstractmethod
-    def from_dict(cls, data: Dict[str, Any]) -> ToolResponse:
-        """Deserialize from a dictionary."""
-        pass
+    def from_dict(cls, data: dict[str, Any]) -> ToolResponse:
+        """Deserialize base fields for a tool response."""
+        return cls(
+            human_message=data.get("human_message", ""),
+            error=data.get("error"),
+        )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class RawTransactionResponse:
+    """Represents a raw transaction result from the Hedera network."""
+
     status: str
     account_id: Optional[AccountId] = None
     token_id: Optional[TokenId] = None
@@ -49,7 +63,7 @@ class RawTransactionResponse:
             "transaction_id": str(self.transaction_id) if self.transaction_id else None,
             "topic_id": str(self.topic_id) if self.topic_id else None,
             "schedule_id": str(self.schedule_id) if self.schedule_id else None,
-            "error": str(self.error) if self.error else None,
+            "error": self.error,
         }
 
     @classmethod
@@ -65,7 +79,11 @@ class RawTransactionResponse:
             token_id=(
                 TokenId.from_string(data["token_id"]) if data.get("token_id") else None
             ),
-            transaction_id=TransactionId.from_string(data.get("transaction_id")),
+            transaction_id=(
+                TransactionId.from_string(data["transaction_id"])
+                if data.get("transaction_id")
+                else None
+            ),
             topic_id=(
                 TopicId.from_string(data["topic_id"]) if data.get("topic_id") else None
             ),
@@ -74,24 +92,26 @@ class RawTransactionResponse:
                 if data.get("schedule_id")
                 else None
             ),
-            error=data.get("error", ""),
+            error=data.get("error"),
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ExecutedTransactionToolResponse(ToolResponse):
     """A tool response representing a fully executed transaction."""
 
     raw: RawTransactionResponse
-    human_message: str
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the response to a dictionary suitable for JSON output."""
-        return {
-            "type": "executed_transaction",
-            "raw": self.raw.to_dict(),
-            "human_message": self.human_message,
-        }
+        data = super().to_dict()
+        data.update(
+            {
+                "type": "executed_transaction",
+                "raw": self.raw.to_dict(),
+            }
+        )
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ExecutedTransactionToolResponse:
@@ -99,21 +119,30 @@ class ExecutedTransactionToolResponse(ToolResponse):
         return cls(
             raw=RawTransactionResponse.from_dict(data["raw"]),
             human_message=data.get("human_message", ""),
+            error=data.get("error"),
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReturnBytesToolResponse(ToolResponse):
     """A tool response representing a transaction serialized to bytes."""
 
     bytes_data: bytes
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": "return_bytes",
-            "bytes_data": self.bytes_data.hex(),  # hex for JSON safety
-        }
+        data = super().to_dict()
+        data.update(
+            {
+                "type": "return_bytes",
+                "bytes_data": self.bytes_data.hex(),  # hex for JSON safety
+            }
+        )
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ReturnBytesToolResponse:
-        return cls(bytes_data=bytes.fromhex(data["bytes_data"]))
+        return cls(
+            bytes_data=bytes.fromhex(data["bytes_data"]),
+            human_message=data.get("human_message", ""),
+            error=data.get("error"),
+        )
