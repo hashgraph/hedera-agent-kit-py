@@ -1,3 +1,9 @@
+"""Common response models used by Hedera Agent Kit tools.
+
+This module defines abstract and concrete response types that tools return,
+including executed transaction results and a bytes-returning placeholder.
+All models provide `to_dict`/`from_dict` helpers for JSON-friendly transport.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -79,6 +85,7 @@ class ExecutedTransactionToolResponse(ToolResponse):
     human_message: str
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize the response to a dictionary suitable for JSON output."""
         return {
             "type": "executed_transaction",
             "raw": self.raw.to_dict(),
@@ -87,6 +94,7 @@ class ExecutedTransactionToolResponse(ToolResponse):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ExecutedTransactionToolResponse:
+        """Reconstruct an `ExecutedTransactionToolResponse` from a dictionary."""
         return cls(
             raw=RawTransactionResponse.from_dict(data["raw"]),
             human_message=data.get("human_message", ""),

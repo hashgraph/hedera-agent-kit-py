@@ -1,3 +1,10 @@
+"""Utilities for building and executing HBAR transfer operations via the Agent Kit.
+
+This module exposes:
+- transfer_hbar_prompt: Generate a prompt/description for the transfer tool.
+- transfer_hbar: Execute an HBAR transfer transaction.
+- TransferHbarTool: Tool wrapper exposing the transfer operation to the runtime.
+"""
 from __future__ import annotations
 
 from hiero_sdk_python import Client, ResponseCode
@@ -25,6 +32,15 @@ from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
 def transfer_hbar_prompt(context: Context = {}) -> str:
+    """Generate a human-readable description of the HBAR transfer tool.
+
+    Args:
+        context: Optional contextual configuration that may influence the prompt,
+            such as default account information or scheduling capabilities.
+
+    Returns:
+        A string describing the tool, its parameters, and usage instructions.
+    """
     context_snippet: str = PromptGenerator.get_context_snippet(context)
     source_account_desc: str = PromptGenerator.get_account_parameter_description(
         "source_account_id", context
@@ -52,6 +68,16 @@ Parameters:
 
 
 def post_process(response: RawTransactionResponse) -> str:
+    """Produce a human-readable summary for a transfer transaction result.
+
+    Args:
+        response: The raw response returned by the transaction execution, which
+            may contain a schedule_id if the transaction was scheduled.
+
+    Returns:
+        A concise message describing the status and any relevant identifiers
+        (e.g., transaction ID, schedule ID).
+    """
     if getattr(response, "schedule_id", None):
         return (
             f"Scheduled HBAR transfer created successfully.\n"
@@ -62,12 +88,25 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def transfer_hbar(
-    client: Client,
-    context: Context,
-    params: TransferHbarParameters,
+        client: Client,
+        context: Context,
+        params: TransferHbarParameters,
 ) -> ToolResponse:
-    """
-    Execute an HBAR transfer.
+    """Execute an HBAR transfer using normalized parameters and a built transaction.
+
+    Args:
+        client: Hedera client used to execute transactions.
+        context: Runtime context providing configuration and defaults.
+        params: User-supplied parameters describing the transfer(s) to perform.
+
+    Returns:
+        A ToolResponse wrapping the raw transaction response and a human-friendly
+        message indicating success or failure.
+
+    Notes:
+        This function captures exceptions and returns a failure ToolResponse
+        rather than raising, to keep tool behavior consistent for callers.
+        It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
         # Normalize parameters
@@ -98,13 +137,31 @@ TRANSFER_HBAR_TOOL: str = "transfer_hbar_tool"
 
 
 class TransferHbarTool(Tool):
+    """Tool wrapper that exposes the HBAR transfer capability to the Agent runtime."""
+
     def __init__(self, context: Context):
+        """Initialize the tool metadata and parameter specification.
+
+        Args:
+            context: Runtime context used to tailor the tool description.
+        """
         self.method: str = TRANSFER_HBAR_TOOL
         self.name: str = TRANSFER_HBAR_TOOL
         self.description: str = transfer_hbar_prompt(context)
         self.parameters: type[TransferHbarParameters] = TransferHbarParameters
 
     async def execute(
-        self, client: Client, context: Context, params: TransferHbarParameters
+            self, client: Client, context: Context, params: TransferHbarParameters
     ) -> ToolResponse:
+        """Execute the HBAR transfer using the provided client, context, and params.
+
+        Args:
+            client: Hedera client used to execute transactions.
+            context: Runtime context providing configuration and defaults.
+            params: Transfer parameters accepted by this tool.
+
+        Returns:
+            The result of the transfer as a ToolResponse, including a human-readable
+            message and the raw transaction response.
+        """
         return await transfer_hbar(client, context, params)

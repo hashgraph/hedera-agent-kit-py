@@ -1,3 +1,9 @@
+"""Abstract tool interface for defining executable Agent Kit tools.
+
+This module defines the base `Tool` class that all concrete tools must extend.
+Each tool exposes a coroutine `execute` method that performs the tool's action
+using a Hedera `Client`, the runtime `Context`, and validated parameters.
+"""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

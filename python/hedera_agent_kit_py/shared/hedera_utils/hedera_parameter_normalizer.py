@@ -16,14 +16,31 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 
 
 class HederaParameterNormaliser:
+    """Utility class to normalise and validate Hedera transaction parameters.
+
+    This class provides static methods for:
+        - Validating and parsing parameters against Pydantic schemas.
+        - Normalising HBAR transfer parameters to Python SDK format.
+        - Resolving account IDs and public keys.
+        - Converting scheduling parameters to ScheduleCreateParams.
+    """
+
     @staticmethod
     def parse_params_with_schema(
         params: Any,
         schema: Type[BaseModel],
     ) -> BaseModel:
-        """
-        Validate and parse parameters using a pydantic schema.
-        Raises ValueError if validation fails.
+        """Validate and parse parameters using a Pydantic schema.
+
+        Args:
+            params: The raw input parameters to validate.
+            schema: The Pydantic model to validate against.
+
+        Returns:
+            BaseModel: An instance of the validated Pydantic model.
+
+        Raises:
+            ValueError: If validation fails, with a formatted description of the issues.
         """
         try:
             return schema.model_validate(params)
@@ -33,6 +50,14 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def format_validation_errors(error: ValidationError) -> str:
+        """Format Pydantic validation errors into a single human-readable string.
+
+        Args:
+            error: The ValidationError instance from Pydantic.
+
+        Returns:
+            str: Formatted error message summarising all field errors.
+        """
         return "; ".join(
             f'Field "{err["loc"][0]}" - {err["msg"]}' for err in error.errors()
         )
@@ -43,6 +68,23 @@ class HederaParameterNormaliser:
         context: Context,
         client: Client,
     ) -> TransferHbarParametersNormalised:
+        """Normalise HBAR transfer parameters to a format compatible with Python SDK.
+
+        This resolves source accounts, converts amounts to tinybars, and optionally
+        handles scheduled transactions.
+
+        Args:
+            params: Raw HBAR transfer parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            TransferHbarParametersNormalised: Normalised HBAR transfer parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If transfer amounts are invalid (<= 0).
+        """
         parsed_params: TransferHbarParameters = cast(
             TransferHbarParameters,
             HederaParameterNormaliser.parse_params_with_schema(
@@ -70,7 +112,7 @@ class HederaParameterNormaliser:
         # Subtract total from the source account
         hbar_transfers[AccountId.from_string(source_account_id)] = -total_tinybars
 
-        # Handle scheduling
+        # Handle optional scheduling
         scheduling_params = None
         if getattr(parsed_params, "scheduling_params", None):
             scheduling_params = (
@@ -91,9 +133,17 @@ class HederaParameterNormaliser:
         context: Context,
         client: Client,
     ) -> ScheduleCreateParams:
-        """
-        Normalises SchedulingParams to ScheduleCreateParams compatible with Python SDK.
-        Resolves keys and account IDs.
+        """Convert SchedulingParams to a ScheduleCreateParams instance compatible with Python SDK.
+
+        Resolves keys, payer account ID, and expiration time.
+
+        Args:
+            scheduling: Raw scheduling parameters.
+            context: Application context for key/account resolution.
+            client: Hedera Client instance used for key resolution.
+
+        Returns:
+            ScheduleCreateParams: Normalised scheduling parameters for SDK transactions.
         """
         # Resolve default user key
         user_public_key: PublicKey = await AccountResolver.get_default_public_key(
@@ -131,6 +181,15 @@ class HederaParameterNormaliser:
         raw_value: Union[str, bool, None],
         user_key: PublicKey,
     ) -> Optional[PublicKey]:
+        """Resolve a raw key input to a PublicKey instance.
+
+        Args:
+            raw_value: Can be None, a string representation of a key, or a boolean.
+            user_key: Default user key to return if raw_value is True.
+
+        Returns:
+            Optional[PublicKey]: Resolved PublicKey or None if not applicable.
+        """
         if raw_value is None:
             return None
         if isinstance(raw_value, str):
