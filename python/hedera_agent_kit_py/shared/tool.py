@@ -4,6 +4,7 @@ This module defines the base `Tool` class that all concrete tools must extend.
 Each tool exposes a coroutine `execute` method that performs the tool's action
 using a Hedera `Client`, the runtime `Context`, and validated parameters.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -27,7 +28,9 @@ class Tool(ABC):
     parameters: Type[BaseModel]
 
     @abstractmethod
-    async def execute(self, client: Client, context: Context, params: Any) -> ToolResponse:
+    async def execute(
+        self, client: Client, context: Context, params: Any
+    ) -> ToolResponse:
         """
         Execute the tool’s main logic.
         Must be implemented by all subclasses.

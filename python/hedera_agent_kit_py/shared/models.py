@@ -4,6 +4,7 @@ This module defines abstract and concrete response types that tools return,
 including executed transaction results and a bytes-returning placeholder.
 All models provide `to_dict`/`from_dict` helpers for JSON-friendly transport.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

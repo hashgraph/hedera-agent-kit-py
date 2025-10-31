@@ -4,6 +4,7 @@ This module defines a simple registry to collect and expose tool providers
 (plugins). It can load predefined core plugins or user-registered plugins and
 return a flat list of `Tool` instances given a `Context`.
 """
+
 from __future__ import annotations
 
 from typing import List, Dict

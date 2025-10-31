@@ -4,6 +4,7 @@ This module defines a strategy interface and implementations that determine how
 transactions are handled (executed on-chain or returned as bytes) according to
 `Context.mode`. It also provides a `handle_transaction` helper.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

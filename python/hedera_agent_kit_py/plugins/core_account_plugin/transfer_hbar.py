@@ -5,6 +5,7 @@ This module exposes:
 - transfer_hbar: Execute an HBAR transfer transaction.
 - TransferHbarTool: Tool wrapper exposing the transfer operation to the runtime.
 """
+
 from __future__ import annotations
 
 from hiero_sdk_python import Client, ResponseCode
@@ -88,9 +89,9 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def transfer_hbar(
-        client: Client,
-        context: Context,
-        params: TransferHbarParameters,
+    client: Client,
+    context: Context,
+    params: TransferHbarParameters,
 ) -> ToolResponse:
     """Execute an HBAR transfer using normalized parameters and a built transaction.
 
@@ -151,7 +152,7 @@ class TransferHbarTool(Tool):
         self.parameters: type[TransferHbarParameters] = TransferHbarParameters
 
     async def execute(
-            self, client: Client, context: Context, params: TransferHbarParameters
+        self, client: Client, context: Context, params: TransferHbarParameters
     ) -> ToolResponse:
         """Execute the HBAR transfer using the provided client, context, and params.
 
