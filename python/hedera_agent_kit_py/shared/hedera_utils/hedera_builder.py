@@ -159,11 +159,8 @@ class HederaBuilder:
             TransferTransaction: Transaction including all approved HBAR transfers.
         """
         tx: TransferTransaction = TransferTransaction()
-        for approved_transfer in params.hbar_approved_transfers:
-            tx.add_approved_hbar_transfer(
-                approved_transfer.owner_account_id,
-                approved_transfer.amount,
-            )
+        for owner_account_id, amount in params.hbar_approved_transfers.items():
+            tx.add_approved_hbar_transfer(owner_account_id, amount)
 
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
@@ -330,7 +327,10 @@ class HederaBuilder:
             Transaction: Transaction optionally wrapped in a schedule.
         """
         tx: AccountCreateTransaction = AccountCreateTransaction(
-            key=params.key, initial_balance=params.initial_balance, memo=params.memo
+            key=params.key,
+            initial_balance=params.initial_balance,
+            memo=params.memo,
+            # max_automatic_token_associations=params.max_automatic_token_associations, FIXME: add this back when SDK supports it
         )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)

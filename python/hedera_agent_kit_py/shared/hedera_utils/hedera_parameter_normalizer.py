@@ -1,18 +1,25 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
     SchedulingParams,
+    CreateAccountParameters,
+    CreateAccountParametersNormalised,
 )
+from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
 class HederaParameterNormaliser:
@@ -27,8 +34,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def parse_params_with_schema(
-        params: Any,
-        schema: Type[BaseModel],
+            params: Any,
+            schema: Type[BaseModel],
     ) -> BaseModel:
         """Validate and parse parameters using a Pydantic schema.
 
@@ -64,9 +71,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar(
-        params: TransferHbarParameters,
-        context: Context,
-        client: Client,
+            params: TransferHbarParameters,
+            context: Context,
+            client: Client,
     ) -> TransferHbarParametersNormalised:
         """Normalise HBAR transfer parameters to a format compatible with Python SDK.
 
@@ -129,9 +136,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_scheduled_transaction_params(
-        scheduling: SchedulingParams,
-        context: Context,
-        client: Client,
+            scheduling: SchedulingParams,
+            context: Context,
+            client: Client,
     ) -> ScheduleCreateParams:
         """Convert SchedulingParams to a ScheduleCreateParams instance compatible with Python SDK.
 
@@ -178,8 +185,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def resolve_key(
-        raw_value: Union[str, bool, None],
-        user_key: PublicKey,
+            raw_value: Union[str, bool, None],
+            user_key: PublicKey,
     ) -> Optional[PublicKey]:
         """Resolve a raw key input to a PublicKey instance.
 
@@ -200,3 +207,76 @@ class HederaParameterNormaliser:
         if raw_value:
             return user_key
         return None
+
+    @staticmethod
+    async def normalise_create_account(
+            params: CreateAccountParameters,
+            context: Context,
+            client: Client,
+    ) -> CreateAccountParametersNormalised:
+        """Normalise account creation parameters to a format compatible with Python SDK.
+
+        This resolves the public key from multiple sources (param, operator, or mirror node),
+        and optionally handles scheduled transactions.
+
+        Args:
+            params: Raw account creation parameters.
+            context: Application context for resolving accounts and keys.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            CreateAccountParametersNormalised: Normalised account creation parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If no public key can be resolved from any source.
+        """
+        parsed_params: CreateAccountParameters = cast(
+            CreateAccountParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateAccountParameters
+            ),
+        )
+
+        # cast input to tinybars and build an instance of Hbar class
+        initial_balance = Hbar(to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True)
+
+        # Try resolving the public_key in priority order
+        public_key = parsed_params.public_key or (
+            client.operator_private_key.public_key().to_string_der()
+            if client.operator_private_key
+            else None
+        )
+
+        if not public_key:
+            default_account_id = AccountResolver.get_default_account(context, client)
+            if default_account_id:
+                mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
+                    context.mirrornode_service, ledger_id_from_network(client.network)
+                )
+                account = await mirrornode_service.get_account(default_account_id)
+                public_key = account.get("account_public_key")
+
+        if not public_key:
+            raise ValueError(
+                "Unable to resolve public key: no param, mirror node, or client operator key available."
+            )
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = (
+                    await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                        parsed_params.scheduling_params, context, client
+                    )
+                )
+                print(f"sheduled params: {scheduling_params.wait_for_expiry}")
+
+        return CreateAccountParametersNormalised(
+            memo=parsed_params.account_memo,
+            initial_balance=initial_balance,
+            key=PublicKey.from_string(public_key),
+            scheduling_params=scheduling_params,
+            # max_automatic_token_associations=parsed_params.max_automatic_token_associations
+        )
