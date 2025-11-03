@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 
 def to_hbar(tinybars: Decimal) -> Decimal:
@@ -9,4 +9,7 @@ def to_hbar(tinybars: Decimal) -> Decimal:
 
 
 def to_tinybars(hbar: Decimal) -> int:
-    return hbar * Decimal("100000000")
+    tinybars = hbar * Decimal("100000000")
+    # Round to the nearest integer using Decimal's rounding
+    tinybars_rounded = tinybars.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return int(tinybars_rounded)

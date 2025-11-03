@@ -8,7 +8,7 @@ transactions are handled (executed on-chain or returned as bytes) according to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Dict
+from typing import Any, Callable, Optional
 
 from hiero_sdk_python import (
     Client,

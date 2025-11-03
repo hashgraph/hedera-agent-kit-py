@@ -1,4 +1,3 @@
-from pprint import pprint
 from unittest.mock import AsyncMock
 
 import pytest

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from pprint import pprint
 
 from dotenv import load_dotenv
 import pytest

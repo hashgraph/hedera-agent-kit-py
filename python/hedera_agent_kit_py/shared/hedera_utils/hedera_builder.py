@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import Optional
 
 from hiero_sdk_python import (
@@ -70,7 +69,7 @@ class HederaBuilder:
 
     @staticmethod
     def maybe_wrap_in_schedule(
-        tx, scheduling_params: Optional[ScheduleCreateParams] = None
+            tx, scheduling_params: Optional[ScheduleCreateParams] = None
     ) -> ScheduleCreateTransaction:
         """Wrap a transaction in a schedule if scheduling parameters are provided.
 
@@ -89,7 +88,7 @@ class HederaBuilder:
 
     @staticmethod
     def create_fungible_token(
-        params: CreateFungibleTokenParametersNormalised,
+            params: CreateFungibleTokenParametersNormalised,
     ) -> Transaction:
         """Build a TokenCreateTransaction for a fungible token.
 
@@ -106,7 +105,7 @@ class HederaBuilder:
 
     @staticmethod
     def create_non_fungible_token(
-        params: CreateNonFungibleTokenParametersNormalised,
+            params: CreateNonFungibleTokenParametersNormalised,
     ) -> Transaction:
         """Build a TokenCreateTransaction for a non-fungible token.
 
@@ -121,6 +120,7 @@ class HederaBuilder:
             tx, getattr(params, "scheduling_params", None)
         )
 
+    # FIXME: TransferTransaction does not support setting memo.
     @staticmethod
     def transfer_hbar(params: TransferHbarParametersNormalised) -> Transaction:
         """Build a TransferTransaction for transferring HBAR.
@@ -131,6 +131,7 @@ class HederaBuilder:
         Returns:
             Transaction: TransferTransaction, optionally wrapped in a schedule.
         """
+
         tx: TransferTransaction = TransferTransaction(
             hbar_transfers=params.hbar_transfers
         )
@@ -138,9 +139,10 @@ class HederaBuilder:
             tx, getattr(params, "scheduling_params", None)
         )
 
+    # FIXME: TransferTransaction does not support setting memo.
     @staticmethod
     def transfer_hbar_with_allowance(
-        params: TransferHbarWithAllowanceParametersNormalised,
+            params: TransferHbarWithAllowanceParametersNormalised,
     ) -> TransferTransaction:
         """Build a TransferTransaction using approved HBAR allowances.
 
@@ -163,7 +165,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_non_fungible_token_with_allowance(
-        params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
+            params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
     ) -> Transaction:
         """Build a TransferTransaction for NFTs using approved allowances.
 
@@ -190,7 +192,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_fungible_token_with_allowance(
-        params: TransferFungibleTokenWithAllowanceParametersNormalised,
+            params: TransferFungibleTokenWithAllowanceParametersNormalised,
     ) -> Transaction:
         """Build a TransferTransaction for fungible tokens using approved allowances.
 
@@ -216,7 +218,7 @@ class HederaBuilder:
 
     @staticmethod
     def transfer_fungible_token(
-        params: TransferFungibleTokenParametersNormalised,
+            params: TransferFungibleTokenParametersNormalised,
     ):
         tx = TransferTransaction()
 
@@ -233,7 +235,7 @@ class HederaBuilder:
 
     @staticmethod
     def airdrop_fungible_token(
-        params: AirdropFungibleTokenParametersNormalised,
+            params: AirdropFungibleTokenParametersNormalised,
     ) -> TokenAirdropTransaction:
         """Build a TokenAirdropTransaction for fungible tokens.
 
@@ -259,7 +261,7 @@ class HederaBuilder:
 
     @staticmethod
     def mint_fungible_token(
-        params: MintFungibleTokenParametersNormalised,
+            params: MintFungibleTokenParametersNormalised,
     ) -> Transaction:
         """Build a TokenMintTransaction for fungible tokens.
 
@@ -276,7 +278,7 @@ class HederaBuilder:
 
     @staticmethod
     def mint_non_fungible_token(
-        params: MintNonFungibleTokenParametersNormalised,
+            params: MintNonFungibleTokenParametersNormalised,
     ) -> Transaction:
         """Build a TokenMintTransaction for non-fungible tokens.
 
@@ -293,7 +295,7 @@ class HederaBuilder:
 
     @staticmethod
     def dissociate_token(
-        params: DissociateTokenParametersNormalised,
+            params: DissociateTokenParametersNormalised,
     ) -> TokenDissociateTransaction:
         """Build a TokenDissociateTransaction.
 
@@ -315,14 +317,17 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-        tx: AccountCreateTransaction = AccountCreateTransaction(**vars(params))
+        param_dict = vars(params).copy()
+        param_dict.pop("scheduling_params", None)
+
+        tx: AccountCreateTransaction = AccountCreateTransaction(**param_dict)
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
 
     @staticmethod
     def delete_account(
-        params: DeleteAccountParametersNormalised,
+            params: DeleteAccountParametersNormalised,
     ) -> AccountDeleteTransaction:
         """Build an AccountDeleteTransaction.
 
@@ -375,7 +380,7 @@ class HederaBuilder:
 
     @staticmethod
     def sign_schedule_transaction(
-        params: SignScheduleTransactionParameters,
+            params: SignScheduleTransactionParameters,
     ) -> ScheduleSignTransaction:
         """Build a ScheduleSignTransaction.
 
@@ -389,7 +394,7 @@ class HederaBuilder:
 
     @staticmethod
     def delete_schedule_transaction(
-        params: ScheduleDeleteTransactionParameters,
+            params: ScheduleDeleteTransactionParameters,
     ) -> ScheduleDeleteTransaction:
         """Build a ScheduleDeleteTransaction.
 
@@ -403,7 +408,7 @@ class HederaBuilder:
 
     @staticmethod
     def associate_token(
-        params: AssociateTokenParametersNormalised,
+            params: AssociateTokenParametersNormalised,
     ) -> TokenAssociateTransaction:
         """Build a TokenAssociateTransaction.
 
@@ -417,7 +422,7 @@ class HederaBuilder:
 
     @staticmethod
     def _build_account_allowance_approve_tx(
-        params,
+            params,
     ) -> AccountAllowanceApproveTransaction:
         """Helper to build an AccountAllowanceApproveTransaction with optional memo.
 
@@ -436,28 +441,28 @@ class HederaBuilder:
 
     @staticmethod
     def approve_hbar_allowance(
-        params: ApproveHbarAllowanceParametersNormalised,
+            params: ApproveHbarAllowanceParametersNormalised,
     ) -> AccountAllowanceApproveTransaction:
         """Build an HBAR allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
     def approve_nft_allowance(
-        params: ApproveNftAllowanceParametersNormalised,
+            params: ApproveNftAllowanceParametersNormalised,
     ) -> AccountAllowanceApproveTransaction:
         """Build an NFT allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
     def approve_token_allowance(
-        params: ApproveTokenAllowanceParametersNormalised,
+            params: ApproveTokenAllowanceParametersNormalised,
     ) -> AccountAllowanceApproveTransaction:
         """Build a fungible token allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
 
     @staticmethod
     def execute_transaction(
-        params: ContractExecuteTransactionParametersNormalised,
+            params: ContractExecuteTransactionParametersNormalised,
     ) -> Transaction:
         """Build a ContractExecuteTransaction.
 
@@ -489,7 +494,7 @@ class HederaBuilder:
 
     @staticmethod
     def submit_topic_message(
-        params: SubmitTopicMessageParametersNormalised,
+            params: SubmitTopicMessageParametersNormalised,
     ) -> Transaction:
         """Build a TopicMessageSubmitTransaction.
 
