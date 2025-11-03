@@ -36,7 +36,8 @@ DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
     system_prompt="""You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
         When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.
         Extract the amount and recipient account ID from the user's request.
-        Always use the exact tool name and parameter structure expected.""",
+        Always use the exact tool name and parameter structure expected.
+        When error occurs, respond with a detailed error message.""",
     api_key=None,
     base_url=None,
 )

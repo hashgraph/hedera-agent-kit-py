@@ -7,6 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
 )
+from hedera_agent_kit_py.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
 (TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
@@ -38,7 +39,7 @@ async def test_simple_transfer(agent_executor, toolkit, monkeypatch):
 
     # Mock the underlying Hedera API run method
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value="")
+    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     # Invoke agent
@@ -60,7 +61,7 @@ async def test_transfer_with_memo(agent_executor, toolkit, monkeypatch):
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value="")
+    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -84,7 +85,7 @@ async def test_incorrect_params(agent_executor, toolkit, monkeypatch):
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value="")
+    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -116,7 +117,7 @@ async def test_natural_language_variations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value="")
+    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(

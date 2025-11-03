@@ -38,6 +38,7 @@ from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     TopicMessagesResponse,
     TokenBalancesResponse,
 )
+from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
     AirdropFungibleTokenParametersNormalised,
     TransferHbarParametersNormalised,
@@ -76,15 +77,19 @@ class HederaOperationsWrapper:
         self, params: CreateAccountParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.create_account(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def delete_account(
         self, params: DeleteAccountParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.delete_account(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     # ---------------------------
     # TOKEN OPERATIONS
@@ -93,22 +98,28 @@ class HederaOperationsWrapper:
         self, params: CreateFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.create_fungible_token(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def create_non_fungible_token(
         self, params: CreateNonFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.create_non_fungible_token(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def delete_token(
         self, params: DeleteTokenParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.delete_token(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     # ---------------------------
     # TOPIC (CONSENSUS) OPERATIONS
@@ -117,22 +128,28 @@ class HederaOperationsWrapper:
         self, params: CreateTopicParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.create_topic(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def delete_topic(
         self, params: DeleteTopicParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.delete_topic(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def submit_message(
         self, params: SubmitTopicMessageParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.submit_topic_message(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def get_topic_messages(self, topic_id: str) -> TopicMessagesResponse:
         return await self.mirrornode.get_topic_messages(
@@ -151,31 +168,38 @@ class HederaOperationsWrapper:
         self, params: TransferHbarParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.transfer_hbar(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def airdrop_token(
         self, params: AirdropFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.airdrop_fungible_token(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def transfer_fungible(
         self, params: TransferFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.transfer_fungible_token(params)
-
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def associate_token(self, params: Dict[str, str]) -> RawTransactionResponse:
         tx = TokenAssociateTransaction(
             account_id=AccountId.from_string(params["accountId"]),
             token_ids=[TokenId.from_string(params["tokenId"])],
         )
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     # ---------------------------
     # READ-ONLY QUERIES
@@ -291,23 +315,31 @@ class HederaOperationsWrapper:
 
     async def approve_hbar_allowance(self, params: Any) -> RawTransactionResponse:
         tx = HederaBuilder.approve_hbar_allowance(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def approve_token_allowance(self, params: Any) -> RawTransactionResponse:
         tx = HederaBuilder.approve_token_allowance(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def approve_nft_allowance(self, params: Any) -> RawTransactionResponse:
         tx = HederaBuilder.approve_nft_allowance(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def mint_nft(self, params: Any) -> RawTransactionResponse:
         tx = HederaBuilder.mint_non_fungible_token(params)
-        result = await self.execute_strategy.handle(tx, self.client, Context())
-        return RawTransactionResponse.from_dict(result["raw"])
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
 
     async def get_account_nfts(self, account_id: str) -> Any:
         return await self.mirrornode.get_account_nfts(account_id)

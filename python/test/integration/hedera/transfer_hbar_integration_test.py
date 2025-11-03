@@ -1,5 +1,4 @@
 from decimal import Decimal
-from pprint import pprint
 
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar
@@ -8,6 +7,7 @@ from hedera_agent_kit_py.plugins.core_account_plugin import TransferHbarTool
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
+from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferHbarParameters,
@@ -181,7 +181,6 @@ async def test_invalid_transfer_zero_amount(setup_accounts):
     params = TransferHbarParameters(
         transfers=[TransferHbarEntry(account_id=str(recipient), amount=0)]
     )
-    result = await tool.execute(executor_client, context, params)
-    result_obj = RawTransactionResponse.from_dict(result["raw"])
+    result: ToolResponse = await tool.execute(executor_client, context, params)
 
-    assert "Failed to transfer HBAR" in result_obj.error
+    assert "Failed to transfer HBAR" in result.error

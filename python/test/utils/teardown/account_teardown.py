@@ -12,9 +12,9 @@ from .. import HederaOperationsWrapper
 
 
 async def return_hbars_and_delete_account(
-    account_wrapper: HederaOperationsWrapper,
-    account_to_delete: AccountId,
-    account_to_return: AccountId,
+        account_wrapper: HederaOperationsWrapper,
+        account_to_delete: AccountId,
+        account_to_return: AccountId,
 ) -> None:
     """
     Attempts to delete a test account and return its HBAR balance to a specified account.
@@ -39,19 +39,24 @@ async def return_hbars_and_delete_account(
             str(account_to_delete)
         )
 
+        print(f"Account {account_to_delete} has {balance_tinybars} tinybars")
+
         # Compute transfer amount, leaving 0.1 HBAR for fees
         transfer_amount_tinybars = int(
             balance_tinybars - to_base_unit(Decimal("0.1"), 8)
         )
+
+        print(f"Transferring {transfer_amount_tinybars} tinybars")
+
         if transfer_amount_tinybars <= 0:
             raise ValueError("Not enough HBAR to return")
 
         # Use HederaOperationsWrapper transfer_hbar method
         await account_wrapper.transfer_hbar(
             TransferHbarParametersNormalised(
-                hbar_transfers=[
-                    {account_to_return, transfer_amount_tinybars},
-                    {account_to_delete, -transfer_amount_tinybars},
-                ]
+                hbar_transfers={
+                    account_to_return: transfer_amount_tinybars,
+                    account_to_delete: -transfer_amount_tinybars,
+                }
             )
         )

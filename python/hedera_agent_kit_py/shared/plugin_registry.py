@@ -1,13 +1,13 @@
+from __future__ import annotations
+
 from typing import List, Dict
+
 """Plugin registration and discovery utilities for the Hedera Agent Kit.
 
 This module defines a simple registry to collect and expose tool providers
 (plugins). It can load predefined core plugins or user-registered plugins and
 return a flat list of `Tool` instances given a `Context`.
 """
-
-from __future__ import annotations
-
 
 from hedera_agent_kit_py.shared.tool import Tool
 from .configuration import Context
