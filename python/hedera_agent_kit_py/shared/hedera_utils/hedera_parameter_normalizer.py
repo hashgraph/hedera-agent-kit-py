@@ -241,6 +241,11 @@ class HederaParameterNormaliser:
         # cast input to tinybars and build an instance of Hbar class
         initial_balance = Hbar(to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True)
 
+        # truncate memo if longer than 100 chars
+        account_memo: Optional[str] = parsed_params.account_memo
+        if account_memo and len(account_memo) > 100:
+            account_memo = account_memo[:100]
+
         # Try resolving the public_key in priority order
         public_key = parsed_params.public_key or (
             client.operator_private_key.public_key().to_string_der()
@@ -271,10 +276,9 @@ class HederaParameterNormaliser:
                         parsed_params.scheduling_params, context, client
                     )
                 )
-                print(f"sheduled params: {scheduling_params.wait_for_expiry}")
 
         return CreateAccountParametersNormalised(
-            memo=parsed_params.account_memo,
+            memo=account_memo,
             initial_balance=initial_balance,
             key=PublicKey.from_string(public_key),
             scheduling_params=scheduling_params,

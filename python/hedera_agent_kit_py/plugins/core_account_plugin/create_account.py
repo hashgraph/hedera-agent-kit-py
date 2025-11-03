@@ -54,7 +54,7 @@ This tool will create a new Hedera account with a passed public key. If not pass
 
 Parameters:
 - public_key (str, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
-- account_memo (str, optional): Optional memo for the account
+- account_memo (str, optional): Optional memo for the account. Can be up to 100 characters long. Too long memos will be truncated in params normalization
 - initial_balance (float, optional, default 0): Initial HBAR to fund the account
 - max_automatic_token_associations (int, optional, default -1): -1 means unlimited
 {scheduled_desc}

@@ -50,7 +50,7 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
         ),
     ] = None
     account_memo: Annotated[
-        Optional[str], Field(description="Optional memo for the account.")
+        Optional[str], Field(description="Optional memo for the account. Can be up to 100 characters long. Too long memos will be handled in params normalization")
     ] = None
     initial_balance: Annotated[
         float,
