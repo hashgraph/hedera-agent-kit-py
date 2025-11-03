@@ -18,7 +18,6 @@ from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
-
 @pytest.fixture(scope="module")
 async def setup_accounts():
     operator_client = get_operator_client_for_tests()

@@ -6,10 +6,14 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_account_plugin import core_account_plugin_tool_names
+from hedera_agent_kit_py.plugins.core_account_plugin import (
+    core_account_plugin_tool_names,
+)
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
@@ -25,6 +29,7 @@ DEFAULT_RECIPIENT_BALANCE = 0
 # ============================================================================
 # SESSION-LEVEL FIXTURES (Run once per test session)
 # ============================================================================
+
 
 @pytest.fixture(scope="session")
 def operator_client():
@@ -42,8 +47,11 @@ def operator_wrapper(operator_client):
 # FUNCTION-LEVEL FIXTURES (Run once per test function)
 # ============================================================================
 
+
 @pytest.fixture
-async def executor_account(operator_wrapper, operator_client) -> AsyncGenerator[tuple, None]:
+async def executor_account(
+    operator_wrapper, operator_client
+) -> AsyncGenerator[tuple, None]:
     """
     Create a temporary executor account for tests.
 
@@ -70,7 +78,7 @@ async def executor_account(operator_wrapper, operator_client) -> AsyncGenerator[
     await return_hbars_and_delete_account(
         executor_wrapper_instance,
         executor_account_id,
-        operator_client.operator_account_id
+        operator_client.operator_account_id,
     )
 
 
@@ -82,7 +90,9 @@ async def executor_wrapper(executor_account):
 
 
 @pytest.fixture
-async def recipient_account(operator_wrapper, operator_client) -> AsyncGenerator[str, None]:
+async def recipient_account(
+    operator_wrapper, operator_client
+) -> AsyncGenerator[str, None]:
     """
     Create a temporary recipient account for tests.
 
@@ -95,7 +105,7 @@ async def recipient_account(operator_wrapper, operator_client) -> AsyncGenerator
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_RECIPIENT_BALANCE,
-            key=operator_client.operator_private_key.public_key()
+            key=operator_client.operator_private_key.public_key(),
         )
     )
     account_id = recipient_resp.account_id
@@ -103,9 +113,7 @@ async def recipient_account(operator_wrapper, operator_client) -> AsyncGenerator
     yield str(account_id)
 
     await return_hbars_and_delete_account(
-        operator_wrapper,
-        account_id,
-        operator_client.operator_account_id
+        operator_wrapper, account_id, operator_client.operator_account_id
     )
 
 
@@ -140,37 +148,33 @@ async def toolkit(langchain_test_setup):
 # HELPER FUNCTIONS
 # ============================================================================
 
+
 async def execute_transfer(agent_executor, input_text: str, config: RunnableConfig):
     """Execute a transfer via the agent and return the response."""
     return await agent_executor.ainvoke(
-        {"messages": [{"role": "user", "content": input_text}]},
-        config=config
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
 
 
 def assert_balance_changed(
-        balance_before: int,
-        balance_after: int,
-        expected_amount: Decimal
+    balance_before: int, balance_after: int, expected_amount: Decimal
 ):
     """Assert that the balance changed by the expected amount."""
     actual_change = balance_after - balance_before
     expected_change = to_tinybars(expected_amount)
-    assert actual_change == expected_change, (
-        f"Balance change mismatch: expected {expected_change}, got {actual_change}"
-    )
+    assert (
+        actual_change == expected_change
+    ), f"Balance change mismatch: expected {expected_change}, got {actual_change}"
 
 
 # ============================================================================
 # TEST CASES
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_simple_transfer(
-        agent_executor,
-        recipient_account,
-        executor_wrapper,
-        langchain_config
+    agent_executor, recipient_account, executor_wrapper, langchain_config
 ):
     """Test a basic HBAR transfer without memo."""
     amount = Decimal("0.1")
@@ -185,10 +189,7 @@ async def test_simple_transfer(
 
 @pytest.mark.asyncio
 async def test_transfer_with_memo(
-        agent_executor,
-        recipient_account,
-        executor_wrapper,
-        langchain_config
+    agent_executor, recipient_account, executor_wrapper, langchain_config
 ):
     """Test HBAR transfer with a memo field."""
     amount = Decimal("0.05")
@@ -201,24 +202,21 @@ async def test_transfer_with_memo(
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert_balance_changed(balance_before, balance_after, amount)
 
+
 ## This test happens to fail The LLM hallucinates some account after trying to crate an invalid transfer instead showing that to the user
 # @pytest.mark.skip(
 #     reason="Skipping this test temporarily due to LLM hallucinations. The LLM hallucinates some account after trying to crate an invalid transfer instead showing that to the user")
 @pytest.mark.asyncio
 async def test_invalid_params(
-        agent_executor,
-        executor_wrapper,
-        recipient_account,
-        langchain_config
+    agent_executor, executor_wrapper, recipient_account, langchain_config
 ):
     """Test that invalid parameters result in proper error handling."""
     amount = Decimal("0.05")
-    input_text = f'Can you move {amount} HBARs to account with ID 0.0.0?'
+    input_text = f"Can you move {amount} HBARs to account with ID 0.0.0?"
     response = await execute_transfer(agent_executor, input_text, langchain_config)
 
     tool_response_obj: ExecutedTransactionToolResponse = extract_tool_response(
-        response,
-        "transfer_hbar_tool"
+        response, "transfer_hbar_tool"
     )
     pprint(tool_response_obj)
 
