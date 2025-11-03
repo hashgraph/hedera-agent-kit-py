@@ -8,7 +8,6 @@ transactions are handled (executed on-chain or returned as bytes) according to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pprint import pprint
 from typing import Any, Callable, Optional, Dict
 
 from hiero_sdk_python import (
@@ -78,11 +77,11 @@ class ExecuteStrategy(TxModeStrategy):
         return json.dumps(response.to_dict(), indent=2)
 
     async def handle(
-            self,
-            tx: Transaction,
-            client: Client,
-            context: Context,
-            post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
+        self,
+        tx: Transaction,
+        client: Client,
+        context: Context,
+        post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
     ) -> ExecutedTransactionToolResponse:
         """Execute the transaction and construct an executed response.
 

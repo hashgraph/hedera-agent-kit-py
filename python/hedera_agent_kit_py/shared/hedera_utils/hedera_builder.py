@@ -306,7 +306,7 @@ class HederaBuilder:
         return TokenDissociateTransaction(**vars(params))
 
     @staticmethod
-    def create_account(params: CreateAccountParametersNormalised):
+    def create_account(params: CreateAccountParametersNormalised) -> Transaction:
         """Build an AccountCreateTransaction.
 
         Args:
@@ -315,11 +315,7 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-
-        params_dict = dict(vars(params))
-        params_dict.pop("scheduling_params", None)
-
-        tx: AccountCreateTransaction = AccountCreateTransaction(**params_dict)
+        tx: AccountCreateTransaction = AccountCreateTransaction(**vars(params))
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )

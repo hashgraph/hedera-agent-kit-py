@@ -10,7 +10,7 @@ packages = [{ include = "hedera_agent_kit_py" }]
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
 langchain = "==1.0.2"
-langchain-openai = "=1.0.1"
+langchain-openai = "^1.0.1"
 langchain-anthropic = "=1.0.0"
 langchain-groq = "=1.0.0"
 python-dotenv = ">=1,<2"

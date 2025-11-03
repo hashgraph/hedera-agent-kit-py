@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Optional, List, Union, Annotated
 
 from hiero_sdk_python import AccountId, PublicKey, TokenAllowance, HbarAllowance, Hbar
