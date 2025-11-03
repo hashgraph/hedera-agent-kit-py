@@ -3,10 +3,6 @@ from decimal import Decimal, getcontext, ROUND_DOWN
 from hedera_agent_kit_py.shared.hedera_utils import to_display_unit
 from .. import HederaOperationsWrapper
 
-# Set precision for HBAR operations
-getcontext().prec = 20
-
-
 async def verify_hbar_balance_change(
     account_id: str,
     balance_before_raw: Decimal,
