@@ -70,5 +70,6 @@ class OptionalScheduledTransactionParams(BaseModelWithArbitraryTypes):
     ] = None
 
 
-class OptionalScheduledTransactionParamsNormalised(ScheduleCreateParams):
+class OptionalScheduledTransactionParamsNormalised(BaseModelWithArbitraryTypes):
+    scheduling_params: Optional[ScheduleCreateParams] = None
     """Wrapper model for normalised scheduling parameters."""
