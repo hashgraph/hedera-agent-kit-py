@@ -5,14 +5,16 @@ from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
     SchedulingParams,
+    CreateTopicParameters,
+    CreateTopicParametersNormalised,
 )
+from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
 class HederaParameterNormaliser:
@@ -27,8 +29,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def parse_params_with_schema(
-        params: Any,
-        schema: Type[BaseModel],
+            params: Any,
+            schema: Type[BaseModel],
     ) -> BaseModel:
         """Validate and parse parameters using a Pydantic schema.
 
@@ -64,9 +66,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar(
-        params: TransferHbarParameters,
-        context: Context,
-        client: Client,
+            params: TransferHbarParameters,
+            context: Context,
+            client: Client,
     ) -> TransferHbarParametersNormalised:
         """Normalise HBAR transfer parameters to a format compatible with Python SDK.
 
@@ -129,9 +131,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_scheduled_transaction_params(
-        scheduling: SchedulingParams,
-        context: Context,
-        client: Client,
+            scheduling: SchedulingParams,
+            context: Context,
+            client: Client,
     ) -> ScheduleCreateParams:
         """Convert SchedulingParams to a ScheduleCreateParams instance compatible with Python SDK.
 
@@ -178,8 +180,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def resolve_key(
-        raw_value: Union[str, bool, None],
-        user_key: PublicKey,
+            raw_value: Union[str, bool, None],
+            user_key: PublicKey,
     ) -> Optional[PublicKey]:
         """Resolve a raw key input to a PublicKey instance.
 
@@ -200,3 +202,82 @@ class HederaParameterNormaliser:
         if raw_value:
             return user_key
         return None
+
+    @staticmethod
+    async def normalise_create_topic_params(
+            params: CreateTopicParameters,
+            context: Context,
+            client: Client,
+            mirror_node,
+    ) -> CreateTopicParametersNormalised:
+        """Normalise create topic parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw create topic parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+            mirror_node: Mirror node service for retrieving account information.
+
+        Returns:
+            CreateTopicParametersNormalised: Normalised create topic parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If default account ID or public key cannot be determined.
+        """
+        parsed_params: CreateTopicParameters = cast(
+            CreateTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateTopicParameters
+            ),
+        )
+
+        default_account_id: Optional[str] = AccountResolver.get_default_account(
+            context, client
+        )
+        if not default_account_id:
+            raise ValueError("Could not determine default account ID")
+
+        normalised = CreateTopicParametersNormalised(
+            is_submit_key=parsed_params.is_submit_key,
+            is_admin_key=parsed_params.is_admin_key,
+            topic_memo=parsed_params.topic_memo,
+            transaction_memo=parsed_params.transaction_memo,
+            memo=parsed_params.topic_memo,
+        )
+
+        # Get a public key for submitted key if needed
+        if parsed_params.is_submit_key:
+            try:
+                account_info = await mirror_node.get_account(default_account_id)
+                public_key_str = account_info.account_public_key
+            except Exception:
+                public_key_str = (
+                    client.operator_private_key.public_key().to_string_der()
+                    if client.operator_private_key.public_key()
+                    else None
+                )
+
+            if not public_key_str:
+                raise ValueError("Could not determine public key for submit key")
+
+            normalised.submit_key = PublicKey.from_string(public_key_str)
+
+        # Get public key for admin key if needed
+        if parsed_params.is_admin_key:
+            try:
+                account_info = await mirror_node.get_account(default_account_id)
+                public_key_str = account_info.account_public_key
+            except Exception:
+                public_key_str = (
+                    client.operator_private_key.public_key().to_string_der()
+                    if client.operator_private_key.public_key()
+                    else None
+                )
+
+            if not public_key_str:
+                raise ValueError("Could not determine public key for admin key")
+
+            normalised.admin_key = PublicKey.from_string(public_key_str)
+
+        return normalised
