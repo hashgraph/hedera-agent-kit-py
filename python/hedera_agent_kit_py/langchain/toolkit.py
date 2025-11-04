@@ -38,7 +38,7 @@ class HederaLangchainToolkit:
                 method=tool.method,
                 description=tool.description,
                 schema=tool.parameters,
-                name=tool.name,
+                name=tool.method, # langchain tools do not accept names with spaces
             )
             for tool in all_tools
         ]

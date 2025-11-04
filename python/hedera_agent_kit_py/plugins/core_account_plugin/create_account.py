@@ -16,6 +16,7 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.models import (
     ToolResponse,
     RawTransactionResponse,
@@ -28,6 +29,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
+from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -91,9 +93,9 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def create_account(
-    client: Client,
-    context: Context,
-    params: CreateAccountParameters,
+        client: Client,
+        context: Context,
+        params: CreateAccountParameters,
 ) -> ToolResponse:
     """Execute an account creation using normalized parameters and a built transaction.
 
@@ -112,10 +114,11 @@ async def create_account(
         It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
+        mirrornode_service = get_mirrornode_service(context.mirrornode_service, ledger_id_from_network(client.network))
         # Normalize parameters
         normalised_params: CreateAccountParametersNormalised = (
             await HederaParameterNormaliser.normalise_create_account(
-                params, context, client
+                params, context, client, mirrornode_service
             )
         )
 
@@ -147,12 +150,12 @@ class CreateAccountTool(Tool):
             context: Runtime context used to tailor the tool description.
         """
         self.method: str = CREATE_ACCOUNT_TOOL
-        self.name: str = CREATE_ACCOUNT_TOOL
+        self.name: str = "Create Account"
         self.description: str = create_account_prompt(context)
         self.parameters: type[CreateAccountParameters] = CreateAccountParameters
 
     async def execute(
-        self, client: Client, context: Context, params: CreateAccountParameters
+            self, client: Client, context: Context, params: CreateAccountParameters
     ) -> ToolResponse:
         """Execute the account creation using the provided client, context, and params.
 

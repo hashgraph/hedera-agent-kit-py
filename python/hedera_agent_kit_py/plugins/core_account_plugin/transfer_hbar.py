@@ -144,7 +144,7 @@ class TransferHbarTool(Tool):
             context: Runtime context used to tailor the tool description.
         """
         self.method: str = TRANSFER_HBAR_TOOL
-        self.name: str = TRANSFER_HBAR_TOOL
+        self.name: str = "Transfer HBAR"
         self.description: str = transfer_hbar_prompt(context)
         self.parameters: type[TransferHbarParameters] = TransferHbarParameters
 

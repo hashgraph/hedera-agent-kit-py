@@ -213,23 +213,31 @@ class HederaParameterNormaliser:
             params: CreateAccountParameters,
             context: Context,
             client: Client,
+            mirrornode_service: IHederaMirrornodeService,
     ) -> CreateAccountParametersNormalised:
-        """Normalise account creation parameters to a format compatible with Python SDK.
+        """Normalize account-creation input into types the Python SDK expects.
 
-        This resolves the public key from multiple sources (param, operator, or mirror node),
-        and optionally handles scheduled transactions.
+        Actions performed:
+        - Validates and parses `params` against the Pydantic schema.
+        - Converts `initial_balance` to an `Hbar` instance (in tinybars).
+        - Truncates `account_memo` to 100 characters when present.
+        - Resolves the account public key in priority order:
+            1. `params.public_key`
+            2. `client.operator_private_key` (if available)
+            3. Mirror node lookup for the default account (via `mirrornode_service`)
+        - Normalizes optional scheduling parameters when `is_scheduled` is True.
 
         Args:
             params: Raw account creation parameters.
-            context: Application context for resolving accounts and keys.
-            client: Hedera Client instance used for account resolution.
+            context: Application context used for resolving defaults.
+            client: Hedera `Client` used to access operator key when present.
+            mirrornode_service: Mirror node service used to fetch account data.
 
         Returns:
-            CreateAccountParametersNormalised: Normalised account creation parameters
-            ready to be used in Hedera transactions.
+            CreateAccountParametersNormalised: Parameters converted to SDK-compatible types.
 
         Raises:
-            ValueError: If no public key can be resolved from any source.
+            ValueError: If no public key can be resolved from params, client operator key, or mirror node.
         """
         parsed_params: CreateAccountParameters = cast(
             CreateAccountParameters,
@@ -256,9 +264,6 @@ class HederaParameterNormaliser:
         if not public_key:
             default_account_id = AccountResolver.get_default_account(context, client)
             if default_account_id:
-                mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
-                    context.mirrornode_service, ledger_id_from_network(client.network)
-                )
                 account = await mirrornode_service.get_account(default_account_id)
                 public_key = account.get("account_public_key")
 
@@ -282,5 +287,5 @@ class HederaParameterNormaliser:
             initial_balance=initial_balance,
             key=PublicKey.from_string(public_key),
             scheduling_params=scheduling_params,
-            # max_automatic_token_associations=parsed_params.max_automatic_token_associations
+            max_automatic_token_associations=parsed_params.max_automatic_token_associations
         )
