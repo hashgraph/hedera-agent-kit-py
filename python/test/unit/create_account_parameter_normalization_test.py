@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 import pytest
 from hiero_sdk_python import PublicKey, PrivateKey, Hbar
+from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -181,7 +182,7 @@ async def test_calls_normalise_scheduled_transaction_params_when_scheduled():
     secondary_key = PrivateKey.generate_ed25519().public_key()
 
     # Return a concrete SchedulingParams (or dict) so pydantic validation in the normaliser succeeds
-    mock_schedule_params = SchedulingParams(is_scheduled=True, admin_key=False, wait_for_expiry=False)
+    mock_schedule_params = ScheduleCreateParams(wait_for_expiry=False)
     spy = AsyncMock(return_value=mock_schedule_params)
 
     with patch.object(
