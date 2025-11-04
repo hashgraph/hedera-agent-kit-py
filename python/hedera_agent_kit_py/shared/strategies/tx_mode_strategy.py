@@ -8,14 +8,16 @@ transactions are handled (executed on-chain or returned as bytes) according to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Dict
+from typing import Any, Callable, Optional
 
 from hiero_sdk_python import (
     Client,
     AccountId,
     TransactionId,
     TransactionReceipt,
+    ResponseCode,
 )
+from hiero_sdk_python.hapi.services.response_code_pb2 import ResponseCodeEnum
 from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context
@@ -25,6 +27,12 @@ from hedera_agent_kit_py.shared.models import (
     ReturnBytesToolResponse,
     ToolResponse,
 )
+
+
+class HederaTransactionError(Exception):
+    """Raised when a Hedera transaction fails prechecking or execution."""
+
+    pass
 
 
 class TxModeStrategy(ABC):
@@ -91,14 +99,24 @@ class ExecuteStrategy(TxModeStrategy):
         """
         post_process = post_process or self.default_post_process
         receipt: TransactionReceipt = tx.execute(client)
+
+        # Create a raw response object
         raw_transaction_response = RawTransactionResponse(
-            status=str(receipt.status),
+            status=ResponseCode(receipt.status).name,
             account_id=getattr(receipt, "account_id", None),
             token_id=getattr(receipt, "token_id", None),
             transaction_id=getattr(receipt, "transaction_id", None),
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
         )
+
+        # Check for failure
+        if receipt.status != ResponseCodeEnum.SUCCESS:
+            raise HederaTransactionError(
+                f"Transaction failed with status: {ResponseCode(receipt.status).name}. Transaction Id: {receipt.transaction_id}"
+            )
+
+        # Normal success path
         return ExecutedTransactionToolResponse(
             raw=raw_transaction_response,
             human_message=post_process(raw_transaction_response),
@@ -139,7 +157,10 @@ class ReturnBytesStrategy(TxModeStrategy):
         tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
         # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
         # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
-        return ReturnBytesToolResponse(bytes_data=b"bytes")  # temporary placeholder
+        return ReturnBytesToolResponse(
+            bytes_data=b"bytes",
+            human_message=f"Transaction bytes: <HERE PASS SOME BYTES>",
+        )  # temporary placeholder
 
 
 def get_strategy_from_context(context: Context) -> TxModeStrategy:

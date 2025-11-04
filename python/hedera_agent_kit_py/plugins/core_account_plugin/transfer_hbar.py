@@ -8,7 +8,7 @@ This module exposes:
 
 from __future__ import annotations
 
-from hiero_sdk_python import Client, ResponseCode
+from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.configuration import Context

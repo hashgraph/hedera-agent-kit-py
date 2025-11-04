@@ -54,6 +54,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     SignScheduleTransactionParameters,
     ScheduleDeleteTransactionParameters,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    TransferFungibleTokenParametersNormalised,
+)
 
 
 class HederaBuilder:
@@ -95,7 +98,10 @@ class HederaBuilder:
         Returns:
             Transaction: TokenCreateTransaction, optionally wrapped in a schedule.
         """
-        tx: TokenCreateTransaction = TokenCreateTransaction(**vars(params))
+        tx: TokenCreateTransaction = TokenCreateTransaction(
+            token_params=params.token_params,
+            keys=params.keys,
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -112,7 +118,10 @@ class HederaBuilder:
         Returns:
             Transaction: TokenCreateTransaction, optionally wrapped in a schedule.
         """
-        tx: TokenCreateTransaction = TokenCreateTransaction(**vars(params))
+        tx: TokenCreateTransaction = TokenCreateTransaction(
+            token_params=params.token_params,
+            keys=params.keys,
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -127,9 +136,12 @@ class HederaBuilder:
         Returns:
             Transaction: TransferTransaction, optionally wrapped in a schedule.
         """
+
         tx: TransferTransaction = TransferTransaction(
             hbar_transfers=params.hbar_transfers
         )
+        if getattr(params, "transaction_memo", None):
+            tx.set_transaction_memo(params.transaction_memo)
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -211,6 +223,23 @@ class HederaBuilder:
         )
 
     @staticmethod
+    def transfer_fungible_token(
+        params: TransferFungibleTokenParametersNormalised,
+    ):
+        tx = TransferTransaction()
+
+        for token_id, transfers in params.ft_transfers.items():
+            for account_id, amount in transfers.items():
+                tx.add_token_transfer(token_id, account_id, amount)
+
+        if getattr(params, "transaction_memo", None):
+            tx.set_transaction_memo(params.transaction_memo)
+
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
+
+    @staticmethod
     def airdrop_fungible_token(
         params: AirdropFungibleTokenParametersNormalised,
     ) -> TokenAirdropTransaction:
@@ -248,7 +277,9 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-        tx: TokenMintTransaction = TokenMintTransaction(**vars(params))
+        tx: TokenMintTransaction = TokenMintTransaction(
+            token_id=params.token_id, amount=params.amount
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -265,7 +296,9 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-        tx: TokenMintTransaction = TokenMintTransaction(**vars(params))
+        tx: TokenMintTransaction = TokenMintTransaction(
+            token_id=params.token_id, metadata=params.metadata
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -294,7 +327,9 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-        tx: AccountCreateTransaction = AccountCreateTransaction(**vars(params))
+        tx: AccountCreateTransaction = AccountCreateTransaction(
+            key=params.key, initial_balance=params.initial_balance, memo=params.memo
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -446,7 +481,11 @@ class HederaBuilder:
         Returns:
             Transaction: Transaction optionally wrapped in a schedule.
         """
-        tx: ContractExecuteTransaction = ContractExecuteTransaction(**vars(params))
+        tx: ContractExecuteTransaction = ContractExecuteTransaction(
+            contract_id=params.contract_id,
+            gas=params.gas,
+            function_parameters=params.function_parameters,
+        )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
         )
@@ -479,7 +518,8 @@ class HederaBuilder:
             Transaction: Transaction optionally wrapped in a schedule.
         """
         tx: TopicMessageSubmitTransaction = TopicMessageSubmitTransaction(
-            **vars(params)
+            topic_id=params.topic_id,
+            message=params.message,
         )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)

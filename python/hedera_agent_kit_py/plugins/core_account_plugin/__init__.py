@@ -17,4 +17,5 @@ core_account_plugin_tool_names = {
 __all__ = [
     "core_account_plugin",
     "core_account_plugin_tool_names",
+    "TransferHbarTool",
 ]
