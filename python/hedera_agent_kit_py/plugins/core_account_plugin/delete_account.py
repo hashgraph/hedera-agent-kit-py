@@ -98,9 +98,7 @@ async def delete_account(
     try:
         # Normalize parameters
         normalised_params: DeleteAccountParametersNormalised = (
-            HederaParameterNormaliser.normalise_delete_account(
-                params, context, client
-            )
+            HederaParameterNormaliser.normalise_delete_account(params, context, client)
         )
 
         # Build transaction

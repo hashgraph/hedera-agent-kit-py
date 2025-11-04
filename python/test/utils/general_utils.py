@@ -30,3 +30,19 @@ def from_evm_address(evm_address: str) -> ContractId:
     return ContractId(
         shard=shard, realm=realm, contract=contract, evm_address=evm_bytes
     )
+
+async def wait(time_in_millis: int):
+    """
+    Waits for a specified amount of time.
+
+    This function pauses the execution of the program for a given duration
+    specified in milliseconds. It uses Python's built-in time module to achieve
+    this delay.
+
+    :param time_in_millis: The amount of time to wait, specified in milliseconds.
+    :type time_in_millis: int
+    """
+    import time
+    time.sleep(
+        time_in_millis / 1000
+    )

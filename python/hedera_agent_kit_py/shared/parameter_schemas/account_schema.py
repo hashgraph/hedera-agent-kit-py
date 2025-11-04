@@ -8,7 +8,7 @@ from pydantic import Field
 # Local import avoids circular import
 from hedera_agent_kit_py.shared.parameter_schemas.common_schema import (
     OptionalScheduledTransactionParams,
-    BaseModelWithArbitraryTypes,
+    BaseModelWithArbitraryTypes, OptionalScheduledTransactionParamsNormalised,
 )
 
 
@@ -61,7 +61,7 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
     ] = -1
 
 
-class CreateAccountParametersNormalised(OptionalScheduledTransactionParams):
+class CreateAccountParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     memo: Optional[str] = None
     initial_balance: Union[Hbar, int] = 0
     key: Optional[PublicKey] = None
