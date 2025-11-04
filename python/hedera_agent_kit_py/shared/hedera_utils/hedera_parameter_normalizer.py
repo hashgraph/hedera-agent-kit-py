@@ -210,74 +210,47 @@ class HederaParameterNormaliser:
             client: Client,
             mirror_node,
     ) -> CreateTopicParametersNormalised:
-        """Normalise create topic parameters to a format compatible with Python SDK.
+        """Normalise 'create topic' parameters into a format compatible with the Python SDK.
+
+        This function:
+          - Validates and parses the raw parameters using the CreateTopicParameters schema.
+          - Resolves the default account ID from context or client configuration.
+          - Optionally resolves a submit key if `is_submit_key` is True.
+          - Populates topic and transaction memos for SDK use.
 
         Args:
-            params: Raw create topic parameters.
-            context: Application context for resolving accounts.
-            client: Hedera Client instance used for account resolution.
-            mirror_node: Mirror node service for retrieving account information.
+            params: Raw topic creation parameters provided by the user.
+            context: Application context (contains environment configuration).
+            client: Hedera Client instance used for resolving account and operator info.
+            mirror_node: Mirror node client (not used in this simplified implementation).
 
         Returns:
-            CreateTopicParametersNormalised: Normalised create topic parameters
-            ready to be used in Hedera transactions.
+            CreateTopicParametersNormalised: A validated, SDK-ready parameter object
+            containing resolved submit key and memos.
 
         Raises:
-            ValueError: If default account ID or public key cannot be determined.
+            ValueError: If a default account ID cannot be determined.
         """
+        # Validate and parse parameters
         parsed_params: CreateTopicParameters = cast(
             CreateTopicParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, CreateTopicParameters
-            ),
+            HederaParameterNormaliser.parse_params_with_schema(params, CreateTopicParameters),
         )
 
-        default_account_id: Optional[str] = AccountResolver.get_default_account(
-            context, client
-        )
+        # Resolve default account ID
+        default_account_id: Optional[str] = AccountResolver.get_default_account(context, client)
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
-            is_submit_key=parsed_params.is_submit_key,
-            is_admin_key=parsed_params.is_admin_key,
-            topic_memo=parsed_params.topic_memo,
-            transaction_memo=parsed_params.transaction_memo,
             memo=parsed_params.topic_memo,
+            transaction_memo=parsed_params.transaction_memo,
         )
 
-        # Get a public key for submitted key if needed
+        # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            try:
-                account_info = await mirror_node.get_account(default_account_id)
-                public_key_str = account_info.account_public_key
-            except Exception:
-                public_key_str = (
-                    client.operator_private_key.public_key().to_string_der()
-                    if client.operator_private_key.public_key()
-                    else None
-                )
-
-            if not public_key_str:
-                raise ValueError("Could not determine public key for submit key")
-
-            normalised.submit_key = PublicKey.from_string(public_key_str)
-
-        # Get public key for admin key if needed
-        if parsed_params.is_admin_key:
-            try:
-                account_info = await mirror_node.get_account(default_account_id)
-                public_key_str = account_info.account_public_key
-            except Exception:
-                public_key_str = (
-                    client.operator_private_key.public_key().to_string_der()
-                    if client.operator_private_key.public_key()
-                    else None
-                )
-
-            if not public_key_str:
-                raise ValueError("Could not determine public key for admin key")
-
-            normalised.admin_key = PublicKey.from_string(public_key_str)
+            submit_key: PublicKey = await AccountResolver.get_default_public_key(context, client)
+            normalised.submit_key = submit_key
 
         return normalised

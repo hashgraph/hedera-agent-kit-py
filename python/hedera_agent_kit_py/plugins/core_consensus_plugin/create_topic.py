@@ -34,6 +34,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
+from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -52,10 +53,10 @@ def create_topic_prompt(context: Context = {}) -> str:
 This tool will create a new topic on the Hedera network.
 
 Parameters:
-- topic_memo (str, optional): A memo for the topic
-- transaction_memo (str, optional): An optional memo to include on the submitted transaction
-- is_submit_key (bool, optional): Whether to set a submit key for the topic. Set to true if user wants to set a submit key, otherwise false
-- is_admin_key (bool, optional): Whether to set an admin key for the topic (defaults to true)
+- topic_memo (str, optional): A memo for the topic.
+- transaction_memo (str, optional): An optional memo to include on the submitted transaction.
+- is_submit_key (bool, optional): Whether to set a submit key for the topic. 
+  Set to true if the user wants to set a submit key, otherwise false.
 
 {usage_instructions}
 """
@@ -77,10 +78,9 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def create_topic(
-    client: Client,
-    context: Context,
-    params: CreateTopicParameters,
-
+        client: Client,
+        context: Context,
+        params: CreateTopicParameters,
 ) -> ToolResponse:
     """Execute a topic creation using normalized parameters and a built transaction.
 
@@ -101,7 +101,7 @@ async def create_topic(
     try:
         # Get mirror node service
         mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
-            context.mirrornode_service, context.ledger_id
+            context.mirrornode_service, ledger_id_from_network(client.network)
         )
 
         # Normalize parameters
@@ -144,7 +144,7 @@ class CreateTopicTool(Tool):
         self.parameters: type[CreateTopicParameters] = CreateTopicParameters
 
     async def execute(
-        self, client: Client, context: Context, params: CreateTopicParameters
+            self, client: Client, context: Context, params: CreateTopicParameters
     ) -> ToolResponse:
         """Execute the topic creation using the provided client, context, and params.
 
