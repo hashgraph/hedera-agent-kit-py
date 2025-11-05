@@ -1,6 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 
-
+# TODO: change to Hbar() when passing floating point values is supported
 def to_hbar(tinybars: Decimal) -> Decimal:
     """
     Converts a tinybar amount to an hbar amount.
@@ -8,6 +8,7 @@ def to_hbar(tinybars: Decimal) -> Decimal:
     return tinybars / Decimal("100000000")
 
 
+# TODO: change to Hbar() when passing floating point values is supported
 def to_tinybars(hbar: Decimal) -> int:
     tinybars = hbar * Decimal("100000000")
     # Round to the nearest integer using Decimal's rounding

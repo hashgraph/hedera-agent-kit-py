@@ -1,20 +1,27 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
     SchedulingParams,
     DeleteAccountParameters,
     DeleteAccountParametersNormalised,
+    CreateAccountParameters,
+    CreateAccountParametersNormalised,
 )
+from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
 class HederaParameterNormaliser:
@@ -29,8 +36,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def parse_params_with_schema(
-        params: Any,
-        schema: Type[BaseModel],
+            params: Any,
+            schema: Type[BaseModel],
     ) -> BaseModel:
         """Validate and parse parameters using a Pydantic schema.
 
@@ -66,9 +73,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar(
-        params: TransferHbarParameters,
-        context: Context,
-        client: Client,
+            params: TransferHbarParameters,
+            context: Context,
+            client: Client,
     ) -> TransferHbarParametersNormalised:
         """Normalise HBAR transfer parameters to a format compatible with Python SDK.
 
@@ -131,9 +138,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_scheduled_transaction_params(
-        scheduling: SchedulingParams,
-        context: Context,
-        client: Client,
+            scheduling: SchedulingParams,
+            context: Context,
+            client: Client,
     ) -> ScheduleCreateParams:
         """Convert SchedulingParams to a ScheduleCreateParams instance compatible with Python SDK.
 
@@ -180,8 +187,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def resolve_key(
-        raw_value: Union[str, bool, None],
-        user_key: PublicKey,
+            raw_value: Union[str, bool, None],
+            user_key: PublicKey,
     ) -> Optional[PublicKey]:
         """Resolve a raw key input to a PublicKey instance.
 
@@ -202,6 +209,88 @@ class HederaParameterNormaliser:
         if raw_value:
             return user_key
         return None
+
+    @staticmethod
+    async def normalise_create_account(
+            params: CreateAccountParameters,
+            context: Context,
+            client: Client,
+            mirrornode_service: IHederaMirrornodeService,
+    ) -> CreateAccountParametersNormalised:
+        """Normalize account-creation input into types the Python SDK expects.
+
+        Actions performed:
+        - Validates and parses `params` against the Pydantic schema.
+        - Converts `initial_balance` to an `Hbar` instance (in tinybars).
+        - Truncates `account_memo` to 100 characters when present.
+        - Resolves the account public key in priority order:
+            1. `params.public_key`
+            2. `client.operator_private_key` (if available)
+            3. Mirror node lookup for the default account (via `mirrornode_service`)
+        - Normalizes optional scheduling parameters when `is_scheduled` is True.
+
+        Args:
+            params: Raw account creation parameters.
+            context: Application context used for resolving defaults.
+            client: Hedera `Client` used to access operator key when present.
+            mirrornode_service: Mirror node service used to fetch account data.
+
+        Returns:
+            CreateAccountParametersNormalised: Parameters converted to SDK-compatible types.
+
+        Raises:
+            ValueError: If no public key can be resolved from params, client operator key, or mirror node.
+        """
+        parsed_params: CreateAccountParameters = cast(
+            CreateAccountParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateAccountParameters
+            ),
+        )
+
+        # cast input to tinybars and build an instance of Hbar class
+        initial_balance = Hbar(to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True)
+
+        # truncate memo if longer than 100 chars
+        account_memo: Optional[str] = parsed_params.account_memo
+        if account_memo and len(account_memo) > 100:
+            account_memo = account_memo[:100]
+
+        # Try resolving the public_key in priority order
+        public_key = parsed_params.public_key or (
+            client.operator_private_key.public_key().to_string_der()
+            if client.operator_private_key
+            else None
+        )
+
+        if not public_key:
+            default_account_id = AccountResolver.get_default_account(context, client)
+            if default_account_id:
+                account = await mirrornode_service.get_account(default_account_id)
+                public_key = account.get("account_public_key")
+
+        if not public_key:
+            raise ValueError(
+                "Unable to resolve public key: no param, mirror node, or client operator key available."
+            )
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = (
+                    await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                        parsed_params.scheduling_params, context, client
+                    )
+                )
+
+        return CreateAccountParametersNormalised(
+            memo=account_memo,
+            initial_balance=initial_balance,
+            key=PublicKey.from_string(public_key),
+            scheduling_params=scheduling_params,
+            max_automatic_token_associations=parsed_params.max_automatic_token_associations
+        )
 
     @staticmethod
     def normalise_delete_account(
