@@ -129,7 +129,7 @@ class DeleteAccountTool(Tool):
             context: Runtime context used to tailor the tool description.
         """
         self.method: str = DELETE_ACCOUNT_TOOL
-        self.name: str = DELETE_ACCOUNT_TOOL
+        self.name: str = "Delete Account"
         self.description: str = delete_account_prompt(context)
         self.parameters: type[DeleteAccountParameters] = DeleteAccountParameters
 
