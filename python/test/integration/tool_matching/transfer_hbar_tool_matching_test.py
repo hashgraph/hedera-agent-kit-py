@@ -9,7 +9,7 @@ from hedera_agent_kit_py.plugins.core_account_plugin import (
 from hedera_agent_kit_py.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
-(TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 
 
 @pytest.fixture(scope="module")

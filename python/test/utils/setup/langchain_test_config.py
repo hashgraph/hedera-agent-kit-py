@@ -10,7 +10,9 @@ from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
 
-(TRANSFER_HBAR_TOOL, CREATE_ACCOUNT_TOOL) = core_account_plugin_tool_names
+CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
+UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
 
 
 @dataclass
@@ -44,7 +46,7 @@ DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
 )
 
 TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
-    tools=[TRANSFER_HBAR_TOOL, CREATE_ACCOUNT_TOOL],
+    tools=[TRANSFER_HBAR_TOOL, CREATE_ACCOUNT_TOOL, UPDATE_ACCOUNT_TOOL],
     plugins=[core_account_plugin],
     agent_mode=AgentMode.AUTONOMOUS,
 )

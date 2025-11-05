@@ -335,76 +335,11 @@ class HederaParameterNormaliser:
         # Build AccountUpdateParams with only the fields that are provided
         account_params = AccountUpdateParams(account_id=account_id)
 
-        if parsed_params.max_automatic_token_associations is not None:
-            account_params.max_automatic_token_associations = (
-                parsed_params.max_automatic_token_associations
-            )
-        if parsed_params.staked_account_id is not None:
-            account_params.staked_account_id = AccountId.from_string(
-                parsed_params.staked_account_id
-            )
         if parsed_params.account_memo is not None:
             account_params.account_memo = parsed_params.account_memo
-        if parsed_params.decline_staking_reward is not None:
-            account_params.decline_reward = parsed_params.decline_staking_reward
 
-        # Normalize scheduling parameters (if present and is_scheduled = True)
-        scheduling_params: ScheduleCreateParams | None = None
-        if getattr(parsed_params, "scheduling_params", None):
-            if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                    parsed_params.scheduling_params, context, client
-                )
-
-        return UpdateAccountParametersNormalised(
-            account_params=account_params,
-            scheduling_params=scheduling_params,
-        )
-
-    @staticmethod
-    async def normalise_update_account(
-        params: UpdateAccountParameters,
-        context: Context,
-        client: Client,
-    ) -> UpdateAccountParametersNormalised:
-        """Normalize account-update input into types the Python SDK expects.
-
-        Actions performed:
-        - Validates and parses `params` against the Pydantic schema.
-        - Resolves `account_id` (defaults to operator account if not provided).
-        - Builds an `AccountUpdateParams` instance with only the fields that are set.
-        - Normalizes optional scheduling parameters when `is_scheduled` is True.
-
-        Args:
-            params: Raw account update parameters.
-            context: Application context used for resolving defaults.
-            client: Hedera `Client` used to access operator account when needed.
-
-        Returns:
-            UpdateAccountParametersNormalised: Parameters converted to SDK-compatible types.
-
-        Raises:
-            ValueError: If validation fails or account ID cannot be resolved.
+        # FIXME: commented out - SDK does not support these fields yet
         """
-        from hiero_sdk_python.account.account_update_transaction import (
-            AccountUpdateParams,
-        )
-
-        parsed_params: UpdateAccountParameters = cast(
-            UpdateAccountParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, UpdateAccountParameters
-            ),
-        )
-
-        # Resolve account ID (default to operator if not provided)
-        account_id = AccountId.from_string(
-            AccountResolver.resolve_account(parsed_params.account_id, context, client)
-        )
-
-        # Build AccountUpdateParams with only the fields that are provided
-        account_params = AccountUpdateParams(account_id=account_id)
-
         if parsed_params.max_automatic_token_associations is not None:
             account_params.max_automatic_token_associations = (
                 parsed_params.max_automatic_token_associations
@@ -413,150 +348,10 @@ class HederaParameterNormaliser:
             account_params.staked_account_id = AccountId.from_string(
                 parsed_params.staked_account_id
             )
-        if parsed_params.account_memo is not None:
-            account_params.account_memo = parsed_params.account_memo
+
         if parsed_params.decline_staking_reward is not None:
             account_params.decline_reward = parsed_params.decline_staking_reward
-
-        # Normalize scheduling parameters (if present and is_scheduled = True)
-        scheduling_params: ScheduleCreateParams | None = None
-        if getattr(parsed_params, "scheduling_params", None):
-            if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                    parsed_params.scheduling_params, context, client
-                )
-
-        return UpdateAccountParametersNormalised(
-            account_params=account_params,
-            scheduling_params=scheduling_params,
-        )
-
-    @staticmethod
-    async def normalise_update_account(
-        params: UpdateAccountParameters,
-        context: Context,
-        client: Client,
-    ) -> UpdateAccountParametersNormalised:
-        """Normalize account-update input into types the Python SDK expects.
-
-        Actions performed:
-        - Validates and parses `params` against the Pydantic schema.
-        - Resolves `account_id` (defaults to operator account if not provided).
-        - Builds an `AccountUpdateParams` instance with only the fields that are set.
-        - Normalizes optional scheduling parameters when `is_scheduled` is True.
-
-        Args:
-            params: Raw account update parameters.
-            context: Application context used for resolving defaults.
-            client: Hedera `Client` used to access operator account when needed.
-
-        Returns:
-            UpdateAccountParametersNormalised: Parameters converted to SDK-compatible types.
-
-        Raises:
-            ValueError: If validation fails or account ID cannot be resolved.
         """
-        from hiero_sdk_python.account.account_update_transaction import (
-            AccountUpdateParams,
-        )
-
-        parsed_params: UpdateAccountParameters = cast(
-            UpdateAccountParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, UpdateAccountParameters
-            ),
-        )
-
-        # Resolve account ID (default to operator if not provided)
-        account_id = AccountId.from_string(
-            AccountResolver.resolve_account(parsed_params.account_id, context, client)
-        )
-
-        # Build AccountUpdateParams with only the fields that are provided
-        account_params = AccountUpdateParams(account_id=account_id)
-
-        if parsed_params.max_automatic_token_associations is not None:
-            account_params.max_automatic_token_associations = (
-                parsed_params.max_automatic_token_associations
-            )
-        if parsed_params.staked_account_id is not None:
-            account_params.staked_account_id = AccountId.from_string(
-                parsed_params.staked_account_id
-            )
-        if parsed_params.account_memo is not None:
-            account_params.account_memo = parsed_params.account_memo
-        if parsed_params.decline_staking_reward is not None:
-            account_params.decline_reward = parsed_params.decline_staking_reward
-
-        # Normalize scheduling parameters (if present and is_scheduled = True)
-        scheduling_params: ScheduleCreateParams | None = None
-        if getattr(parsed_params, "scheduling_params", None):
-            if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                    parsed_params.scheduling_params, context, client
-                )
-
-        return UpdateAccountParametersNormalised(
-            account_params=account_params,
-            scheduling_params=scheduling_params,
-        )
-
-    @staticmethod
-    async def normalise_update_account(
-        params: UpdateAccountParameters,
-        context: Context,
-        client: Client,
-    ) -> UpdateAccountParametersNormalised:
-        """Normalize account-update input into types the Python SDK expects.
-
-        Actions performed:
-        - Validates and parses `params` against the Pydantic schema.
-        - Resolves `account_id` (defaults to operator account if not provided).
-        - Builds an `AccountUpdateParams` instance with only the fields that are set.
-        - Normalizes optional scheduling parameters when `is_scheduled` is True.
-
-        Args:
-            params: Raw account update parameters.
-            context: Application context used for resolving defaults.
-            client: Hedera `Client` used to access operator account when needed.
-
-        Returns:
-            UpdateAccountParametersNormalised: Parameters converted to SDK-compatible types.
-
-        Raises:
-            ValueError: If validation fails or account ID cannot be resolved.
-        """
-        from hiero_sdk_python.account.account_update_transaction import (
-            AccountUpdateParams,
-        )
-
-        parsed_params: UpdateAccountParameters = cast(
-            UpdateAccountParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, UpdateAccountParameters
-            ),
-        )
-
-        # Resolve account ID (default to operator if not provided)
-        account_id = AccountId.from_string(
-            AccountResolver.resolve_account(parsed_params.account_id, context, client)
-        )
-
-        # Build AccountUpdateParams with only the fields that are provided
-        account_params = AccountUpdateParams(account_id=account_id)
-
-        if parsed_params.max_automatic_token_associations is not None:
-            account_params.max_automatic_token_associations = (
-                parsed_params.max_automatic_token_associations
-            )
-        if parsed_params.staked_account_id is not None:
-            account_params.staked_account_id = AccountId.from_string(
-                parsed_params.staked_account_id
-            )
-        if parsed_params.account_memo is not None:
-            account_params.account_memo = parsed_params.account_memo
-        if parsed_params.decline_staking_reward is not None:
-            account_params.decline_reward = parsed_params.decline_staking_reward
 
         # Normalize scheduling parameters (if present and is_scheduled = True)
         scheduling_params: ScheduleCreateParams | None = None
