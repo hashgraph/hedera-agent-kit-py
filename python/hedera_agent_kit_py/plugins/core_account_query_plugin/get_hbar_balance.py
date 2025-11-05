@@ -13,7 +13,9 @@ from decimal import Decimal
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -90,8 +92,11 @@ async def get_hbar_balance(
         rather than raising, to keep tool behavior consistent for callers.
     """
     try:
-        normalised_params: AccountBalanceQueryParametersNormalised =  HederaParameterNormaliser.normalise_get_hbar_balance(
-                params, context, client)
+        normalised_params: AccountBalanceQueryParametersNormalised = (
+            HederaParameterNormaliser.normalise_get_hbar_balance(
+                params, context, client
+            )
+        )
 
         # Get mirrornode service
         mirrornode_service = get_mirrornode_service(

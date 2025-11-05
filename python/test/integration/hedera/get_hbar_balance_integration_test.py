@@ -14,11 +14,18 @@ from hedera_agent_kit_py.plugins.core_account_query_plugin import GetHbarBalance
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.models import ToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import AccountBalanceQueryParameters, \
-    CreateAccountParametersNormalised, DeleteAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    AccountBalanceQueryParameters,
+    CreateAccountParametersNormalised,
+    DeleteAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import wait
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 
 
 @pytest.fixture(scope="module")
@@ -30,14 +37,19 @@ async def setup_environment():
     # Create an executor account
     executor_key = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
-        CreateAccountParametersNormalised(key=executor_key.public_key(), initial_balance=Hbar(5, in_tinybars=False)))
+        CreateAccountParametersNormalised(
+            key=executor_key.public_key(), initial_balance=Hbar(5, in_tinybars=False)
+        )
+    )
     executor_account_id = executor_resp.account_id
     executor_client = get_custom_client(executor_account_id, executor_key)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
     # Create recipient account via executor
     recipient_resp = await executor_wrapper.create_account(
-        CreateAccountParametersNormalised(key=executor_key.public_key(), initial_balance=Hbar(1, in_tinybars=False))
+        CreateAccountParametersNormalised(
+            key=executor_key.public_key(), initial_balance=Hbar(1, in_tinybars=False)
+        )
     )
     recipient_account_id = recipient_resp.account_id
 
@@ -57,10 +69,15 @@ async def setup_environment():
 
     # Cleanup: delete recipient and executor
     await executor_wrapper.delete_account(
-        DeleteAccountParametersNormalised(account_id=recipient_account_id, transfer_account_id=executor_account_id)
+        DeleteAccountParametersNormalised(
+            account_id=recipient_account_id, transfer_account_id=executor_account_id
+        )
     )
     await executor_wrapper.delete_account(
-        DeleteAccountParametersNormalised(account_id=executor_account_id, transfer_account_id=operator_client.operator_account_id,)
+        DeleteAccountParametersNormalised(
+            account_id=executor_account_id,
+            transfer_account_id=operator_client.operator_account_id,
+        )
     )
 
     executor_client.close()
@@ -95,7 +112,9 @@ async def test_get_balance_default_executor_account(setup_environment):
     context: Context = setup_environment["context"]
 
     params = AccountBalanceQueryParameters()
-    expected_balance = executor_wrapper.get_account_hbar_balance(str(executor_account_id))
+    expected_balance = executor_wrapper.get_account_hbar_balance(
+        str(executor_account_id)
+    )
 
     tool = GetHbarBalanceTool(context)
     result: ToolResponse = await tool.execute(executor_client, context, params)

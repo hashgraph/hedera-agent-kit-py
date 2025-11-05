@@ -12,7 +12,9 @@ from hiero_sdk_python import PrivateKey, Hbar
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.shared.models import ToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
@@ -89,6 +91,7 @@ async def agent_executor(langchain_test_setup):
     """Provide LangChain agent executor."""
     return langchain_test_setup.agent
 
+
 @pytest.fixture
 def langchain_config():
     """LangChain runnable config."""
@@ -100,7 +103,9 @@ def langchain_config():
 # ============================================================================
 
 
-async def execute_get_hbar_balance(agent_executor, input_text: str, config: RunnableConfig):
+async def execute_get_hbar_balance(
+    agent_executor, input_text: str, config: RunnableConfig
+):
     """Execute balance query through the agent."""
     return await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
@@ -142,7 +147,9 @@ async def test_get_hbar_balance_for_executor_account(
     expected_balance = executor_wrapper.get_account_hbar_balance(executor_id_str)
 
     input_text = f"What is the HBAR balance of {executor_id_str}?"
-    result = await execute_get_hbar_balance(agent_executor, input_text, langchain_config)
+    result = await execute_get_hbar_balance(
+        agent_executor, input_text, langchain_config
+    )
     observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
     assert observation is not None
@@ -172,7 +179,9 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     input_text = f"What is the HBAR balance of {account_id}?"
-    result = await execute_get_hbar_balance(agent_executor, input_text, langchain_config)
+    result = await execute_get_hbar_balance(
+        agent_executor, input_text, langchain_config
+    )
     observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
     assert str(account_id) in observation.human_message
@@ -205,7 +214,9 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     input_text = f"What is the HBAR balance of {account_id}?"
-    result = await execute_get_hbar_balance(agent_executor, input_text, langchain_config)
+    result = await execute_get_hbar_balance(
+        agent_executor, input_text, langchain_config
+    )
     observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
     assert str(account_id) in observation.human_message

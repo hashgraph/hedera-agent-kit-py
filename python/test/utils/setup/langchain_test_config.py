@@ -16,7 +16,9 @@ from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
 
 (TRANSFER_HBAR_TOOL, CREATE_ACCOUNT_TOOL) = core_account_plugin_tool_names
-GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names["GET_HBAR_BALANCE_QUERY_TOOL"]
+GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
+    "GET_HBAR_BALANCE_QUERY_TOOL"
+]
 
 
 @dataclass
@@ -55,4 +57,4 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
     agent_mode=AgentMode.AUTONOMOUS,
 )
 
-MIRROR_NODE_WAITING_TIME=4000
+MIRROR_NODE_WAITING_TIME = 4000

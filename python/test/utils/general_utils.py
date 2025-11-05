@@ -33,7 +33,6 @@ def from_evm_address(evm_address: str) -> ContractId:
         shard=shard, realm=realm, contract=contract, evm_address=evm_bytes
     )
 
+
 async def wait(milis: int):
-    await asyncio.sleep(
-        milis / 1000
-    )
+    await asyncio.sleep(milis / 1000)

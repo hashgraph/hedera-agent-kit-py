@@ -16,7 +16,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParametersNormalised,
     SchedulingParams,
     CreateAccountParameters,
-    CreateAccountParametersNormalised, AccountBalanceQueryParameters, AccountBalanceQueryParametersNormalised,
+    CreateAccountParametersNormalised,
+    AccountBalanceQueryParameters,
+    AccountBalanceQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -292,9 +294,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def normalise_get_hbar_balance(
-            params: AccountBalanceQueryParameters,
-            context: Context,
-            client: Client,
+        params: AccountBalanceQueryParameters,
+        context: Context,
+        client: Client,
     ) -> AccountBalanceQueryParametersNormalised:
         """Normalise HBAR balance query parameters
 
