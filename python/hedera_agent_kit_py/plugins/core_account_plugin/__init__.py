@@ -14,7 +14,12 @@ core_account_plugin = Plugin(
     ],
 )
 
-core_account_plugin_tool_names = {TRANSFER_HBAR_TOOL, DELETE_ACCOUNT_TOOL, CREATE_ACCOUNT_TOOL}
+core_account_plugin_tool_names = {
+    "TRANSFER_HBAR_TOOL": TRANSFER_HBAR_TOOL,
+    "DELETE_ACCOUNT_TOOL": DELETE_ACCOUNT_TOOL,
+    "CREATE_ACCOUNT_TOOL": CREATE_ACCOUNT_TOOL,
+}
+
 
 __all__ = [
     "core_account_plugin",

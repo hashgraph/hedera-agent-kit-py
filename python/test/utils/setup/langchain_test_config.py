@@ -10,7 +10,9 @@ from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
 
-(TRANSFER_HBAR_TOOL, DELETE_ACCOUNT_TOOL, CREATE_ACCOUNT_TOOL) = core_account_plugin_tool_names
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
+DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
+CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 
 
 @dataclass

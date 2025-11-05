@@ -18,7 +18,7 @@ from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configu
 
 load_dotenv(".env")
 
-(TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 
 
 async def bootstrap():

@@ -8,10 +8,11 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.plugins import core_account_plugin_tool_names
 from hedera_agent_kit_py.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
-DELETE_ACCOUNT_TOOL = "delete_account_tool"
+DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
 
 
 @pytest.fixture(scope="module")
@@ -85,7 +86,7 @@ async def test_match_delete_account_tool_with_transfer_account_id(
 @pytest.mark.parametrize(
     "input_text,expected",
     [
-        ("Close account 0.0.42", {"account_id": "0.0.42"}),
+        ("Delete account 0.0.42", {"account_id": "0.0.42"}),
         (
             "Remove account id 0.0.77 and send balance to 0.0.88",
             {"account_id": "0.0.77", "transfer_account_id": "0.0.88"},
