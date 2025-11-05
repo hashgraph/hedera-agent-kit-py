@@ -91,7 +91,10 @@ async def test_falls_back_to_client_operator_key_when_mirror_has_no_key():
 
         assert result.submit_key is not None
         assert isinstance(result.submit_key, PublicKey)
-        assert result.submit_key.to_string_der() == operator_key.public_key().to_string_der()
+        assert (
+            result.submit_key.to_string_der()
+            == operator_key.public_key().to_string_der()
+        )
 
 
 @pytest.mark.asyncio
@@ -109,7 +112,9 @@ async def test_raises_when_no_public_key_for_submit_key():
     with patch.object(AccountResolver, "get_default_account", return_value="0.0.1001"):
         params = CreateTopicParameters(is_submit_key=True)
 
-        with pytest.raises(ValueError, match="Could not determine public key for submit key"):
+        with pytest.raises(
+            ValueError, match="Could not determine public key for submit key"
+        ):
             await HederaParameterNormaliser.normalise_create_topic_params(
                 params, mock_context, mock_client, mock_mirror_node
             )

@@ -1,5 +1,9 @@
 """Core consensus plugin for Hedera Agent Kit."""
-from hedera_agent_kit_py.plugins.core_consensus_plugin.create_topic import CreateTopicTool, CREATE_TOPIC_TOOL
+
+from hedera_agent_kit_py.plugins.core_consensus_plugin.create_topic import (
+    CreateTopicTool,
+    CREATE_TOPIC_TOOL,
+)
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 core_account_plugin = Plugin(

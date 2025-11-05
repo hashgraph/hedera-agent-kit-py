@@ -1,5 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 
+
 # TODO: change to Hbar() when passing floating point values is supported
 def to_hbar(tinybars: Decimal) -> Decimal:
     """

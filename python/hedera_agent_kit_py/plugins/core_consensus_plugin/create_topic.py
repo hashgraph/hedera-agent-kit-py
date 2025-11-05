@@ -78,9 +78,9 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def create_topic(
-        client: Client,
-        context: Context,
-        params: CreateTopicParameters,
+    client: Client,
+    context: Context,
+    params: CreateTopicParameters,
 ) -> ToolResponse:
     """Execute a topic creation using normalized parameters and a built transaction.
 
@@ -144,7 +144,7 @@ class CreateTopicTool(Tool):
         self.parameters: type[CreateTopicParameters] = CreateTopicParameters
 
     async def execute(
-            self, client: Client, context: Context, params: CreateTopicParameters
+        self, client: Client, context: Context, params: CreateTopicParameters
     ) -> ToolResponse:
         """Execute the topic creation using the provided client, context, and params.
 

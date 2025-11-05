@@ -21,8 +21,6 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
 class HederaParameterNormaliser:
@@ -37,8 +35,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def parse_params_with_schema(
-            params: Any,
-            schema: Type[BaseModel],
+        params: Any,
+        schema: Type[BaseModel],
     ) -> BaseModel:
         """Validate and parse parameters using a Pydantic schema.
 
@@ -74,9 +72,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar(
-            params: TransferHbarParameters,
-            context: Context,
-            client: Client,
+        params: TransferHbarParameters,
+        context: Context,
+        client: Client,
     ) -> TransferHbarParametersNormalised:
         """Normalise HBAR transfer parameters to a format compatible with Python SDK.
 
@@ -139,9 +137,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_scheduled_transaction_params(
-            scheduling: SchedulingParams,
-            context: Context,
-            client: Client,
+        scheduling: SchedulingParams,
+        context: Context,
+        client: Client,
     ) -> ScheduleCreateParams:
         """Convert SchedulingParams to a ScheduleCreateParams instance compatible with Python SDK.
 
@@ -188,8 +186,8 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def resolve_key(
-            raw_value: Union[str, bool, None],
-            user_key: PublicKey,
+        raw_value: Union[str, bool, None],
+        user_key: PublicKey,
     ) -> Optional[PublicKey]:
         """Resolve a raw key input to a PublicKey instance.
 
@@ -210,12 +208,13 @@ class HederaParameterNormaliser:
         if raw_value:
             return user_key
         return None
+
     @staticmethod
     async def normalise_create_account(
-            params: CreateAccountParameters,
-            context: Context,
-            client: Client,
-            mirrornode_service: IHederaMirrornodeService,
+        params: CreateAccountParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
     ) -> CreateAccountParametersNormalised:
         """Normalize account-creation input into types the Python SDK expects.
 
@@ -249,7 +248,9 @@ class HederaParameterNormaliser:
         )
 
         # cast input to tinybars and build an instance of Hbar class
-        initial_balance = Hbar(to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True)
+        initial_balance = Hbar(
+            to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True
+        )
 
         # truncate memo if longer than 100 chars
         account_memo: Optional[str] = parsed_params.account_memo
@@ -278,10 +279,8 @@ class HederaParameterNormaliser:
         scheduling_params: ScheduleCreateParams | None = None
         if getattr(parsed_params, "scheduling_params", None):
             if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = (
-                    await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                        parsed_params.scheduling_params, context, client
-                    )
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
                 )
 
         return CreateAccountParametersNormalised(
@@ -289,15 +288,15 @@ class HederaParameterNormaliser:
             initial_balance=initial_balance,
             key=PublicKey.from_string(public_key),
             scheduling_params=scheduling_params,
-            max_automatic_token_associations=parsed_params.max_automatic_token_associations
+            max_automatic_token_associations=parsed_params.max_automatic_token_associations,
         )
 
     @staticmethod
     async def normalise_create_topic_params(
-            params: CreateTopicParameters,
-            context: Context,
-            client: Client,
-            mirror_node,
+        params: CreateTopicParameters,
+        context: Context,
+        client: Client,
+        mirror_node,
     ) -> CreateTopicParametersNormalised:
         """Normalise 'create topic' parameters into a format compatible with the Python SDK.
 
@@ -323,11 +322,15 @@ class HederaParameterNormaliser:
         # Validate and parse parameters
         parsed_params: CreateTopicParameters = cast(
             CreateTopicParameters,
-            HederaParameterNormaliser.parse_params_with_schema(params, CreateTopicParameters),
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateTopicParameters
+            ),
         )
 
         # Resolve default account ID
-        default_account_id: Optional[str] = AccountResolver.get_default_account(context, client)
+        default_account_id: Optional[str] = AccountResolver.get_default_account(
+            context, client
+        )
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
@@ -339,7 +342,9 @@ class HederaParameterNormaliser:
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(context, client)
+            submit_key: PublicKey = await AccountResolver.get_default_public_key(
+                context, client
+            )
             normalised.submit_key = submit_key
 
         return normalised
