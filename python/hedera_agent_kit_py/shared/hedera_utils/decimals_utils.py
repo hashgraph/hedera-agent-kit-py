@@ -1,9 +1,4 @@
-from decimal import Decimal, getcontext, ROUND_FLOOR
-
-# Set high precision for large token calculations
-getcontext().prec = 100
-
-## TODO: this must match SDK transaction responses - might require adjustment later
+from decimal import Decimal, ROUND_FLOOR
 
 
 def to_base_unit(amount: float | Decimal, decimals: int) -> Decimal:
