@@ -1,9 +1,9 @@
-"""Utilities for building and executing account creation operations via the Agent Kit.
+"""Utilities for building and executing account update operations via the Agent Kit.
 
 This module exposes:
-- create_account_prompt: Generate a prompt/description for the create account tool.
-- create_account: Execute an account creation transaction.
-- CreateAccountTool: Tool wrapper exposing the account creation operation to the runtime.
+- update_account_prompt: Generate a prompt/description for the update account tool.
+- update_account: Execute an account update transaction.
+- UpdateAccountTool: Tool wrapper exposing the account update operation to the runtime.
 """
 
 from __future__ import annotations
@@ -16,25 +16,23 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.models import (
     ToolResponse,
     RawTransactionResponse,
 )
 from hedera_agent_kit_py.shared.parameter_schemas import (
-    CreateAccountParameters,
-    CreateAccountParametersNormalised,
+    UpdateAccountParameters,
+    UpdateAccountParametersNormalised,
 )
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
-def create_account_prompt(context: Context = {}) -> str:
-    """Generate a human-readable description of the create account tool.
+def update_account_prompt(context: Context = {}) -> str:
+    """Generate a human-readable description of the update account tool.
 
     Args:
         context: Optional contextual configuration that may influence the prompt,
@@ -44,6 +42,9 @@ def create_account_prompt(context: Context = {}) -> str:
         A string describing the tool, its parameters, and usage instructions.
     """
     context_snippet: str = PromptGenerator.get_context_snippet(context)
+    account_desc: str = PromptGenerator.get_account_parameter_description(
+        "account_id", context
+    )
     usage_instructions: str = PromptGenerator.get_parameter_usage_instructions()
     scheduled_desc: str = PromptGenerator.get_scheduled_transaction_params_description(
         context
@@ -52,13 +53,15 @@ def create_account_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 
-This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operator's public key.
+This tool will update an existing Hedera account. Only provided fields will be updated.
 
 Parameters:
-- public_key (str, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
-- account_memo (str, optional): Optional memo for the account. Can be up to 100 characters long. Too long memos will be truncated in params normalization
-- initial_balance (float, optional, default 0): Initial HBAR to fund the account
-- max_automatic_token_associations (int, optional, default -1): -1 means unlimited
+- {account_desc}
+- account_id (str, optional): Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used
+- max_automatic_token_associations (int, optional): Max automatic token associations, positive, zero, or -1 for unlimited
+- staked_account_id (str, optional): Account ID to stake to
+- account_memo (str, optional): Memo to be set for the updated account
+- decline_staking_reward (bool, optional): Whether to decline staking rewards
 {scheduled_desc}
 
 {usage_instructions}
@@ -66,7 +69,7 @@ Parameters:
 
 
 def post_process(response: RawTransactionResponse) -> str:
-    """Produce a human-readable summary for an account creation result.
+    """Produce a human-readable summary for an account update result.
 
     Args:
         response: The raw response returned by the transaction execution, which
@@ -74,33 +77,30 @@ def post_process(response: RawTransactionResponse) -> str:
 
     Returns:
         A concise message describing the status and any relevant identifiers
-        (e.g., transaction ID, account ID, schedule ID).
+        (e.g., transaction ID, schedule ID).
     """
     if getattr(response, "schedule_id", None):
         return (
-            f"Scheduled transaction created successfully.\n"
+            f"Scheduled account update created successfully.\n"
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    account_id_str = str(response.account_id) if response.account_id else "unknown"
     return (
-        f"Account created successfully.\n"
-        f"Transaction ID: {response.transaction_id}\n"
-        f"New Account ID: {account_id_str}"
+        f"Account successfully updated.\n" f"Transaction ID: {response.transaction_id}"
     )
 
 
-async def create_account(
+async def update_account(
     client: Client,
     context: Context,
-    params: CreateAccountParameters,
+    params: UpdateAccountParameters,
 ) -> ToolResponse:
-    """Execute an account creation using normalized parameters and a built transaction.
+    """Execute an account update using normalized parameters and a built transaction.
 
     Args:
         client: Hedera client used to execute transactions.
         context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the account to create.
+        params: User-supplied parameters describing the account update.
 
     Returns:
         A ToolResponse wrapping the raw transaction response and a human-friendly
@@ -112,36 +112,33 @@ async def create_account(
         It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
         # Normalize parameters
-        normalised_params: CreateAccountParametersNormalised = (
-            await HederaParameterNormaliser.normalise_create_account(
-                params, context, client, mirrornode_service
+        normalised_params: UpdateAccountParametersNormalised = (
+            await HederaParameterNormaliser.normalise_update_account(
+                params, context, client
             )
         )
 
         # Build transaction
-        tx: Transaction = HederaBuilder.create_account(normalised_params)
+        tx: Transaction = HederaBuilder.update_account(normalised_params)
 
         # Execute transaction and post-process result
         return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
-        message: str = f"Failed to create account: {str(e)}"
-        print("[create_account_tool]", message)
+        message: str = f"Failed to update account: {str(e)}"
+        print("[update_account_tool]", message)
         return ToolResponse(
             human_message=message,
             error=message,
         )
 
 
-CREATE_ACCOUNT_TOOL: str = "create_account_tool"
+UPDATE_ACCOUNT_TOOL: str = "update_account_tool"
 
 
-class CreateAccountTool(Tool):
-    """Tool wrapper that exposes the account creation capability to the Agent runtime."""
+class UpdateAccountTool(Tool):
+    """Tool wrapper that exposes the account update capability to the Agent runtime."""
 
     def __init__(self, context: Context):
         """Initialize the tool metadata and parameter specification.
@@ -149,23 +146,23 @@ class CreateAccountTool(Tool):
         Args:
             context: Runtime context used to tailor the tool description.
         """
-        self.method: str = CREATE_ACCOUNT_TOOL
-        self.name: str = "Create Account"
-        self.description: str = create_account_prompt(context)
-        self.parameters: type[CreateAccountParameters] = CreateAccountParameters
+        self.method: str = UPDATE_ACCOUNT_TOOL
+        self.name: str = "Update Account"
+        self.description: str = update_account_prompt(context)
+        self.parameters: type[UpdateAccountParameters] = UpdateAccountParameters
 
     async def execute(
-        self, client: Client, context: Context, params: CreateAccountParameters
+        self, client: Client, context: Context, params: UpdateAccountParameters
     ) -> ToolResponse:
-        """Execute the account creation using the provided client, context, and params.
+        """Execute the account update using the provided client, context, and params.
 
         Args:
             client: Hedera client used to execute transactions.
             context: Runtime context providing configuration and defaults.
-            params: Account creation parameters accepted by this tool.
+            params: Account update parameters accepted by this tool.
 
         Returns:
-            The result of the account creation as a ToolResponse, including a human-readable
+            The result of the account update as a ToolResponse, including a human-readable
             message and error information if applicable.
         """
-        return await create_account(client, context, params)
+        return await update_account(client, context, params)

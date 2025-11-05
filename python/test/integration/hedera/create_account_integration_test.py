@@ -12,7 +12,10 @@ from hiero_sdk_python import PrivateKey, Hbar, PublicKey, Client
 from hedera_agent_kit_py.plugins.core_account_plugin import CreateAccountTool
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import ToolResponse, ExecutedTransactionToolResponse
+from hedera_agent_kit_py.shared.models import (
+    ToolResponse,
+    ExecutedTransactionToolResponse,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParameters,
     CreateAccountParametersNormalised,
@@ -65,7 +68,7 @@ async def setup_accounts():
 async def test_create_account_with_executor_public_key_by_default(setup_accounts):
     """Test creating an account with an executor public key by default."""
     executor_client: Client = setup_accounts["executor_client"]
-    executor_wrapper: HederaOperationsWrapper= setup_accounts["executor_wrapper"]
+    executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
     operator_wrapper: HederaOperationsWrapper = setup_accounts["operator_wrapper"]
     context: Context = setup_accounts["context"]
 
@@ -73,7 +76,7 @@ async def test_create_account_with_executor_public_key_by_default(setup_accounts
 
     tool = CreateAccountTool(context)
     result = await tool.execute(executor_client, context, params)
-    assert result.error is None # check that the response is not an error
+    assert result.error is None  # check that the response is not an error
     exec_result = cast(ExecutedTransactionToolResponse, result)
 
     assert "Account created successfully." in result.human_message
@@ -110,7 +113,7 @@ async def test_create_account_with_initial_balance_and_memo(setup_accounts):
 
     tool = CreateAccountTool(context)
     result: ToolResponse = await tool.execute(executor_client, context, params)
-    assert result.error is None # check that the response is not an error
+    assert result.error is None  # check that the response is not an error
     exec_result = cast(ExecutedTransactionToolResponse, result)
 
     assert "Account created successfully." in result.human_message
@@ -150,7 +153,7 @@ async def test_create_account_with_explicit_public_key(setup_accounts):
 
     tool: CreateAccountTool = CreateAccountTool(context)
     result: ToolResponse = await tool.execute(executor_client, context, params)
-    assert result.error is None # check that the response is not an error
+    assert result.error is None  # check that the response is not an error
     exec_result = cast(ExecutedTransactionToolResponse, result)
 
     assert result.error is None
@@ -178,7 +181,7 @@ async def test_schedule_create_account_transaction(setup_accounts):
 
     tool = CreateAccountTool(context)
     result: ToolResponse = await tool.execute(executor_client, context, params)
-    assert result.error is None # check that the response is not an error
+    assert result.error is None  # check that the response is not an error
     exec_result = cast(ExecutedTransactionToolResponse, result)
 
     assert exec_result.raw.schedule_id is not None
