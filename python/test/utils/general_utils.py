@@ -31,6 +31,7 @@ def from_evm_address(evm_address: str) -> ContractId:
         shard=shard, realm=realm, contract=contract, evm_address=evm_bytes
     )
 
+
 async def wait(time_in_millis: int):
     """
     Waits for a specified amount of time.
@@ -43,6 +44,5 @@ async def wait(time_in_millis: int):
     :type time_in_millis: int
     """
     import time
-    time.sleep(
-        time_in_millis / 1000
-    )
+
+    time.sleep(time_in_millis / 1000)

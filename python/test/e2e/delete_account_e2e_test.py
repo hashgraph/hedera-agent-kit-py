@@ -2,7 +2,9 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.general_utils import wait
@@ -27,7 +29,9 @@ def operator_wrapper(operator_client):
 async def executor_account(operator_wrapper, operator_client):
     executor_key: PrivateKey = PrivateKey.generate_ed25519()
     resp = await operator_wrapper.create_account(
-        CreateAccountParametersNormalised(initial_balance=DEFAULT_EXECUTOR_BALANCE, key=executor_key.public_key())
+        CreateAccountParametersNormalised(
+            initial_balance=DEFAULT_EXECUTOR_BALANCE, key=executor_key.public_key()
+        )
     )
     executor_account_id = resp.account_id
     executor_client = get_custom_client(executor_account_id, executor_key)
@@ -64,24 +68,31 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "delete_account_e2e"})
 
 
-async def create_test_account(executor_wrapper, executor_client, initial_balance_in_tinybar=0):
+async def create_test_account(
+    executor_wrapper, executor_client, initial_balance_in_tinybar=0
+):
     return await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_client.operator_private_key.public_key(), initial_balance=initial_balance_in_tinybar
+            key=executor_client.operator_private_key.public_key(),
+            initial_balance=initial_balance_in_tinybar,
         )
     )
 
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_default_transfer(
-        agent_executor, executor_wrapper, executor_account, langchain_config
+    agent_executor, executor_wrapper, executor_account, langchain_config
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
     target_account_id = str(resp.account_id)
 
     result = await agent_executor.ainvoke(
-        {"messages": [{"role": "user", "content": f"Delete the account {target_account_id}"}]},
+        {
+            "messages": [
+                {"role": "user", "content": f"Delete the account {target_account_id}"}
+            ]
+        },
         config=langchain_config,
     )
 
@@ -91,7 +102,7 @@ async def test_delete_pre_created_account_default_transfer(
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_with_explicit_transfer(
-        agent_executor, executor_wrapper, executor_account, langchain_config
+    agent_executor, executor_wrapper, executor_account, langchain_config
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
@@ -116,28 +127,39 @@ async def test_delete_pre_created_account_with_explicit_transfer(
 
 @pytest.mark.asyncio
 async def test_delete_non_existent_account(
-        agent_executor, executor_wrapper, langchain_config
+    agent_executor, executor_wrapper, langchain_config
 ):
     fake_account_id = "0.0.999999999"
 
     result = await agent_executor.ainvoke(
-        {"messages": [{"role": "user", "content": f"Delete the account {fake_account_id}"}]},
+        {
+            "messages": [
+                {"role": "user", "content": f"Delete the account {fake_account_id}"}
+            ]
+        },
         config=langchain_config,
     )
 
     observation = extract_tool_response(result, "delete_account_tool")
     assert any(
         err in observation.human_message.upper()
-        for err in ["INVALID_ACCOUNT_ID", "ACCOUNT_DELETED", "NOT_FOUND", "INVALID_SIGNATURE"]
+        for err in [
+            "INVALID_ACCOUNT_ID",
+            "ACCOUNT_DELETED",
+            "NOT_FOUND",
+            "INVALID_SIGNATURE",
+        ]
     )
 
 
 @pytest.mark.asyncio
 async def test_delete_account_with_natural_language_variations(
-        agent_executor, executor_wrapper, executor_account, langchain_config
+    agent_executor, executor_wrapper, executor_account, langchain_config
 ):
     _, _, executor_client, _ = executor_account
-    resp = await create_test_account(executor_wrapper, executor_client, initial_balance_in_tinybar=5*10**8)
+    resp = await create_test_account(
+        executor_wrapper, executor_client, initial_balance_in_tinybar=5 * 10**8
+    )
     target_account_id = str(resp.account_id)
 
     operator_balance_before = executor_wrapper.get_account_hbar_balance(

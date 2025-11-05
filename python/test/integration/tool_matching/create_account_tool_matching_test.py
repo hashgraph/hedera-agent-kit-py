@@ -41,7 +41,7 @@ CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 
 @pytest.mark.asyncio
 async def test_match_create_account_tool_with_default_params(
-        agent_executor, toolkit, monkeypatch
+    agent_executor, toolkit, monkeypatch
 ):
     """Test that the tool matches with default params."""
     input_text = "Create a new Hedera account"
@@ -62,7 +62,7 @@ async def test_match_create_account_tool_with_default_params(
 
 @pytest.mark.asyncio
 async def test_match_create_account_with_memo_and_initial_balance(
-        agent_executor, toolkit, monkeypatch
+    agent_executor, toolkit, monkeypatch
 ):
     """Test tool matching with memo and initial balance."""
     input_text = (
@@ -88,7 +88,7 @@ async def test_match_create_account_with_memo_and_initial_balance(
 
 @pytest.mark.asyncio
 async def test_match_create_account_with_explicit_public_key(
-        agent_executor, toolkit, monkeypatch
+    agent_executor, toolkit, monkeypatch
 ):
     """Test tool matching with explicit public key."""
     public_key = PrivateKey.generate_ed25519().public_key().to_string_der()
@@ -113,7 +113,7 @@ async def test_match_create_account_with_explicit_public_key(
 
 @pytest.mark.asyncio
 async def test_parse_max_automatic_token_associations(
-        agent_executor, toolkit, monkeypatch
+    agent_executor, toolkit, monkeypatch
 ):
     """Test parsing of max automatic token associations."""
     input_text = "Create an account with max automatic token associations 10"
@@ -136,7 +136,7 @@ async def test_parse_max_automatic_token_associations(
 
 @pytest.mark.asyncio
 async def test_match_and_extract_params_for_scheduled_create_account(
-        agent_executor, toolkit, monkeypatch
+    agent_executor, toolkit, monkeypatch
 ):
     """Test matching and parameter extraction for scheduled create account transaction."""
     input_text = (
@@ -174,7 +174,7 @@ async def test_match_and_extract_params_for_scheduled_create_account(
     ],
 )
 async def test_handle_various_natural_language_variations(
-        agent_executor, toolkit, monkeypatch, input_text, expected_memo
+    agent_executor, toolkit, monkeypatch, input_text, expected_memo
 ):
     """Test various natural language variations."""
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}

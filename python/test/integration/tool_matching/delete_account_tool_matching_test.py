@@ -44,7 +44,9 @@ async def test_match_delete_account_tool_with_account_id_only(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked delete response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked delete response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -67,7 +69,9 @@ async def test_match_delete_account_tool_with_transfer_account_id(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked delete response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked delete response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -100,7 +104,9 @@ async def test_handle_various_natural_language_variations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked delete response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked delete response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(

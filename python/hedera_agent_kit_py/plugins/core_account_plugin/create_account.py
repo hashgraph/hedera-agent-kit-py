@@ -82,9 +82,7 @@ def post_process(response: RawTransactionResponse) -> str:
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    account_id_str = (
-        str(response.account_id) if response.account_id else "unknown"
-    )
+    account_id_str = str(response.account_id) if response.account_id else "unknown"
     return (
         f"Account created successfully.\n"
         f"Transaction ID: {response.transaction_id}\n"
@@ -93,9 +91,9 @@ def post_process(response: RawTransactionResponse) -> str:
 
 
 async def create_account(
-        client: Client,
-        context: Context,
-        params: CreateAccountParameters,
+    client: Client,
+    context: Context,
+    params: CreateAccountParameters,
 ) -> ToolResponse:
     """Execute an account creation using normalized parameters and a built transaction.
 
@@ -114,7 +112,9 @@ async def create_account(
         It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
-        mirrornode_service = get_mirrornode_service(context.mirrornode_service, ledger_id_from_network(client.network))
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
         # Normalize parameters
         normalised_params: CreateAccountParametersNormalised = (
             await HederaParameterNormaliser.normalise_create_account(
@@ -155,7 +155,7 @@ class CreateAccountTool(Tool):
         self.parameters: type[CreateAccountParameters] = CreateAccountParameters
 
     async def execute(
-            self, client: Client, context: Context, params: CreateAccountParameters
+        self, client: Client, context: Context, params: CreateAccountParameters
     ) -> ToolResponse:
         """Execute the account creation using the provided client, context, and params.
 
