@@ -41,9 +41,10 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-class CreateTopicParametersNormalised(CreateTopicParameters):
+class CreateTopicParametersNormalised(BaseModelWithArbitraryTypes):
     memo: Optional[str] = None
     submit_key: Optional[PublicKey] = None
+    transaction_memo: Optional[str] = None
 
 
 class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):

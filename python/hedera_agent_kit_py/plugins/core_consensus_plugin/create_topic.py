@@ -139,7 +139,7 @@ class CreateTopicTool(Tool):
             context: Runtime context used to tailor the tool description.
         """
         self.method: str = CREATE_TOPIC_TOOL
-        self.name: str = CREATE_TOPIC_TOOL
+        self.name: str = "Create Topic"
         self.description: str = create_topic_prompt(context)
         self.parameters: type[CreateTopicParameters] = CreateTopicParameters
 

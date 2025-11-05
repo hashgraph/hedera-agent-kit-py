@@ -7,7 +7,6 @@ from pydantic import BaseModel, ValidationError
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
@@ -338,6 +337,7 @@ class HederaParameterNormaliser:
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
+            submit_key=None,
         )
 
         # Optionally resolve submit key if requested
