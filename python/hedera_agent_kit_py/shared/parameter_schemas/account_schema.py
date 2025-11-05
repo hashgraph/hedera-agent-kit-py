@@ -8,7 +8,8 @@ from pydantic import Field
 # Local import avoids circular import
 from hedera_agent_kit_py.shared.parameter_schemas.common_schema import (
     OptionalScheduledTransactionParams,
-    BaseModelWithArbitraryTypes, OptionalScheduledTransactionParamsNormalised,
+    BaseModelWithArbitraryTypes,
+    OptionalScheduledTransactionParamsNormalised,
 )
 
 
@@ -50,7 +51,10 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
         ),
     ] = None
     account_memo: Annotated[
-        Optional[str], Field(description="Optional memo for the account. Can be up to 100 characters long. Too long memos will be handled in params normalization")
+        Optional[str],
+        Field(
+            description="Optional memo for the account. Can be up to 100 characters long. Too long memos will be handled in params normalization"
+        ),
     ] = None
     initial_balance: Annotated[
         float,
@@ -199,7 +203,9 @@ class DeleteHbarAllowanceParameters(BaseModelWithArbitraryTypes):
     transaction_memo: Optional[str] = None
 
 
-class TransferHbarWithAllowanceParametersNormalised(OptionalScheduledTransactionParamsNormalised):
+class TransferHbarWithAllowanceParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
     hbar_approved_transfers: dict["AccountId", int] = Field(
         description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )

@@ -67,7 +67,9 @@ async def executor_account(
 
     executor_account_id: AccountId = executor_resp.account_id
     executor_client: Client = get_custom_client(executor_account_id, executor_key_pair)
-    executor_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(executor_client)
+    executor_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
+        executor_client
+    )
 
     yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
 
@@ -117,7 +119,7 @@ async def toolkit(langchain_test_setup):
 # ============================================================================
 
 
-def extract_account_id(agent_result:  dict[str, Any]) -> str:
+def extract_account_id(agent_result: dict[str, Any]) -> str:
     """Extract account ID from an agent result.
 
     Args:
@@ -174,7 +176,9 @@ async def test_create_account_with_default_operator_public_key(
 
     # Cleanup created an account
     await return_hbars_and_delete_account(
-        executor_wrapper, AccountId.from_string(new_account_id), operator_client.operator_account_id
+        executor_wrapper,
+        AccountId.from_string(new_account_id),
+        operator_client.operator_account_id,
     )
 
 
@@ -202,7 +206,9 @@ async def test_create_account_with_initial_balance_and_memo(
 
     # Cleanup created an account
     await return_hbars_and_delete_account(
-        executor_wrapper, AccountId.from_string(new_account_id), operator_client.operator_account_id
+        executor_wrapper,
+        AccountId.from_string(new_account_id),
+        operator_client.operator_account_id,
     )
 
 
@@ -226,14 +232,10 @@ async def test_create_account_with_explicit_public_key(
 
 
 @pytest.mark.asyncio
-async def test_schedule_create_account_transaction(
-    agent_executor, langchain_config
-):
+async def test_schedule_create_account_transaction(agent_executor, langchain_config):
     """Test scheduling a creation account transaction with an explicit public key."""
     public_key = PrivateKey.generate_ed25519().public_key()
-    input_text = (
-        f"Schedule creating a new Hedera account using public key {public_key.to_string_der()}"
-    )
+    input_text = f"Schedule creating a new Hedera account using public key {public_key.to_string_der()}"
 
     result = await execute_create_account(agent_executor, input_text, langchain_config)
     observation = extract_tool_response(result, "create_account_tool")
@@ -272,5 +274,7 @@ async def test_create_account_with_very_small_initial_balance(
 
     # Cleanup created an account
     await return_hbars_and_delete_account(
-        executor_wrapper, AccountId.from_string(new_account_id), operator_client.operator_account_id
+        executor_wrapper,
+        AccountId.from_string(new_account_id),
+        operator_client.operator_account_id,
     )

@@ -7,7 +7,7 @@ All models provide `to_dict`/`from_dict` helpers for JSON-friendly transport.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from hiero_sdk_python import AccountId, TokenId, TopicId, TransactionId
@@ -25,20 +25,27 @@ class ToolResponse:
 
     human_message: str
     error: Optional[str] = None
+    extra: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize the base fields for all tool responses."""
-        return {
+        """Serialize all fields to a dictionary (including extras)."""
+        data = {
             "human_message": self.human_message,
             "error": self.error,
         }
+        # Merge extra dynamic fields
+        data.update(self.extra)
+        return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ToolResponse:
-        """Deserialize base fields for a tool response."""
+    def from_dict(cls, data: dict[str, Any]) -> "ToolResponse":
+        """Reconstruct from dictionary, keeping unrecognized fields."""
+        base_keys = {"human_message", "error"}
+        extra = {k: v for k, v in data.items() if k not in base_keys}
         return cls(
             human_message=data.get("human_message", ""),
             error=data.get("error"),
+            extra=extra,
         )
 
 
@@ -100,10 +107,9 @@ class RawTransactionResponse:
 class ExecutedTransactionToolResponse(ToolResponse):
     """A tool response representing a fully executed transaction."""
 
-    raw: RawTransactionResponse
+    raw: "RawTransactionResponse"
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize the response to a dictionary suitable for JSON output."""
         data = super().to_dict()
         data.update(
             {
@@ -114,12 +120,13 @@ class ExecutedTransactionToolResponse(ToolResponse):
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ExecutedTransactionToolResponse:
-        """Reconstruct an `ExecutedTransactionToolResponse` from a dictionary."""
+    def from_dict(cls, data: dict[str, Any]) -> "ExecutedTransactionToolResponse":
+        base = ToolResponse.from_dict(data)
         return cls(
             raw=RawTransactionResponse.from_dict(data["raw"]),
-            human_message=data.get("human_message", ""),
-            error=data.get("error"),
+            human_message=base.human_message,
+            error=base.error,
+            extra=base.extra,  # preserve unknown fields
         )
 
 
@@ -130,19 +137,23 @@ class ReturnBytesToolResponse(ToolResponse):
     bytes_data: bytes
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize to a dictionary including extras."""
         data = super().to_dict()
         data.update(
             {
                 "type": "return_bytes",
-                "bytes_data": self.bytes_data.hex(),  # hex for JSON safety
+                "bytes_data": self.bytes_data.hex(),  # convert bytes safely for JSON
             }
         )
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ReturnBytesToolResponse:
+    def from_dict(cls, data: dict[str, Any]) -> "ReturnBytesToolResponse":
+        """Deserialize from a dictionary (preserving extra fields)."""
+        base = ToolResponse.from_dict(data)
         return cls(
             bytes_data=bytes.fromhex(data["bytes_data"]),
-            human_message=data.get("human_message", ""),
-            error=data.get("error"),
+            human_message=base.human_message,
+            error=base.error,
+            extra=base.extra,  # preserve any extra fields
         )

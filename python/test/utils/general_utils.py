@@ -1,3 +1,5 @@
+import asyncio
+
 from hiero_sdk_python.contract.contract_id import ContractId
 
 
@@ -29,4 +31,9 @@ def from_evm_address(evm_address: str) -> ContractId:
 
     return ContractId(
         shard=shard, realm=realm, contract=contract, evm_address=evm_bytes
+    )
+
+async def wait(milis: int):
+    await asyncio.sleep(
+        milis / 1000
     )
