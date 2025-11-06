@@ -20,6 +20,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    GetTopicInfoParameters,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -351,7 +352,6 @@ class HederaParameterNormaliser:
 
         return normalised
 
-
     @staticmethod
     def normalise_get_hbar_balance(
         params: AccountBalanceQueryParameters,
@@ -378,3 +378,30 @@ class HederaParameterNormaliser:
             resolved_account_id = parsed_params.account_id
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @staticmethod
+    def normalise_get_topic_info(
+        params: GetTopicInfoParameters,
+    ):
+        """
+        Normalizes the input parameters for the 'get_topic_info' operation to ensure
+        they adhere to the expected schema format. This function parses the input
+        parameters utilizing a schema and type casts the result to the appropriate
+        data type.
+
+        :param params: The parameters for the 'get_topic_info' operation. These
+            parameters should be of type 'GetTopicInfoParameters'.
+        :type params: GetTopicInfoParameters
+
+        :return: Parsed and normalized parameters after being verified against
+            the schema.
+        :rtype: GetTopicInfoParameters
+        """
+        parsed_params: GetTopicInfoParameters = cast(
+            GetTopicInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTopicInfoParameters
+            ),
+        )
+
+        return parsed_params
