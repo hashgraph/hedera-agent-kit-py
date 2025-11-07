@@ -14,6 +14,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
     SchedulingParams,
+    DeleteAccountParameters,
+    DeleteAccountParametersNormalised,
     CreateAccountParameters,
     CreateAccountParametersNormalised,
     CreateTopicParameters,
@@ -348,3 +350,48 @@ class HederaParameterNormaliser:
             normalised.submit_key = submit_key
 
         return normalised
+
+    @staticmethod
+    def normalise_delete_account(
+        params: DeleteAccountParameters,
+        context: Context,
+        client: Client,
+    ) -> DeleteAccountParametersNormalised:
+        """Normalise delete account parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete account parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            DeleteAccountParametersNormalised: Normalised delete account parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If account ID is invalid or transfer account ID cannot be determined.
+        """
+        parsed_params: DeleteAccountParameters = cast(
+            DeleteAccountParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteAccountParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.account_id):
+            raise ValueError("Account ID must be a Hedera address")
+
+        # If no transfer account ID is provided, use the operator account ID
+        transfer_account_id: Optional[str] = (
+            parsed_params.transfer_account_id
+            if parsed_params.transfer_account_id
+            else AccountResolver.get_default_account(context, client)
+        )
+
+        if not transfer_account_id:
+            raise ValueError("Could not determine transfer account ID")
+
+        return DeleteAccountParametersNormalised(
+            account_id=AccountId.from_string(parsed_params.account_id),
+            transfer_account_id=AccountId.from_string(transfer_account_id),
+        )
