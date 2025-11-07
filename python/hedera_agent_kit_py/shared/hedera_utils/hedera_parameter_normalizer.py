@@ -294,9 +294,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def normalise_get_hbar_balance(
-            params: AccountBalanceQueryParameters,
-            context: Context,
-            client: Client,
+        params: AccountBalanceQueryParameters,
+        context: Context,
+        client: Client,
     ) -> AccountBalanceQueryParametersNormalised:
         """Normalise HBAR balance query parameters
 
@@ -377,4 +377,3 @@ class HederaParameterNormaliser:
             normalised.submit_key = submit_key
 
         return normalised
-
