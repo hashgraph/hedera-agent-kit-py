@@ -26,7 +26,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     AccountBalanceQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
-    AccountQueryParametersNormalised
+    AccountQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
