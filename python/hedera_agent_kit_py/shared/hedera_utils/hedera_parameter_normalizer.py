@@ -333,7 +333,6 @@ class HederaParameterNormaliser:
         )
         return parsed_params
 
-
     @staticmethod
     async def normalise_create_topic_params(
         params: CreateTopicParameters,
