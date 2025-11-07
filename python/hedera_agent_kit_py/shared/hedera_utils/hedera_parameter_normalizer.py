@@ -2,8 +2,10 @@ from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
+from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
+from web3 import Web3
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
@@ -20,6 +22,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    ContractExecuteTransactionParametersNormalised,
+    CreateERC20Parameters,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -377,3 +381,64 @@ class HederaParameterNormaliser:
             normalised.submit_key = submit_key
 
         return normalised
+
+    @staticmethod
+    async def normalise_create_erc20_params(
+        params: CreateERC20Parameters,
+        factory_address: str,
+        ERC20_FACTORY_ABI: list[str],
+        factory_contract_function_name: str,
+        context: Context,
+        client: Client,
+    ) -> "ContractExecuteTransactionParametersNormalised":
+        """Normalise ERC20 creation parameters for BaseERC20Factory contract deployment.
+
+        This method mirrors the TypeScript `normaliseCreateERC20Params` logic and prepares
+        the encoded contract function call along with optional scheduling information.
+
+        Args:
+            params: Raw ERC20 creation parameters.
+            factory_address: The address/ID of the ERC20 factory contract.
+            ERC20_FACTORY_ABI: ABI of the BaseERC20Factory contract.
+            factory_contract_function_name: Function to invoke (e.g., 'deployToken').
+            context: Application context.
+            client: Active Hedera client instance.
+
+        Returns:
+            ContractExecuteTransactionParametersNormalised: Normalised parameters ready for execution.
+        """
+        # Validate and parse parameters
+        parsed_params: CreateERC20Parameters = cast(
+            CreateERC20Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateERC20Parameters
+            ),
+        )
+
+        w3 = Web3()
+        contract = w3.eth.contract(abi=ERC20_FACTORY_ABI)
+        encoded_data = contract.encode_abi(
+            fn_name=factory_contract_function_name,
+            args=[
+                parsed_params.token_name,
+                parsed_params.token_symbol,
+                parsed_params.decimals,
+                parsed_params.initial_supply,
+            ],
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_sclassmethodcheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=ContractId.from_string(factory_address),
+            function_parameters=function_parameters,
+            gas=3_000_000,  # TODO: make configurable
+            scheduling_params=scheduling_params,
+        )
