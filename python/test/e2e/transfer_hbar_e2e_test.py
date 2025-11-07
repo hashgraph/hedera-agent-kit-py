@@ -6,6 +6,9 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.plugins.core_account_plugin import (
+    core_account_plugin_tool_names,
+)
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
 from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -18,6 +21,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.verification import extract_tool_response
 
 # Constants
+(TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
 DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
 DEFAULT_RECIPIENT_BALANCE = 0
 
