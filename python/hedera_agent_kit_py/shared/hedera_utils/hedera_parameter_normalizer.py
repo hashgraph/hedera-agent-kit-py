@@ -21,6 +21,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
     GetTopicInfoParameters,
+    ExchangeRateQueryParameters,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -401,6 +402,31 @@ class HederaParameterNormaliser:
             GetTopicInfoParameters,
             HederaParameterNormaliser.parse_params_with_schema(
                 params, GetTopicInfoParameters
+            ),
+        )
+
+        return parsed_params
+
+    @staticmethod
+    def normalise_get_exchange_rate(
+        params: ExchangeRateQueryParameters,
+    ) -> ExchangeRateQueryParameters:
+        """
+        Normalises and parses the given exchange rate query parameters using a predefined
+        schema. This method ensures that the input parameters adhere to the required structure
+        and format specified by the schema.
+
+        :param params: The exchange rate query parameters to be normalised. The parameter
+            must conform to the type `ExchangeRateQueryParameters`.
+        :type params: ExchangeRateQueryParameters
+
+        :return: A parsed and normalised instance of `ExchangeRateQueryParameters`.
+        :rtype: ExchangeRateQueryParameters
+        """
+        parsed_params: ExchangeRateQueryParameters = cast(
+            ExchangeRateQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ExchangeRateQueryParameters
             ),
         )
 
