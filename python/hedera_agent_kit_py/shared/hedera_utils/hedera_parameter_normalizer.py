@@ -20,6 +20,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    AccountBalanceQueryParameters,
+    AccountBalanceQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -291,6 +293,33 @@ class HederaParameterNormaliser:
             scheduling_params=scheduling_params,
             max_automatic_token_associations=parsed_params.max_automatic_token_associations,
         )
+
+    @staticmethod
+    def normalise_get_hbar_balance(
+        params: AccountBalanceQueryParameters,
+        context: Context,
+        client: Client,
+    ) -> AccountBalanceQueryParametersNormalised:
+        """Normalise HBAR balance query parameters
+
+        If an account_id is provided, it is used directly.
+        Otherwise, the default account from AccountResolver is used.
+        """
+
+        parsed_params: AccountBalanceQueryParameters = cast(
+            AccountBalanceQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountBalanceQueryParameters
+            ),
+        )
+
+        if parsed_params.account_id is None:
+            # Only resolve when no account ID is provided
+            resolved_account_id = AccountResolver.get_default_account(context, client)
+        else:
+            resolved_account_id = parsed_params.account_id
+
+        return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
 
     @staticmethod
     async def normalise_create_topic_params(
