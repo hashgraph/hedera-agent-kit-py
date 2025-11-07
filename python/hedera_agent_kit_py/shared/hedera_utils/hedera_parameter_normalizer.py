@@ -20,6 +20,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    AccountQueryParametersNormalised,
+)
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -318,3 +321,14 @@ class HederaParameterNormaliser:
             resolved_account_id = parsed_params.account_id
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @classmethod
+    def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
+        """Parse and validate account query parameters"""
+        parsed_params: AccountQueryParametersNormalised = cast(
+            AccountQueryParametersNormalised,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountQueryParametersNormalised
+            ),
+        )
+        return parsed_params

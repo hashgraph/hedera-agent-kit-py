@@ -11,10 +11,16 @@ from __future__ import annotations
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import AccountResponse
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import AccountQueryParameters
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    AccountQueryParametersNormalised,
+)
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
@@ -80,12 +86,15 @@ async def get_account_query(
         rather than raising, to keep tool behavior consistent for callers.
     """
     try:
+        parsed_params: AccountQueryParametersNormalised = (
+            HederaParameterNormaliser.normalise_get_account_query(params)
+        )
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )
-        account = await mirrornode_service.get_account(params.account_id)
+        account = await mirrornode_service.get_account(parsed_params.account_id)
         return ToolResponse(
-            extra={"account_id": params.account_id, "account": account},
+            extra={"account_id": parsed_params.account_id, "account": account},
             human_message=post_process(account),
         )
     except Exception as e:

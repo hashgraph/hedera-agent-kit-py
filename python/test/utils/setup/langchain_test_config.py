@@ -20,6 +20,8 @@ GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
 ]
 
+GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+
 
 @dataclass
 class LangchainTestOptions:
@@ -52,7 +54,12 @@ DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
 )
 
 TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
-    tools=[TRANSFER_HBAR_TOOL, CREATE_ACCOUNT_TOOL, GET_HBAR_BALANCE_QUERY_TOOL],
+    tools=[
+        TRANSFER_HBAR_TOOL,
+        CREATE_ACCOUNT_TOOL,
+        GET_HBAR_BALANCE_QUERY_TOOL,
+        GET_ACCOUNT_QUERY_TOOL,
+    ],
     plugins=[core_account_plugin, core_account_query_plugin],
     agent_mode=AgentMode.AUTONOMOUS,
 )
