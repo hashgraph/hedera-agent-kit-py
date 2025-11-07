@@ -438,9 +438,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def normalise_delete_account(
-            params: DeleteAccountParameters,
-            context: Context,
-            client: Client,
+        params: DeleteAccountParameters,
+        context: Context,
+        client: Client,
     ) -> DeleteAccountParametersNormalised:
         """Normalise delete account parameters to a format compatible with Python SDK.
 
@@ -483,9 +483,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_update_account(
-            params: UpdateAccountParameters,
-            context: Context,
-            client: Client,
+        params: UpdateAccountParameters,
+        context: Context,
+        client: Client,
     ) -> UpdateAccountParametersNormalised:
         """Normalize account-update input into types the Python SDK expects.
 
