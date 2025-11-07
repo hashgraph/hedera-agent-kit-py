@@ -51,7 +51,6 @@ from .evm_schema import (
     CreateERC20Parameters,
     TransferERC721Parameters,
     MintERC721Parameters,
-    EvmContractCallParametersNormalised,
     ContractInfoQueryParameters,
 )
 from .token_schema import (
