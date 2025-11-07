@@ -429,9 +429,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_update_account(
-            params: UpdateAccountParameters,
-            context: Context,
-            client: Client,
+        params: UpdateAccountParameters,
+        context: Context,
+        client: Client,
     ) -> UpdateAccountParametersNormalised:
         """Normalize account-update input into types the Python SDK expects.
 
