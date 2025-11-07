@@ -10,6 +10,7 @@ import pytest
 from hiero_sdk_python import PrivateKey
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.plugins import core_account_plugin_tool_names
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import SchedulingParams
 from test.utils import create_langchain_test_setup
@@ -35,7 +36,7 @@ async def toolkit(test_setup):
     return test_setup.toolkit
 
 
-CREATE_ACCOUNT_TOOL = "create_account_tool"
+CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 
 
 @pytest.mark.asyncio

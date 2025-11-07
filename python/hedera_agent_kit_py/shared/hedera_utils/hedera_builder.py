@@ -164,8 +164,6 @@ class HederaBuilder:
 
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
-        if getattr(params, "transaction_memo", None):
-            tx.set_transaction_memo(params.transaction_memo)
         return tx
 
     @staticmethod

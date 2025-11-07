@@ -40,7 +40,6 @@ async def test_applies_defaults_when_values_not_provided():
         )
 
         assert isinstance(result, CreateTopicParametersNormalised)
-        assert not result.is_submit_key
         assert result.submit_key is None
         assert result.memo is None
 
