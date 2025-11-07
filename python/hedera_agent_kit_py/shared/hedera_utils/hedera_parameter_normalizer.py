@@ -7,7 +7,6 @@ from pydantic import BaseModel, ValidationError
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
@@ -15,14 +14,17 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
     SchedulingParams,
+    DeleteAccountParameters,
+    DeleteAccountParametersNormalised,
     CreateAccountParameters,
     CreateAccountParametersNormalised,
     UpdateAccountParameters,
     UpdateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    AccountBalanceQueryParameters,
+    AccountBalanceQueryParametersNormalised,
 )
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
@@ -295,6 +297,33 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    def normalise_get_hbar_balance(
+        params: AccountBalanceQueryParameters,
+        context: Context,
+        client: Client,
+    ) -> AccountBalanceQueryParametersNormalised:
+        """Normalise HBAR balance query parameters
+
+        If an account_id is provided, it is used directly.
+        Otherwise, the default account from AccountResolver is used.
+        """
+
+        parsed_params: AccountBalanceQueryParameters = cast(
+            AccountBalanceQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountBalanceQueryParameters
+            ),
+        )
+
+        if parsed_params.account_id is None:
+            # Only resolve when no account ID is provided
+            resolved_account_id = AccountResolver.get_default_account(context, client)
+        else:
+            resolved_account_id = parsed_params.account_id
+
+        return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @staticmethod
     async def normalise_create_topic_params(
         params: CreateTopicParameters,
         context: Context,
@@ -354,10 +383,55 @@ class HederaParameterNormaliser:
         return normalised
 
     @staticmethod
-    async def normalise_update_account(
-        params: UpdateAccountParameters,
+    def normalise_delete_account(
+        params: DeleteAccountParameters,
         context: Context,
         client: Client,
+    ) -> DeleteAccountParametersNormalised:
+        """Normalise delete account parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete account parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            DeleteAccountParametersNormalised: Normalised delete account parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If account ID is invalid or transfer account ID cannot be determined.
+        """
+        parsed_params: DeleteAccountParameters = cast(
+            DeleteAccountParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteAccountParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.account_id):
+            raise ValueError("Account ID must be a Hedera address")
+
+        # If no transfer account ID is provided, use the operator account ID
+        transfer_account_id: Optional[str] = (
+            parsed_params.transfer_account_id
+            if parsed_params.transfer_account_id
+            else AccountResolver.get_default_account(context, client)
+        )
+
+        if not transfer_account_id:
+            raise ValueError("Could not determine transfer account ID")
+
+        return DeleteAccountParametersNormalised(
+            account_id=AccountId.from_string(parsed_params.account_id),
+            transfer_account_id=AccountId.from_string(transfer_account_id),
+        )
+
+    @staticmethod
+    async def normalise_update_account(
+            params: UpdateAccountParameters,
+            context: Context,
+            client: Client,
     ) -> UpdateAccountParametersNormalised:
         """Normalize account-update input into types the Python SDK expects.
 
