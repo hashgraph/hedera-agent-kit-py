@@ -289,24 +289,15 @@ class HederaParameterNormaliser:
             initial_balance=initial_balance,
             key=PublicKey.from_string(public_key),
             scheduling_params=scheduling_params,
-            max_automatic_token_associations=parsed_params.max_automatic_token_associations
+            max_automatic_token_associations=parsed_params.max_automatic_token_associations,
         )
-
-        # Optionally resolve submit key if requested
-        if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
-
-        return normalised
 
     @staticmethod
     async def normalise_create_topic_params(
-            params: CreateTopicParameters,
-            context: Context,
-            client: Client,
-            mirror_node,
+        params: CreateTopicParameters,
+        context: Context,
+        client: Client,
+        mirror_node,
     ) -> CreateTopicParametersNormalised:
         """Normalise 'create topic' parameters into a format compatible with the Python SDK.
 
@@ -360,7 +351,6 @@ class HederaParameterNormaliser:
 
         return normalised
 
-
     @staticmethod
     def normalise_delete_account(
         params: DeleteAccountParameters,
@@ -405,4 +395,3 @@ class HederaParameterNormaliser:
             account_id=AccountId.from_string(parsed_params.account_id),
             transfer_account_id=AccountId.from_string(transfer_account_id),
         )
-
