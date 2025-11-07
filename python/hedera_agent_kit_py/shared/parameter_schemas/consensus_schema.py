@@ -31,13 +31,6 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
         bool, Field(description="Whether to set a submit key for the topic (optional).")
     ] = False
 
-    is_admin_key: Annotated[
-        bool,
-        Field(
-            description="Whether to set an admin key for the topic (optional, defaults to true)."
-        ),
-    ] = True
-
     topic_memo: Annotated[
         Optional[str], Field(description="Memo for the topic (optional).")
     ] = None
@@ -48,10 +41,10 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-class CreateTopicParametersNormalised(CreateTopicParameters):
-    memo: Optional[str] = (None,)
-    admin_key: Optional[PublicKey] = (None,)
-    submit_key: Optional[PublicKey] = (None,)
+class CreateTopicParametersNormalised(BaseModelWithArbitraryTypes):
+    memo: Optional[str] = None
+    submit_key: Optional[PublicKey] = None
+    transaction_memo: Optional[str] = None
 
 
 class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):

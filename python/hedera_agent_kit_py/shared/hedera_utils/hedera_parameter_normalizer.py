@@ -7,7 +7,6 @@ from pydantic import BaseModel, ValidationError
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
@@ -17,10 +16,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     SchedulingParams,
     CreateAccountParameters,
     CreateAccountParametersNormalised,
+    CreateTopicParameters,
+    CreateTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
 )
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
@@ -294,9 +294,9 @@ class HederaParameterNormaliser:
 
     @staticmethod
     def normalise_get_hbar_balance(
-        params: AccountBalanceQueryParameters,
-        context: Context,
-        client: Client,
+            params: AccountBalanceQueryParameters,
+            context: Context,
+            client: Client,
     ) -> AccountBalanceQueryParametersNormalised:
         """Normalise HBAR balance query parameters
 
@@ -318,3 +318,63 @@ class HederaParameterNormaliser:
             resolved_account_id = parsed_params.account_id
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @staticmethod
+    async def normalise_create_topic_params(
+        params: CreateTopicParameters,
+        context: Context,
+        client: Client,
+        mirror_node,
+    ) -> CreateTopicParametersNormalised:
+        """Normalise 'create topic' parameters into a format compatible with the Python SDK.
+
+        This function:
+          - Validates and parses the raw parameters using the CreateTopicParameters schema.
+          - Resolves the default account ID from context or client configuration.
+          - Optionally resolves a submit key if `is_submit_key` is True.
+          - Populates topic and transaction memos for SDK use.
+
+        Args:
+            params: Raw topic creation parameters provided by the user.
+            context: Application context (contains environment configuration).
+            client: Hedera Client instance used for resolving account and operator info.
+            mirror_node: Mirror node client (not used in this simplified implementation).
+
+        Returns:
+            CreateTopicParametersNormalised: A validated, SDK-ready parameter object
+            containing resolved submit key and memos.
+
+        Raises:
+            ValueError: If a default account ID cannot be determined.
+        """
+        # Validate and parse parameters
+        parsed_params: CreateTopicParameters = cast(
+            CreateTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateTopicParameters
+            ),
+        )
+
+        # Resolve default account ID
+        default_account_id: Optional[str] = AccountResolver.get_default_account(
+            context, client
+        )
+        if not default_account_id:
+            raise ValueError("Could not determine default account ID")
+
+        # Build normalized parameter object
+        normalised = CreateTopicParametersNormalised(
+            memo=parsed_params.topic_memo,
+            transaction_memo=parsed_params.transaction_memo,
+            submit_key=None,
+        )
+
+        # Optionally resolve submit key if requested
+        if parsed_params.is_submit_key:
+            submit_key: PublicKey = await AccountResolver.get_default_public_key(
+                context, client
+            )
+            normalised.submit_key = submit_key
+
+        return normalised
+
