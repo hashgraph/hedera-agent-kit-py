@@ -43,7 +43,9 @@ async def test_match_create_topic_tool_with_default_params(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked topic response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked topic response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -66,7 +68,9 @@ async def test_match_create_topic_with_memo_and_submit_key(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked topic response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked topic response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -101,7 +105,9 @@ async def test_handle_various_natural_language_variations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked topic response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(human_message="mocked topic response")
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(

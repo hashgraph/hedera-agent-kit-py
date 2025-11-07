@@ -3,6 +3,7 @@
 This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
+
 import json
 from typing import AsyncGenerator, cast
 import pytest
@@ -10,7 +11,9 @@ from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
@@ -114,7 +117,9 @@ async def toolkit(langchain_test_setup):
 # ============================================================================
 
 
-async def execute_create_topic(agent_executor, input_text: str, config: RunnableConfig) -> ExecutedTransactionToolResponse:
+async def execute_create_topic(
+    agent_executor, input_text: str, config: RunnableConfig
+) -> ExecutedTransactionToolResponse:
     """Execute topic creation via the agent and return the parsed response dict."""
     response = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
@@ -124,7 +129,12 @@ async def execute_create_topic(agent_executor, input_text: str, config: Runnable
     # Find the ToolMessage in the response
     messages = response.get("messages", [])
     tool_message = next(
-        (m for m in messages if m.__class__.__name__ == "ToolMessage" or getattr(m, "name", None) == "create_topic_tool"),
+        (
+            m
+            for m in messages
+            if m.__class__.__name__ == "ToolMessage"
+            or getattr(m, "name", None) == "create_topic_tool"
+        ),
         None,
     )
 
@@ -144,12 +154,15 @@ async def execute_create_topic(agent_executor, input_text: str, config: Runnable
 
 @pytest.mark.asyncio
 async def test_create_topic_with_default_settings(
-    agent_executor, executor_wrapper: HederaOperationsWrapper, langchain_config: RunnableConfig
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
 ):
     """Test creating a topic with default settings."""
     input_text = "Create a new Hedera topic"
-    response: ExecutedTransactionToolResponse = await execute_create_topic(agent_executor, input_text, langchain_config)
-
+    response: ExecutedTransactionToolResponse = await execute_create_topic(
+        agent_executor, input_text, langchain_config
+    )
 
     topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
     assert topic_info is not None
@@ -159,12 +172,17 @@ async def test_create_topic_with_default_settings(
 
 @pytest.mark.asyncio
 async def test_create_topic_with_memo_and_submit_key(
-    agent_executor, executor_wrapper: HederaOperationsWrapper, executor_account, langchain_config: RunnableConfig
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_account,
+    langchain_config: RunnableConfig,
 ):
     """Test creating a topic with memo and submit key."""
     _, _, executor_client, _ = executor_account
     input_text = 'Create a topic with memo "E2E test topic" and set submit key'
-    response: ExecutedTransactionToolResponse = await execute_create_topic(agent_executor, input_text, langchain_config)
+    response: ExecutedTransactionToolResponse = await execute_create_topic(
+        agent_executor, input_text, langchain_config
+    )
 
     topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
     assert (
@@ -175,11 +193,17 @@ async def test_create_topic_with_memo_and_submit_key(
 
 @pytest.mark.asyncio
 async def test_create_topic_with_memo_and_no_submit_key(
-    agent_executor, executor_wrapper: HederaOperationsWrapper, langchain_config: RunnableConfig
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
 ):
     """Test creating a topic with memo and without submit key restriction."""
-    input_text = 'Create a topic with memo "E2E test topic" and do not restrict submit access'
-    response: ExecutedTransactionToolResponse = await execute_create_topic(agent_executor, input_text, langchain_config)
+    input_text = (
+        'Create a topic with memo "E2E test topic" and do not restrict submit access'
+    )
+    response: ExecutedTransactionToolResponse = await execute_create_topic(
+        agent_executor, input_text, langchain_config
+    )
 
     topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
     assert topic_info.submit_key is None
