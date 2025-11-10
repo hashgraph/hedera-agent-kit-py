@@ -28,6 +28,8 @@ GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
 ]
 
+GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+
 
 @dataclass
 class LangchainTestOptions:
@@ -67,6 +69,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_TOPIC_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         DELETE_ACCOUNT_TOOL,
+        GET_ACCOUNT_QUERY_TOOL,
     ],
     plugins=[core_account_plugin, core_consensus_plugin, core_account_query_plugin],
     agent_mode=AgentMode.AUTONOMOUS,

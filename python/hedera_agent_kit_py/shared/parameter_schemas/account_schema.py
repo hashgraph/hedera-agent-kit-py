@@ -111,6 +111,10 @@ class AccountQueryParameters(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="The account ID to query.")
 
 
+class AccountQueryParametersNormalised(BaseModelWithArbitraryTypes):
+    account_id: str
+
+
 class AccountBalanceQueryParameters(BaseModelWithArbitraryTypes):
     account_id: Annotated[
         Optional[str], Field(description="The account ID to query.")
