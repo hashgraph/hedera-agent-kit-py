@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from typing import Optional, Any, Callable
 
@@ -17,10 +18,6 @@ from .langchain_test_config import (
 from .llm_factory import LLMFactory, LLMOptions
 
 
-class CompiledGraph:
-    pass
-
-
 class LangchainTestSetup:
     """Container for LangChain test setup components."""
 
@@ -28,7 +25,7 @@ class LangchainTestSetup:
         self,
         client: Client,
         agent: Any,
-        toolkit: HederaLangchainToolkit,
+        toolkit: "HederaLangchainToolkit",
         cleanup: Callable[[], None],
     ):
         self.client = client
