@@ -108,6 +108,7 @@ class ExecuteStrategy(TxModeStrategy):
             transaction_id=getattr(receipt, "transaction_id", None),
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
+            contract_id=getattr(receipt, "contract_id", None)
         )
 
         # Check for failure

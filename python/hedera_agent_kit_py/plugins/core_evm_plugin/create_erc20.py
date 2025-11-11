@@ -8,7 +8,10 @@ This module exposes:
 
 from __future__ import annotations
 
-from hiero_sdk_python import Client, TransactionRecordQuery, TransactionRecord
+from typing import cast
+
+from hiero_sdk_python import Client
+from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.configuration import Context, AgentMode
@@ -16,7 +19,7 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.models import ToolResponse, RawTransactionResponse
+from hedera_agent_kit_py.shared.models import ToolResponse, RawTransactionResponse, ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateERC20Parameters,
     ContractExecuteTransactionParametersNormalised,
@@ -58,7 +61,7 @@ Parameters:
 """
 
 
-def post_process(erc20_address: str | None, response: RawTransactionResponse) -> str:
+def post_process(evm_contract_id: str, response: RawTransactionResponse) -> str:
     """Produce a human-readable summary for ERC20 creation results."""
     if getattr(response, "schedule_id", None):
         return (
@@ -67,17 +70,9 @@ def post_process(erc20_address: str | None, response: RawTransactionResponse) ->
             f"Schedule ID: {response.schedule_id}"
         )
     return (
-        f"ERC20 token created successfully at address {erc20_address or 'unknown'}.\n"
+        f"ERC20 token created successfully at address {evm_contract_id or 'unknown'}.\n"
         f"Transaction ID: {response.transaction_id}"
     )
-
-
-async def get_erc20_address(client: Client, tx: RawTransactionResponse) -> str:
-    record: TransactionRecord = (
-        TransactionRecordQuery().set_transaction_id(tx.transaction_id).execute(client)
-    )
-    return f"0x{record.call_result.evm_address}"
-
 
 async def create_erc20(
     client: Client,
@@ -107,13 +102,20 @@ async def create_erc20(
         if context.mode == AgentMode.RETURN_BYTES:
             return result
 
-        raw_tx = getattr(result, "raw_tx", None)
-        erc20_address = await get_erc20_address(client, raw_tx)
-        human_message = post_process(erc20_address, raw_tx)
+        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
+        evm_contract_id: str | None = None
 
-        return ToolResponse(
+        is_scheduled = getattr(params, "is_scheduled", False)
+        contract_id = getattr(raw_tx_data, "contract_id", None)
+        if not is_scheduled and contract_id:
+            evm_contract_id = f"0x{str(contract_id.to_evm_address())}"
+
+        human_message = post_process(evm_contract_id, raw_tx_data)
+
+        return ExecutedTransactionToolResponse(
             human_message=human_message,
-            extra={"erc20_address": erc20_address, "raw": raw_tx},
+            raw=raw_tx_data,
+            extra={"erc20_address": evm_contract_id, "raw": raw_tx_data},
         )
 
     except Exception as e:
