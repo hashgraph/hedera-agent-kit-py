@@ -1,18 +1,11 @@
 from typing import cast
-
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from hiero_sdk_python.contract.contract_id import ContractId
-
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.constants.contracts import (
-    ERC20_FACTORY_ABI,
-    get_erc20_factory_address,
-)
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
-    HederaParameterNormaliser,
-)
+from hedera_agent_kit_py.shared.constants.contracts import ERC20_FACTORY_ABI, get_erc20_factory_address
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
 from hedera_agent_kit_py.shared.parameter_schemas import CreateERC20Parameters
 from hedera_agent_kit_py.shared.utils import LedgerId
 
@@ -46,7 +39,7 @@ async def test_encodes_function_call_with_all_params(mock_parse, mock_web3):
     )
 
     mock_contract.encode_abi.assert_called_once_with(
-        fn_name=FUNCTION_NAME,
+        abi_element_identifier=FUNCTION_NAME,
         args=["MyToken", "MTK", 8, 1000],
     )
 
@@ -80,7 +73,7 @@ async def test_defaults_decimals_and_supply_when_missing(mock_parse, mock_web3):
     )
 
     mock_contract.encode_abi.assert_called_once_with(
-        fn_name=FUNCTION_NAME,
+        abi_element_identifier=FUNCTION_NAME,
         args=["DefaultToken", "DEF", 18, 0],
     )
     assert result.gas == 3_000_000
@@ -113,7 +106,7 @@ async def test_handles_zero_decimals(mock_parse, mock_web3):
     )
 
     mock_contract.encode_abi.assert_called_once_with(
-        fn_name=FUNCTION_NAME,
+        abi_element_identifier=FUNCTION_NAME,
         args=["ZeroDecimals", "ZDC", 0, 500],
     )
     assert result.gas == 3_000_000
@@ -148,7 +141,7 @@ async def test_large_initial_supply(mock_parse, mock_web3):
     )
 
     mock_contract.encode_abi.assert_called_once_with(
-        fn_name=FUNCTION_NAME,
+        abi_element_identifier=FUNCTION_NAME,
         args=["WhaleToken", "WHL", 18, 1_000_000_000],
     )
     assert isinstance(result.function_parameters, bytes)
