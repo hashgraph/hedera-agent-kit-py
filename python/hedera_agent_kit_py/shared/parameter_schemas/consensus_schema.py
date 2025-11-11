@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union, Annotated
 
-from hiero_sdk_python import AccountId, PublicKey, Duration, Timestamp
+from hiero_sdk_python import AccountId, PublicKey, Duration, Timestamp, TopicId
 from hiero_sdk_python.hapi.services import basic_types_pb2
 from pydantic import Field
 
@@ -22,8 +22,8 @@ class DeleteTopicParameters(BaseModelWithArbitraryTypes):
 
 class DeleteTopicParametersNormalised(BaseModelWithArbitraryTypes):
     topic_id: (
-        basic_types_pb2.TopicID
-    )  # FIXME TopicDeleteTransaction uses basic_types_pb2.TopicID instead of TopicId
+        TopicId
+    )
 
 
 class CreateTopicParameters(BaseModelWithArbitraryTypes):
