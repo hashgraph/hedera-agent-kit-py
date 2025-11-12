@@ -4,8 +4,13 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 from hiero_sdk_python.contract.contract_id import ContractId
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.constants.contracts import ERC20_FACTORY_ABI, get_erc20_factory_address
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
+from hedera_agent_kit_py.shared.constants.contracts import (
+    ERC20_FACTORY_ABI,
+    get_erc20_factory_address,
+)
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import CreateERC20Parameters
 from hedera_agent_kit_py.shared.utils import LedgerId
 

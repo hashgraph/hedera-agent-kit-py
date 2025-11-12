@@ -1,4 +1,7 @@
-from hedera_agent_kit_py.plugins.core_evm_plugin.create_erc20 import CreateERC20Tool, CREATE_ERC20_TOOL
+from hedera_agent_kit_py.plugins.core_evm_plugin.create_erc20 import (
+    CreateERC20Tool,
+    CREATE_ERC20_TOOL,
+)
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 
