@@ -27,6 +27,9 @@ CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
 ]
+SUBMIT_TOPIC_MESSAGE_TOOL = core_consensus_plugin_tool_names[
+    "SUBMIT_TOPIC_MESSAGE_TOOL"
+]
 
 
 @dataclass
@@ -67,6 +70,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_TOPIC_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         DELETE_ACCOUNT_TOOL,
+        SUBMIT_TOPIC_MESSAGE_TOOL,
     ],
     plugins=[core_account_plugin, core_consensus_plugin, core_account_query_plugin],
     agent_mode=AgentMode.AUTONOMOUS,
