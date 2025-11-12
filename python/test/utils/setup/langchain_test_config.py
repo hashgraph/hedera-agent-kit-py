@@ -40,6 +40,8 @@ GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
     "GET_TOPIC_INFO_QUERY_TOOL"
 ]
 
+GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+
 
 @dataclass
 class LangchainTestOptions:
@@ -81,6 +83,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         GET_EXCHANGE_RATE_TOOL,
         UPDATE_ACCOUNT_TOOL,
         DELETE_ACCOUNT_TOOL,
+        GET_ACCOUNT_QUERY_TOOL,
     ],
     plugins=[
         core_account_plugin,
