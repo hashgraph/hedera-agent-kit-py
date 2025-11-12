@@ -19,7 +19,11 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.models import ToolResponse, RawTransactionResponse, ExecutedTransactionToolResponse
+from hedera_agent_kit_py.shared.models import (
+    ToolResponse,
+    RawTransactionResponse,
+    ExecutedTransactionToolResponse,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateERC20Parameters,
     ContractExecuteTransactionParametersNormalised,
@@ -73,6 +77,7 @@ def post_process(evm_contract_id: str, response: RawTransactionResponse) -> str:
         f"ERC20 token created successfully at address {evm_contract_id or 'unknown'}.\n"
         f"Transaction ID: {response.transaction_id}"
     )
+
 
 async def create_erc20(
     client: Client,

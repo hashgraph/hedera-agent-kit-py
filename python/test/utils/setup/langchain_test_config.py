@@ -23,7 +23,10 @@ from hedera_agent_kit_py.plugins.core_consensus_plugin import (
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
 )
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names, core_evm_plugin
+from hedera_agent_kit_py.plugins.core_evm_plugin import (
+    core_evm_plugin_tool_names,
+    core_evm_plugin,
+)
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions

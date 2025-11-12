@@ -123,6 +123,7 @@ ERC721_MINT_FUNCTION_ABI = [
 #  Helper Functions
 # =====================================================
 
+
 def get_erc20_factory_address(ledger_id: LedgerId) -> str:
     """Return the ERC20 factory contract address for the given ledger/network."""
     address = ERC20_FACTORY_ADDRESSES.get(ledger_id.value)

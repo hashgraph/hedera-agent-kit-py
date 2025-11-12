@@ -3,6 +3,7 @@
 This module tests the ERC20 creation tool by calling it directly with parameters,
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
+
 import time
 from pprint import pprint
 from typing import cast
@@ -21,7 +22,8 @@ from hedera_agent_kit_py.shared.models import (
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateERC20Parameters,
     DeleteAccountParametersNormalised,
-    CreateAccountParametersNormalised, SchedulingParams,
+    CreateAccountParametersNormalised,
+    SchedulingParams,
 )
 from test import HederaOperationsWrapper
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
@@ -82,9 +84,7 @@ async def test_deploy_erc20_minimal_params(setup_environment):
     assert "erc20_address" in exec_result.extra
     assert exec_result.extra["erc20_address"].startswith("0x")
 
-    contract_info = await wrapper.get_contract_info(
-        exec_result.extra["erc20_address"]
-    )
+    contract_info = await wrapper.get_contract_info(exec_result.extra["erc20_address"])
     assert contract_info is not None
     assert contract_info.contract_id is not None
     assert contract_info.admin_key is not None
@@ -112,9 +112,7 @@ async def test_deploy_erc20_with_supply_and_decimals(setup_environment):
     assert "erc20_address" in exec_result.extra
     assert exec_result.extra["erc20_address"].startswith("0x")
 
-    contract_info = await wrapper.get_contract_info(
-        exec_result.extra["erc20_address"]
-    )
+    contract_info = await wrapper.get_contract_info(exec_result.extra["erc20_address"])
     assert contract_info is not None
     assert contract_info.contract_id is not None
 
