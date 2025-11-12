@@ -15,6 +15,9 @@ from hedera_agent_kit_py.plugins.core_consensus_plugin import (
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
 )
+from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
+    core_transaction_query_plugin, core_transaction_query_plugin_tool_names,
+)
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
@@ -26,6 +29,9 @@ UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
 CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
+]
+GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
+    "GET_TRANSACTION_RECORD_QUERY_TOOL"
 ]
 
 
@@ -67,8 +73,14 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_TOPIC_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         DELETE_ACCOUNT_TOOL,
+        GET_TRANSACTION_RECORD_QUERY_TOOL,
     ],
-    plugins=[core_account_plugin, core_consensus_plugin, core_account_query_plugin],
+    plugins=[
+        core_account_plugin,
+        core_consensus_plugin,
+        core_account_query_plugin,
+        core_transaction_query_plugin,
+    ],
     agent_mode=AgentMode.AUTONOMOUS,
 )
 

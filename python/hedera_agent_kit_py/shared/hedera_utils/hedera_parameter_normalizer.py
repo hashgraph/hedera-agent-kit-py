@@ -24,6 +24,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    TransactionRecordQueryParameters,
+    TransactionRecordQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -500,4 +502,62 @@ class HederaParameterNormaliser:
         return UpdateAccountParametersNormalised(
             account_params=account_params,
             scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_get_transaction_record_params(
+        params: TransactionRecordQueryParameters,
+    ) -> TransactionRecordQueryParametersNormalised:
+        """Normalize transaction record query parameters.
+
+        This method validates the input parameters and converts transaction IDs
+        from SDK-style format (e.g., "0.0.4177806@1755169980.051721264")
+        to mirror-node style format (e.g., "0.0.4177806-1755169980-051721264").
+
+        Args:
+            params: Raw transaction record query parameters.
+
+        Returns:
+            TransactionRecordQueryParametersNormalised: Normalized parameters
+            with transaction ID in mirror-node format.
+
+        Raises:
+            ValueError: If transaction_id is missing or in an invalid format.
+        """
+        import re
+
+        parsed_params: TransactionRecordQueryParameters = cast(
+            TransactionRecordQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransactionRecordQueryParameters
+            ),
+        )
+
+        if not parsed_params.transaction_id:
+            raise ValueError("transactionId is required")
+
+        # Regex patterns for different transaction ID formats
+        mirror_node_style_regex = re.compile(r"^\d+\.\d+\.\d+-\d+-\d+$")
+        sdk_style_regex = re.compile(r"^(\d+\.\d+\.\d+)@(\d+)\.(\d+)$")
+
+        transaction_id: str
+
+        # Check if already in mirror-node style
+        if mirror_node_style_regex.match(parsed_params.transaction_id):
+            transaction_id = parsed_params.transaction_id
+        else:
+            # Try to match SDK-style format
+            match = sdk_style_regex.match(parsed_params.transaction_id)
+            if not match:
+                raise ValueError(
+                    f"Invalid transactionId format: {parsed_params.transaction_id}"
+                )
+
+            # Convert from SDK style to mirror-node style
+            account_id, seconds, nanos = match.groups()
+            transaction_id = f"{account_id}-{seconds}-{nanos}"
+
+        return TransactionRecordQueryParametersNormalised(
+            transaction_id=transaction_id,
+            nonce=parsed_params.nonce,
         )
