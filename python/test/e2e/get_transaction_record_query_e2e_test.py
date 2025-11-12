@@ -4,10 +4,9 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-import asyncio
 from typing import AsyncGenerator
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TransactionId, HbarTransfer
+from hiero_sdk_python import Hbar, PrivateKey, AccountId
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.shared.models import ToolResponse
@@ -115,7 +114,7 @@ def langchain_config():
 async def pre_created_transaction(
     executor_wrapper: HederaOperationsWrapper, executor_account
 ):
-    """Creates a simple HBAR self-transfer and yields its ID in SDK and Mirror Node formats."""
+    """Creates a simple HBAR self-transfer and yields its ID"""
     _, _, executor_client, _ = executor_account
     executor_account_id = str(executor_client.operator_account_id)
 
@@ -123,34 +122,16 @@ async def pre_created_transaction(
     # Using 1 tinybar.
     resp = await executor_wrapper.transfer_hbar(
         TransferHbarParametersNormalised(
-            transfers=[
-                HbarTransfer(
-                    account_id=executor_account_id,
-                    amount=Hbar(1, "tinybar"),
-                    is_approval=False,
-                ),
-                HbarTransfer(
-                    account_id=executor_account_id,
-                    amount=Hbar(-1, "tinybar"),
-                    is_approval=False,
-                ),
-            ]
+            hbar_transfers={
+                AccountId.from_string(executor_account_id): -1,
+                AccountId.from_string(executor_account_id): 1,
+            }
         )
     )
 
     assert resp.transaction_id is not None
 
-    # Get ID in SDK format (e.g., 0.0.X@SSS.NNN)
-    tx_id_sdk_obj = TransactionId.from_string(resp.transaction_id)
-    tx_id_sdk_style_str = str(tx_id_sdk_obj)  # This is the @ format
-
-    # Get ID in Mirror Node format (e.g., 0.0.X-SSS-NNN)
-    tx_id_mirror_style_str = _format_tx_id_to_mirror_node(tx_id_sdk_obj)
-
-    # Wait for mirror node ingestion
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME)
-
-    yield tx_id_sdk_style_str, tx_id_mirror_style_str
+    yield resp.transaction_id
 
 
 # ============================================================================
@@ -163,14 +144,14 @@ async def test_fetch_record_sdk_at_style(
     agent_executor, pre_created_transaction, langchain_config: RunnableConfig
 ):
     """Test fetching a record using the SDK-style transaction ID (e.g., 0.0.X@SSS.NNN)."""
-    tx_id_sdk_style, tx_id_mirror_style = pre_created_transaction
+    tx_id = pre_created_transaction
 
     result = await agent_executor.ainvoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Get the transaction record for transaction ID {tx_id_sdk_style}",
+                    "content": f"Get the transaction record for transaction ID {str(tx_id)}",
                 }
             ]
         },
@@ -181,9 +162,8 @@ async def test_fetch_record_sdk_at_style(
 
     assert isinstance(observation, ToolResponse)
     assert observation.error is None
-    # The normalizer converts the @ format to the - format, which is used in the query and post_process
     assert (
-        f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
+        f"Transaction Details for {str(tx_id)}" in observation.human_message
     )
 
 
@@ -192,14 +172,14 @@ async def test_fetch_record_mirror_node_style(
     agent_executor, pre_created_transaction, langchain_config: RunnableConfig
 ):
     """Test fetching a record using the Mirror Node-style transaction ID (e.g., 0.0.X-SSS-NNN)."""
-    _, tx_id_mirror_style = pre_created_transaction
+    tx_id = pre_created_transaction
 
     result = await agent_executor.ainvoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Get the transaction record for transaction {tx_id_mirror_style}",
+                    "content": f"Get the transaction record for transaction {tx_id}",
                 }
             ]
         },
@@ -210,7 +190,7 @@ async def test_fetch_record_mirror_node_style(
 
     assert isinstance(observation, ToolResponse)
     assert observation.error is None
-    assert f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
+    assert f"Transaction Details for {tx_id}" in observation.human_message
 
 
 @pytest.mark.asyncio
