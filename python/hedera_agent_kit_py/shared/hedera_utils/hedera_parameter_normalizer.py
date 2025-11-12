@@ -368,19 +368,21 @@ class HederaParameterNormaliser:
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        account_public_key: PublicKey = await AccountResolver.get_default_public_key(
+            context, client
+        )
+
         # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
+            admin_key=account_public_key,
         )
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
+            normalised.submit_key = account_public_key
 
         return normalised
 
@@ -529,6 +531,9 @@ class HederaParameterNormaliser:
                 params, DeleteTopicParameters
             ),
         )
+
+        if not AccountResolver.is_hedera_address(parsed_params.topic_id):
+            raise ValueError("Topic ID must be a Hedera address")
 
         parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
 

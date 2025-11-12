@@ -24,6 +24,7 @@ CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
 CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
+DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
 ]
@@ -67,8 +68,9 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_TOPIC_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         DELETE_ACCOUNT_TOOL,
+        DELETE_TOPIC_TOOL,
     ],
-    plugins=[core_account_plugin, core_consensus_plugin, core_account_query_plugin],
+    plugins=[core_consensus_plugin, core_account_query_plugin, core_account_plugin],
     agent_mode=AgentMode.AUTONOMOUS,
 )
 

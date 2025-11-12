@@ -8,10 +8,12 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import cast
+
 from hiero_sdk_python import Client
 from hiero_sdk_python.consensus.topic_delete_transaction import TopicDeleteTransaction
 
-from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit_py.shared.configuration import Context, AgentMode
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
@@ -19,6 +21,7 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import 
 from hedera_agent_kit_py.shared.models import (
     ToolResponse,
     RawTransactionResponse,
+    ExecutedTransactionToolResponse,
 )
 from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteTopicParameters,
@@ -51,7 +54,7 @@ Parameters:
 """
 
 
-def post_process(response: RawTransactionResponse) -> str:
+def post_process(response: RawTransactionResponse, topic_id: str) -> str:
     """Produce a human-readable summary for a topic deletion result.
 
     Args:
@@ -60,7 +63,7 @@ def post_process(response: RawTransactionResponse) -> str:
     Returns:
         A concise message describing the status and transaction ID.
     """
-    return f"Topic with id {response.topic_id} deleted successfully. Transaction id {response.transaction_id}"
+    return f"Topic with id {topic_id} deleted successfully. Transaction id {response.transaction_id}"
 
 
 async def delete_topic(
@@ -96,7 +99,18 @@ async def delete_topic(
         tx: TopicDeleteTransaction = HederaBuilder.delete_topic(normalised_params)
 
         # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
+        result = await handle_transaction(tx, client, context)
+
+        if context.mode == AgentMode.RETURN_BYTES:
+            return result
+
+        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
+        human_message = post_process(raw_tx_data, params["topic_id"])
+
+        return ExecutedTransactionToolResponse(
+            human_message=human_message,
+            raw=raw_tx_data,
+        )
 
     except Exception as e:
         message: str = f"Failed to delete the topic: {str(e)}"

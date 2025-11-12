@@ -21,9 +21,7 @@ class DeleteTopicParameters(BaseModelWithArbitraryTypes):
 
 
 class DeleteTopicParametersNormalised(BaseModelWithArbitraryTypes):
-    topic_id: (
-        TopicId
-    )
+    topic_id: TopicId
 
 
 class CreateTopicParameters(BaseModelWithArbitraryTypes):
@@ -44,6 +42,7 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
 class CreateTopicParametersNormalised(BaseModelWithArbitraryTypes):
     memo: Optional[str] = None
     submit_key: Optional[PublicKey] = None
+    admin_key: Optional[PublicKey] = None
     transaction_memo: Optional[str] = None
 
 
