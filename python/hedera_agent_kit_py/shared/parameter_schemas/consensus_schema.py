@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union, Annotated
 
-from hiero_sdk_python import AccountId, PublicKey, Duration, Timestamp
+from hiero_sdk_python import AccountId, PublicKey, Duration, Timestamp, TopicId
 from hiero_sdk_python.hapi.services import basic_types_pb2
 from pydantic import Field
 
@@ -65,13 +65,10 @@ class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):
 class SubmitTopicMessageParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    topic_id: (
-        basic_types_pb2.TopicID
-    )  # FIXME: uses basic_types_pb2.TopicID instead of TopicId
+    topic_id: TopicId
+    message: Optional[str] = None
 
-    message: Optional[str] = (None,)
-
-    transaction_memo: Optional[str] = (None,)
+    transaction_memo: Optional[str] = None
 
 
 class TopicMessagesQueryParameters(BaseModelWithArbitraryTypes):
