@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 
@@ -22,8 +22,15 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    DeleteTopicParameters,
+    DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    GetTopicInfoParameters,
+    ExchangeRateQueryParameters,
+)
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    AccountQueryParametersNormalised,
 )
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -323,6 +330,17 @@ class HederaParameterNormaliser:
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
 
+    @classmethod
+    def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
+        """Parse and validate account query parameters"""
+        parsed_params: AccountQueryParametersNormalised = cast(
+            AccountQueryParametersNormalised,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountQueryParametersNormalised
+            ),
+        )
+        return parsed_params
+
     @staticmethod
     async def normalise_create_topic_params(
         params: CreateTopicParameters,
@@ -366,21 +384,75 @@ class HederaParameterNormaliser:
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        account_public_key: PublicKey = await AccountResolver.get_default_public_key(
+            context, client
+        )
+
         # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
+            admin_key=account_public_key,
         )
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
+            normalised.submit_key = account_public_key
 
         return normalised
+
+    @staticmethod
+    def normalise_get_topic_info(
+        params: GetTopicInfoParameters,
+    ):
+        """
+        Normalizes the input parameters for the 'get_topic_info' operation to ensure
+        they adhere to the expected schema format. This function parses the input
+        parameters utilizing a schema and type casts the result to the appropriate
+        data type.
+
+        :param params: The parameters for the 'get_topic_info' operation. These
+            parameters should be of type 'GetTopicInfoParameters'.
+        :type params: GetTopicInfoParameters
+
+        :return: Parsed and normalized parameters after being verified against
+            the schema.
+        :rtype: GetTopicInfoParameters
+        """
+        parsed_params: GetTopicInfoParameters = cast(
+            GetTopicInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTopicInfoParameters
+            ),
+        )
+
+        return parsed_params
+
+    @staticmethod
+    def normalise_get_exchange_rate(
+        params: ExchangeRateQueryParameters,
+    ) -> ExchangeRateQueryParameters:
+        """
+        Normalises and parses the given exchange rate query parameters using a predefined
+        schema. This method ensures that the input parameters adhere to the required structure
+        and format specified by the schema.
+
+        :param params: The exchange rate query parameters to be normalised. The parameter
+            must conform to the type `ExchangeRateQueryParameters`.
+        :type params: ExchangeRateQueryParameters
+
+        :return: A parsed and normalised instance of `ExchangeRateQueryParameters`.
+        :rtype: ExchangeRateQueryParameters
+        """
+        parsed_params: ExchangeRateQueryParameters = cast(
+            ExchangeRateQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ExchangeRateQueryParameters
+            ),
+        )
+
+        return parsed_params
 
     @staticmethod
     def normalise_delete_account(
@@ -501,3 +573,36 @@ class HederaParameterNormaliser:
             account_params=account_params,
             scheduling_params=scheduling_params,
         )
+
+    @staticmethod
+    def normalise_delete_topic(
+        params: DeleteTopicParameters,
+    ) -> DeleteTopicParametersNormalised:
+        """Normalise delete topic parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete topic parameters.
+
+        Returns:
+            DeleteTopicParametersNormalised: Normalised delete topic parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If validation fails.
+        """
+        from hiero_sdk_python.hapi.services import basic_types_pb2
+
+        # First, validate against the basic schema
+        parsed_params: DeleteTopicParameters = cast(
+            DeleteTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteTopicParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.topic_id):
+            raise ValueError("Topic ID must be a Hedera address")
+
+        parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)

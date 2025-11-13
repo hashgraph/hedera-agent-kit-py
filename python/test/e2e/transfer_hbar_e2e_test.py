@@ -21,7 +21,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.verification import extract_tool_response
 
 # Constants
-(TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
 DEFAULT_RECIPIENT_BALANCE = 0
 
