@@ -64,13 +64,10 @@ class SubmitTopicMessageParameters(OptionalScheduledTransactionParams):
 class SubmitTopicMessageParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    topic_id: (
-        basic_types_pb2.TopicID
-    )  # FIXME: uses basic_types_pb2.TopicID instead of TopicId
-
+    topic_id: TopicId
     message: Optional[str] = (None,)
 
-    transaction_memo: Optional[str] = (None,)
+    transaction_memo: Optional[str] = ""
 
 
 class TopicMessagesQueryParameters(BaseModelWithArbitraryTypes):

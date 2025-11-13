@@ -74,7 +74,7 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
 
 class CreateAccountParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     memo: Optional[str] = None
-    initial_balance: Union[Hbar, int] = 0
+    initial_balance: Union[Hbar] = Hbar(0)
     key: Optional[PublicKey] = None
     max_automatic_token_associations: Optional[int] = None
 
@@ -116,6 +116,10 @@ class UpdateAccountParametersNormalised(OptionalScheduledTransactionParamsNormal
 
 class AccountQueryParameters(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="The account ID to query.")
+
+
+class AccountQueryParametersNormalised(BaseModelWithArbitraryTypes):
+    account_id: str
 
 
 class AccountBalanceQueryParameters(BaseModelWithArbitraryTypes):
