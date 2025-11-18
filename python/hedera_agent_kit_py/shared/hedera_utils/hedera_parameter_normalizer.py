@@ -352,7 +352,6 @@ class HederaParameterNormaliser:
         params: CreateTopicParameters,
         context: Context,
         client: Client,
-        _mirror_node: IHederaMirrornodeService,
     ) -> CreateTopicParametersNormalised:
         """Normalise 'create topic' parameters into a format compatible with the Python SDK.
 
@@ -666,7 +665,6 @@ class HederaParameterNormaliser:
         Raises:
             ValueError: If parameter validation fails.
         """
-        from hiero_sdk_python.hapi.services import basic_types_pb2
 
         # Validate and parse parameters
         parsed_params: SubmitTopicMessageParameters = cast(
@@ -707,7 +705,6 @@ class HederaParameterNormaliser:
         Raises:
             ValueError: If validation fails.
         """
-        from hiero_sdk_python.hapi.services import basic_types_pb2
 
         # First, validate against the basic schema
         parsed_params: DeleteTopicParameters = cast(

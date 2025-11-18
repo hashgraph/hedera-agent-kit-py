@@ -69,12 +69,12 @@ def langchain_config():
 
 
 async def create_test_account(
-    executor_wrapper, executor_client, initial_balance_in_tinybar=0
+    executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(0)
 ):
     return await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_client.operator_private_key.public_key(),
-            initial_balance=initial_balance_in_tinybar,
+            initial_balance=initial_balance_in_hbar,
         )
     )
 
@@ -158,7 +158,7 @@ async def test_delete_account_with_natural_language_variations(
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(
-        executor_wrapper, executor_client, initial_balance_in_tinybar=5 * 10**8
+        executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(5, in_tinybars=False)
     )
     target_account_id = str(resp.account_id)
 

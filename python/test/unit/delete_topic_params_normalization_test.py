@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 import pytest
 from hiero_sdk_python import TopicId
-from pydantic import ValidationError
 
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,

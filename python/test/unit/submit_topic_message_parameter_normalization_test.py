@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from pydantic import ValidationError
 
 from hiero_sdk_python import Client, Network, TopicId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
