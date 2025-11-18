@@ -5,7 +5,7 @@ tools up to on-chain execution.
 """
 
 import json
-from typing import AsyncGenerator, cast
+from typing import AsyncGenerator
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig

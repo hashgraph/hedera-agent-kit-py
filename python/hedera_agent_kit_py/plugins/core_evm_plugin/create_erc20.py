@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import cast
 
 from hiero_sdk_python import Client
-from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit_py.shared.configuration import Context, AgentMode

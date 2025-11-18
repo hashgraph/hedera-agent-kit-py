@@ -65,9 +65,9 @@ class SubmitTopicMessageParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
     topic_id: TopicId
-    message: Optional[str] = (None,)
+    message: Optional[str] = None
 
-    transaction_memo: Optional[str] = ""
+    transaction_memo: Optional[str] = None
 
 
 class TopicMessagesQueryParameters(BaseModelWithArbitraryTypes):

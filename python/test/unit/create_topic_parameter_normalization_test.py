@@ -31,7 +31,7 @@ async def test_applies_defaults_when_values_not_provided():
         params = CreateTopicParameters()
 
         result = await HederaParameterNormaliser.normalise_create_topic_params(
-            params, mock_context, mock_client, mirror_node=None
+            params, mock_context, mock_client
         )
 
         assert isinstance(result, CreateTopicParametersNormalised)
@@ -63,7 +63,7 @@ async def test_sets_submit_key_when_requested():
         params = CreateTopicParameters(is_submit_key=True, topic_memo="hello")
 
         result = await HederaParameterNormaliser.normalise_create_topic_params(
-            params, mock_context, mock_client, mirror_node=None
+            params, mock_context, mock_client
         )
 
         assert isinstance(result.submit_key, PublicKey)
@@ -96,7 +96,7 @@ async def test_falls_back_to_operator_public_key():
         params = CreateTopicParameters(is_submit_key=True)
 
         result = await HederaParameterNormaliser.normalise_create_topic_params(
-            params, mock_context, mock_client, mirror_node=None
+            params, mock_context, mock_client
         )
 
         assert result.submit_key is not None
@@ -131,7 +131,7 @@ async def test_raises_when_no_public_key_available():
             ValueError, match="Could not determine public key for submit key"
         ):
             await HederaParameterNormaliser.normalise_create_topic_params(
-                params, mock_context, mock_client, mirror_node=None
+                params, mock_context, mock_client
             )
 
 
@@ -153,5 +153,5 @@ async def test_raises_when_no_default_account_id():
 
         with pytest.raises(ValueError, match="Could not determine default account ID"):
             await HederaParameterNormaliser.normalise_create_topic_params(
-                params, mock_context, mock_client, mirror_node=None
+                params, mock_context, mock_client
             )

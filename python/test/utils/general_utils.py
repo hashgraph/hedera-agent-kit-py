@@ -1,4 +1,3 @@
-import asyncio
 
 from hiero_sdk_python.contract.contract_id import ContractId
 

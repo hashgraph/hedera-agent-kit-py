@@ -104,7 +104,7 @@ async def recipient_account(
     """
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_RECIPIENT_BALANCE,
+            initial_balance=Hbar(DEFAULT_RECIPIENT_BALANCE),
             key=operator_client.operator_private_key.public_key(),
         )
     )

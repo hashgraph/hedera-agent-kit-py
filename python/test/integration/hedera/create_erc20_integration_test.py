@@ -5,7 +5,6 @@ omitting the LLM and focusing on testing logic and on-chain execution.
 """
 
 import time
-from pprint import pprint
 from typing import cast
 
 import pytest

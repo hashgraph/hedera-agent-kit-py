@@ -99,15 +99,10 @@ async def create_topic(
         It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
-        # Get mirror node service
-        mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
         # Normalize parameters
         normalised_params: CreateTopicParametersNormalised = (
             await HederaParameterNormaliser.normalise_create_topic_params(
-                params, context, client, mirrornode_service
+                params, context, client
             )
         )
 
