@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId
 from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
@@ -24,6 +24,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    DeleteTopicParameters,
+    DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
     GetTopicInfoParameters,
@@ -386,19 +388,21 @@ class HederaParameterNormaliser:
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        account_public_key: PublicKey = await AccountResolver.get_default_public_key(
+            context, client
+        )
+
         # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
+            admin_key=account_public_key,
         )
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
+            normalised.submit_key = account_public_key
 
         return normalised
 
@@ -634,3 +638,36 @@ class HederaParameterNormaliser:
             account_params=account_params,
             scheduling_params=scheduling_params,
         )
+
+    @staticmethod
+    def normalise_delete_topic(
+        params: DeleteTopicParameters,
+    ) -> DeleteTopicParametersNormalised:
+        """Normalise delete topic parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete topic parameters.
+
+        Returns:
+            DeleteTopicParametersNormalised: Normalised delete topic parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If validation fails.
+        """
+        from hiero_sdk_python.hapi.services import basic_types_pb2
+
+        # First, validate against the basic schema
+        parsed_params: DeleteTopicParameters = cast(
+            DeleteTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteTopicParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.topic_id):
+            raise ValueError("Topic ID must be a Hedera address")
+
+        parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)

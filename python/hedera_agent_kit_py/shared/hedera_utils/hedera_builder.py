@@ -503,6 +503,7 @@ class HederaBuilder:
         tx: TopicCreateTransaction = TopicCreateTransaction(
             memo=params.memo,
             submit_key=params.submit_key,
+            admin_key=params.admin_key,
         )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
