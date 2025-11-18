@@ -10,21 +10,46 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from hedera_agent_kit_py.langchain import HederaAgentKitTool
 from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.plugins import core_account_plugin
 from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
+core_account_plugin
 )
+from hedera_agent_kit_py.plugins.core_account_query_plugin import (
+    core_account_query_plugin_tool_names,
+    core_account_query_plugin)
 from hedera_agent_kit_py.plugins.core_consensus_plugin import (
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
 )
+from hedera_agent_kit_py.plugins.core_consensus_query_plugin import(
+    core_consensus_query_plugin_tool_names,
+    core_consensus_query_plugin)
+from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names, core_evm_plugin
+from hedera_agent_kit_py.plugins.core_misc_query_plugin import core_misc_query_plugin_tool_names, core_misc_query_plugin
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
 
+DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
+CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
+UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
 CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
+GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
+    "GET_HBAR_BALANCE_QUERY_TOOL"
+]
+CREATE_ERC20_TOOL = core_evm_plugin_tool_names["CREATE_ERC20_TOOL"]
+SUBMIT_TOPIC_MESSAGE_TOOL = core_consensus_plugin_tool_names[
+    "SUBMIT_TOPIC_MESSAGE_TOOL"
+]
+GET_EXCHANGE_RATE_TOOL = core_misc_query_plugin_tool_names["GET_EXCHANGE_RATE_TOOL"]
+GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
+    "GET_TOPIC_INFO_QUERY_TOOL"
+]
+
+GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+
 
 
 async def bootstrap():
@@ -43,8 +68,28 @@ async def bootstrap():
 
     # Configuration placeholder
     configuration: Configuration = Configuration(
-        tools=[TRANSFER_HBAR_TOOL, DELETE_TOPIC_TOOL, CREATE_TOPIC_TOOL],
-        plugins=[core_account_plugin, core_consensus_plugin],
+        tools=[
+            TRANSFER_HBAR_TOOL,
+            CREATE_ACCOUNT_TOOL,
+            CREATE_TOPIC_TOOL,
+            GET_HBAR_BALANCE_QUERY_TOOL,
+            GET_TOPIC_INFO_QUERY_TOOL,
+            GET_EXCHANGE_RATE_TOOL,
+            UPDATE_ACCOUNT_TOOL,
+            DELETE_ACCOUNT_TOOL,
+            DELETE_TOPIC_TOOL,
+            CREATE_ERC20_TOOL,
+            SUBMIT_TOPIC_MESSAGE_TOOL,
+            GET_ACCOUNT_QUERY_TOOL,
+        ],
+        plugins=[
+            core_consensus_plugin,
+            core_account_query_plugin,
+            core_consensus_query_plugin,
+            core_misc_query_plugin,
+            core_evm_plugin,
+            core_account_plugin,
+        ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
