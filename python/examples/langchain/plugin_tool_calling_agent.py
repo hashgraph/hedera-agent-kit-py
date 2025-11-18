@@ -14,11 +14,17 @@ from hedera_agent_kit_py.plugins import core_account_plugin
 from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
 )
+from hedera_agent_kit_py.plugins.core_consensus_plugin import (
+    core_consensus_plugin_tool_names,
+    core_consensus_plugin,
+)
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
 
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
+CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
+DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
 
 
 async def bootstrap():
@@ -37,8 +43,8 @@ async def bootstrap():
 
     # Configuration placeholder
     configuration: Configuration = Configuration(
-        tools=[TRANSFER_HBAR_TOOL],
-        plugins=[core_account_plugin],
+        tools=[TRANSFER_HBAR_TOOL, DELETE_TOPIC_TOOL, CREATE_TOPIC_TOOL],
+        plugins=[core_account_plugin, core_consensus_plugin],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
