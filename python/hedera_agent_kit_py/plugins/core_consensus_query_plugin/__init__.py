@@ -5,7 +5,7 @@ from hedera_agent_kit_py.plugins.core_consensus_query_plugin.get_topic_info_quer
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 core_consensus_query_plugin = Plugin(
-    name="core-account-plugin",
+    name="core-consensus-query-plugin",
     version="1.0.0",
     description="A plugin for the Hedera Consensus Service (HCS)",
     tools=lambda context: [
