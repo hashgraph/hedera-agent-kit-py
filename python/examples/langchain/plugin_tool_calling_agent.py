@@ -69,8 +69,6 @@ async def bootstrap():
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
 
-    print(f"using openai api key: {os.getenv('OPENAI_API_KEY')}")
-
     network: Network = Network(
         network="testnet"
     )  # ensure this matches SDK expectations
