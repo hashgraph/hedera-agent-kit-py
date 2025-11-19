@@ -28,7 +28,7 @@ class LangchainTestSetup:
         agent: Any,
         toolkit: "HederaLangchainToolkit",
         cleanup: Callable[[], None],
-        response_parser: ResponseParserService
+        response_parser: ResponseParserService,
     ):
         self.client = client
         self.agent = agent
@@ -113,5 +113,9 @@ async def create_langchain_test_setup(
             pass
 
     return LangchainTestSetup(
-        client=client, agent=agent, toolkit=toolkit, cleanup=cleanup, response_parser=response_parser
+        client=client,
+        agent=agent,
+        toolkit=toolkit,
+        cleanup=cleanup,
+        response_parser=response_parser,
     )

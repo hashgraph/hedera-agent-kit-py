@@ -220,7 +220,9 @@ async def test_submit_message_to_pre_created_topic(
 
 @pytest.mark.asyncio
 async def test_fail_submit_to_non_existent_topic(
-    agent_executor, langchain_config: RunnableConfig, response_parser: ResponseParserService
+    agent_executor,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test attempting to submit a message to a topic that does not exist."""
     fake_topic_id = "0.0.999999999"
@@ -264,9 +266,6 @@ async def test_submit_message_scheduled(
     human_message = parsed_data["humanMessage"]
     raw_data = parsed_data["raw"]
 
-    assert (
-        "scheduled transaction created successfully"
-        in human_message.lower()
-    )
+    assert "scheduled transaction created successfully" in human_message.lower()
     assert raw_data.get("schedule_id") is not None
     assert raw_data.get("transaction_id") is not None

@@ -18,6 +18,7 @@ from .models import ToolResponse
 
 ParserOutput = Dict[str, Union[Any, str]]
 
+
 class Tool(ABC):
     """
     Abstract base class representing a Tool definition.

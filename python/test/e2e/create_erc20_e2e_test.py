@@ -16,7 +16,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
@@ -148,7 +152,9 @@ async def execute_create_erc20(
 
     tool_call = parsed_tool_calls[0]
     if tool_call.toolName != "create_erc20_tool":
-        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of create_erc20_tool")
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of create_erc20_tool"
+        )
 
     return tool_call.parsedData
 

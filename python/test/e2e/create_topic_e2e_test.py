@@ -15,7 +15,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
@@ -123,7 +127,10 @@ async def response_parser(langchain_test_setup):
 
 
 async def execute_create_topic(
-    agent_executor, input_text: str, config: RunnableConfig, response_parser: ResponseParserService
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
 ) -> dict[str, Any]:
     """Execute topic creation via the agent and return the parsed raw data."""
     response = await agent_executor.ainvoke(
@@ -140,7 +147,9 @@ async def execute_create_topic(
 
     tool_call = parsed_tool_calls[0]
     if tool_call.toolName != "create_topic_tool":
-        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of create_topic_tool")
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of create_topic_tool"
+        )
 
     return tool_call.parsedData
 

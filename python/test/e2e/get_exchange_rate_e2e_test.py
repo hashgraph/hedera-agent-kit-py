@@ -49,7 +49,10 @@ async def response_parser(langchain_test_setup):
 
 
 async def execute_exchange_rate_query(
-    agent_executor, input_text: str, config: RunnableConfig, response_parser: ResponseParserService
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
 ) -> dict[str, Any]:
     """Helper to invoke the agent with the given query text and return parsed tool data."""
     result = await agent_executor.ainvoke(
@@ -79,7 +82,9 @@ async def execute_exchange_rate_query(
 
 
 @pytest.mark.asyncio
-async def test_get_current_exchange_rate(agent_executor, langchain_config, response_parser):
+async def test_get_current_exchange_rate(
+    agent_executor, langchain_config, response_parser
+):
     """It should return the current exchange rate when no timestamp is provided."""
     input_text = "What is the current HBAR exchange rate?"
 
@@ -129,7 +134,9 @@ async def test_valid_epoch_timestamp(agent_executor, langchain_config, response_
 
 
 @pytest.mark.asyncio
-async def test_valid_precise_nanos_timestamp(agent_executor, langchain_config, response_parser):
+async def test_valid_precise_nanos_timestamp(
+    agent_executor, langchain_config, response_parser
+):
     """It should return precise exchange rate data for nanos timestamp input."""
     ts = "1757512862.640825000"
     input_text = f"Get the HBAR exchange rate at timestamp {ts}"

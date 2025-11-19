@@ -9,12 +9,14 @@ ParsingFunction = Callable[[str], Any]
 @dataclass
 class AgentResponse:
     """This data class defines the shape of the object response from the agent."""
+
     messages: List[BaseMessage]
 
 
 @dataclass
 class ParsedToolData:
     """Structure for the data returned after parsing a ToolMessage."""
+
     toolName: str
     toolCallId: str
     parsedData: Any
@@ -23,6 +25,7 @@ class ParsedToolData:
 @dataclass
 class ToolRequest:
     """Structure for a tool call request found in an AIMessage."""
+
     name: str
     args: Dict[str, Any]
     tool_call_id: str
@@ -33,6 +36,7 @@ class ResponseParserService:
     Parses new ToolMessages in an AgentResponse (or dict) using a set of registered tools
     and their parsing functions.
     """
+
     processedMessageIds: set[str]
     tools: List[HederaAgentKitTool]
     parsingMap: Dict[str, ParsingFunction]
@@ -73,7 +77,9 @@ class ResponseParserService:
 
         return msg_type == "tool" and tool_call_id is not None and name is not None
 
-    def _extract_messages_list(self, response: Union[AgentResponse, Dict[str, Any]]) -> List[Any]:
+    def _extract_messages_list(
+        self, response: Union[AgentResponse, Dict[str, Any]]
+    ) -> List[Any]:
         """Safely extracts the list of messages from the response container."""
         if isinstance(response, dict):
             return response.get("messages", [])
@@ -82,8 +88,7 @@ class ResponseParserService:
         return []
 
     def get_new_tool_requests(
-            self,
-            response: Union[AgentResponse, Dict[str, Any]]
+        self, response: Union[AgentResponse, Dict[str, Any]]
     ) -> List[ToolRequest]:
         """
         Extracts tool calls requested by the AI (found in AIMessages).
@@ -107,20 +112,19 @@ class ResponseParserService:
 
                 for call in tool_calls:
                     # 'call' is expected to be a dict: {'name': ..., 'args': ..., 'id': ...}
-                    if isinstance(call, dict) and 'name' in call and 'id' in call:
+                    if isinstance(call, dict) and "name" in call and "id" in call:
                         all_requests.append(
                             ToolRequest(
-                                name=call.get('name', ''),
-                                args=call.get('args', {}),
-                                tool_call_id=call.get('id', '')
+                                name=call.get("name", ""),
+                                args=call.get("args", {}),
+                                tool_call_id=call.get("id", ""),
                             )
                         )
 
         return all_requests
 
     def parse_new_tool_messages(
-            self,
-            response: Union[AgentResponse, Dict[str, Any]]
+        self, response: Union[AgentResponse, Dict[str, Any]]
     ) -> List[ParsedToolData]:
         """
         Parses all new ToolMessages (tool results) in the response.
@@ -141,7 +145,9 @@ class ResponseParserService:
             # CRITICAL FIX: Mark any AIMessage containing tool_calls as processed,
             # even if we only care about the ToolMessage *results* here.
             # This prevents us from endlessly processing the same message ID.
-            if self._get_attr(message, "type") == "ai" and self._get_attr(message, "tool_calls"):
+            if self._get_attr(message, "type") == "ai" and self._get_attr(
+                message, "tool_calls"
+            ):
                 self.processedMessageIds.add(message_id)
                 continue
 

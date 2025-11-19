@@ -39,7 +39,7 @@ class HederaLangchainToolkit:
                 description=tool.description,
                 schema=tool.parameters,
                 name=tool.method,  # langchain tools do not accept names with spaces
-                response_parsing_function=tool.outputParser or None
+                response_parsing_function=tool.outputParser or None,
             )
             for tool in all_tools
         ]

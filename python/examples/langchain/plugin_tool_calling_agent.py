@@ -160,15 +160,22 @@ async def bootstrap():
             ## 2. Handle tool calls
             else:
                 tool_call = parsed_data[0]
-                print(f"AI: {response['messages'][-1].content}")  # <- agent response text generated based on the tool call response
+                print(
+                    f"AI: {response['messages'][-1].content}"
+                )  # <- agent response text generated based on the tool call response
                 print("\n=== Tool Data ===")
-                print("= Direct tool response =\n", tool_call.parsedData["humanMessage"]) # <- you can use this string for a deterministic tool human-readable response.
+                print(
+                    "= Direct tool response =\n", tool_call.parsedData["humanMessage"]
+                )  # <- you can use this string for a deterministic tool human-readable response.
                 print("\n= Full tool response =")
-                pprint(tool_call.parsedData)  # <- you can use this object for convenient tool response extraction
+                pprint(
+                    tool_call.parsedData
+                )  # <- you can use this object for convenient tool response extraction
 
         except Exception as e:
             print("Error:", e)
             import traceback
+
             traceback.print_exc()
 
 

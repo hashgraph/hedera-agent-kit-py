@@ -113,6 +113,7 @@ async def toolkit(langchain_test_setup):
     """Provide the LangChain toolkit."""
     return langchain_test_setup.toolkit
 
+
 @pytest.fixture
 async def response_parser(langchain_test_setup):
     """Provide the LangChain response parser."""
@@ -124,7 +125,9 @@ async def response_parser(langchain_test_setup):
 # ============================================================================
 
 
-def extract_account_id(agent_result: dict[str, Any], response_parser: ResponseParserService, tool_name: str) -> str:
+def extract_account_id(
+    agent_result: dict[str, Any], response_parser: ResponseParserService, tool_name: str
+) -> str:
     parsed_tool_calls = response_parser.parse_new_tool_messages(agent_result)
 
     if not parsed_tool_calls:
@@ -133,8 +136,11 @@ def extract_account_id(agent_result: dict[str, Any], response_parser: ResponsePa
         if len(parsed_tool_calls) > 1:
             raise ValueError("Multiple tool calls were found")
         if parsed_tool_calls[0].toolName != tool_name:
-            raise ValueError(f"Incorrect tool name. Called {parsed_tool_calls[0].toolName} instead of {tool_name}")
+            raise ValueError(
+                f"Incorrect tool name. Called {parsed_tool_calls[0].toolName} instead of {tool_name}"
+            )
     return parsed_tool_calls[0].parsedData["raw"]["account_id"]
+
 
 async def execute_create_account(
     agent_executor, input_text: str, config: RunnableConfig
@@ -158,7 +164,7 @@ async def test_create_account_with_default_operator_public_key(
     operator_client: Client,
     langchain_config: RunnableConfig,
     executor_account,
-    response_parser
+    response_parser,
 ):
     """Test creating an account with a default operator public key."""
     _, _, executor_client, _ = executor_account
@@ -186,7 +192,8 @@ async def test_create_account_with_initial_balance_and_memo(
     executor_wrapper,
     operator_wrapper,
     operator_client,
-    langchain_config,response_parser
+    langchain_config,
+    response_parser,
 ):
     """Test creating an account with initial balance and memo."""
     input_text = (
@@ -217,7 +224,7 @@ async def test_create_account_with_explicit_public_key(
     operator_wrapper,
     operator_client,
     langchain_config,
-response_parser
+    response_parser,
 ):
     """Test creating an account with an explicit public key."""
     public_key = PrivateKey.generate_ed25519().public_key()
@@ -231,7 +238,9 @@ response_parser
 
 
 @pytest.mark.asyncio
-async def test_schedule_create_account_transaction(agent_executor, langchain_config, response_parser):
+async def test_schedule_create_account_transaction(
+    agent_executor, langchain_config, response_parser
+):
     """Test scheduling a creation account transaction with an explicit public key."""
     public_key = PrivateKey.generate_ed25519().public_key()
     input_text = f"Schedule creating a new Hedera account using public key {public_key.to_string_der()}"
@@ -243,7 +252,10 @@ async def test_schedule_create_account_transaction(agent_executor, langchain_con
     assert tool_call.parsedData["raw"] is not None
     assert tool_call.parsedData["raw"]["transaction_id"] is not None
     assert tool_call.parsedData["raw"]["schedule_id"] is not None
-    assert "Scheduled transaction created successfully" in tool_call.parsedData["humanMessage"]
+    assert (
+        "Scheduled transaction created successfully"
+        in tool_call.parsedData["humanMessage"]
+    )
 
     # We don't expect account_id yet since it's not executed immediately
     assert tool_call.parsedData["raw"]["account_id"] is None
@@ -261,7 +273,7 @@ async def test_create_account_with_very_small_initial_balance(
     operator_wrapper,
     operator_client,
     langchain_config,
-        response_parser
+    response_parser,
 ):
     """Test creating an account with very small initial balance."""
     input_text = "Create an account with initial balance 0.0001 HBAR"
