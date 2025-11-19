@@ -8,6 +8,8 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import Dict, Any
+
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
@@ -17,7 +19,6 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import 
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types.transaction import (
     TransactionDetailsResponse,
-    TransactionData,
 )
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -26,6 +27,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
+    untyped_query_output_parser,
+)
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -48,7 +52,7 @@ def get_transaction_record_query_prompt(context: Context = {}) -> str:
 This tool will return the transaction record for a given Hedera transaction ID.
 
 Parameters:
-- transactionId (str, required): The transaction ID to fetch record for. Should be in format "shard.realm.num-sss-nnn" format where sss are seconds and nnn are nanoseconds
+- transaction_id (str, required): The transaction ID to fetch record for. Should be in format "shard.realm.num-sss-nnn" format where sss are seconds and nnn are nanoseconds
 - nonce (number, optional): Optional nonce value for the transaction
 
 {usage_instructions}
@@ -124,9 +128,7 @@ Entity ID: {tx.get('entity_id', 'N/A')}{transfers_info}"""
 
 
 async def get_transaction_record_query(
-    client: Client,
-    context: Context,
-    params: TransactionRecordQueryParameters,
+    client: Client, context: Context, params: TransactionRecordQueryParameters
 ) -> ToolResponse:
     """Execute a transaction record query using the mirror node service.
 
@@ -162,9 +164,11 @@ async def get_transaction_record_query(
         )
 
         return ToolResponse(
-            human_message=post_process(transaction_record, params.transaction_id),
+            human_message=post_process(
+                transaction_record, params.get("transaction_id")
+            ),
             extra={
-                "transaction_id": params.transaction_id,
+                "transaction_id": params["transaction_id"],
                 "transaction_record": transaction_record,
             },
         )
@@ -196,12 +200,10 @@ class GetTransactionRecordQueryTool(Tool):
         self.parameters: type[TransactionRecordQueryParameters] = (
             TransactionRecordQueryParameters
         )
+        self.outputParser = untyped_query_output_parser
 
     async def execute(
-        self,
-        client: Client,
-        context: Context,
-        params: TransactionRecordQueryParameters,
+        self, client: Client, context: Context, params: TransactionRecordQueryParameters
     ) -> ToolResponse:
         """Execute the transaction record query using the provided client, context, and params.
 
