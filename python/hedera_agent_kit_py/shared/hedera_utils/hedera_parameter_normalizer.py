@@ -2,8 +2,10 @@ from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python.contract.contract_id import ContractId
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId, SupplyType
+from hiero_sdk_python.hapi.services.basic_types_pb2 import TokenSupplyType
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
+from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from pydantic import BaseModel, ValidationError
 from web3 import Web3
 
@@ -33,7 +35,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     GetTopicInfoParameters,
     ExchangeRateQueryParameters,
     ContractExecuteTransactionParametersNormalised,
-    CreateERC20Parameters,
+    CreateERC20Parameters, CreateFungibleTokenParameters, CreateFungibleTokenParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
@@ -719,3 +721,125 @@ class HederaParameterNormaliser:
         parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
 
         return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
+
+    @staticmethod
+    async def normalise_create_fungible_token_params(
+            params: CreateFungibleTokenParameters,
+            context: Context,
+            client: Client,
+            mirrornode: IHederaMirrornodeService,
+    ) -> CreateFungibleTokenParametersNormalised:
+        """Normalize parameters for creating a fungible token.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+            mirrornode: The Mirrornode service instance.
+
+        Returns:
+            The normalized parameters are ready for transaction building.
+        """
+        # Validate and parse parameters
+        parsed_params: CreateFungibleTokenParameters = cast(
+            CreateFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateFungibleTokenParameters
+            ),
+        )
+
+        # Resolve Treasury Account
+        default_account_id = (
+            str(client.operator_account_id)
+            if client.operator_account_id
+            else None
+        )
+        treasury_account_id = parsed_params.treasury_account_id or default_account_id
+
+        if not treasury_account_id:
+            raise ValueError("Must include treasury account ID")
+
+        # Resolve Decimals and Supply
+        decimals = parsed_params.decimals
+        initial_supply = int(parsed_params.initial_supply * (10 ** decimals))
+
+        # Resolve Supply Type
+        supply_type = SupplyType.INFINITE
+
+        # Check the explicit supply_type parameter (if provided)
+        if parsed_params.supply_type is not None:
+            if parsed_params.supply_type == 0 or parsed_params.supply_type == SupplyType.INFINITE:
+                supply_type = SupplyType.INFINITE
+            elif parsed_params.supply_type == 1 or parsed_params.supply_type == SupplyType.FINITE:
+                supply_type = SupplyType.FINITE
+
+        # Override: If max_supply is explicitly set and positive, the token MUST be FINITE.
+        if parsed_params.max_supply is not None and parsed_params.max_supply > 0:
+            supply_type = SupplyType.FINITE
+
+        # Resolve Max Supply (only needed if supply_type is FINITE)
+        max_supply = None
+        if supply_type == SupplyType.FINITE:
+            # Default to 1,000,000 if max_supply was not specified, and convert to base units.
+            raw_max = (
+                parsed_params.max_supply
+                if parsed_params.max_supply is not None
+                else 1_000_000
+            )
+            max_supply = int(raw_max * (10 ** decimals))
+
+            # Python sdk requires non-zero initial supply if the token supply is finite
+            if not parsed_params.initial_supply:
+                initial_supply = int(1 * (10 ** decimals)) # mint 1 token
+
+        # Validation
+        if max_supply is not None and initial_supply > max_supply:
+            raise ValueError(
+                f"Initial supply ({initial_supply}) cannot exceed max supply ({max_supply})"
+            )
+
+        # Resolve Supply Key
+        supply_key: Optional[PublicKey] = None
+        if parsed_params.is_supply_key or supply_type == SupplyType.FINITE:
+            # Try to fetch key from mirror node, fall back to the client operator
+            public_key = None
+            try:
+                account_info = await mirrornode.get_account(treasury_account_id)
+                if account_info.get("account_public_key"):
+                    public_key = account_info.get("account_public_key")
+            except Exception:
+                pass
+
+            if not public_key and client.operator_private_key.public_key():
+                public_key = client.operator_private_key.public_key().to_string_der()
+
+            if public_key:
+                supply_key = PublicKey.from_string(public_key)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        # Construct TokenParams
+        token_params = TokenParams(
+            token_name=parsed_params.token_name,
+            token_symbol=parsed_params.token_symbol,
+            decimals=decimals,
+            initial_supply=initial_supply,
+            treasury_account_id=AccountId.from_string(treasury_account_id),
+            supply_type=supply_type,
+            max_supply=max_supply,
+            auto_renew_account_id=AccountId.from_string(default_account_id),
+        )
+
+        token_keys = TokenKeys(supply_key=supply_key) if supply_key else None
+
+        return CreateFungibleTokenParametersNormalised(
+            token_params=token_params,
+            keys=token_keys,
+            scheduling_params=scheduling_params,
+        )

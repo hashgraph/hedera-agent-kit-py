@@ -36,10 +36,12 @@ from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
     core_misc_query_plugin_tool_names,
     core_misc_query_plugin,
 )
+from hedera_agent_kit_py.plugins.core_token_plugin import core_token_plugin_tool_names, core_token_plugin
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
 
+CREATE_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names["CREATE_FUNGIBLE_TOKEN_TOOL"]
 DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
 CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
@@ -90,6 +92,7 @@ async def bootstrap():
             CREATE_ERC20_TOOL,
             SUBMIT_TOPIC_MESSAGE_TOOL,
             GET_ACCOUNT_QUERY_TOOL,
+            CREATE_FUNGIBLE_TOKEN_TOOL
         ],
         plugins=[
             core_consensus_plugin,
@@ -98,6 +101,7 @@ async def bootstrap():
             core_misc_query_plugin,
             core_evm_plugin,
             core_account_plugin,
+            core_token_plugin,
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
