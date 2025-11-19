@@ -4,27 +4,23 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-import asyncio
 from datetime import datetime
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
 
 # Constants
-# ERC20 creation is more expensive than topic creation
 DEFAULT_EXECUTOR_BALANCE = Hbar(20, in_tinybars=False)
-MIRROR_NODE_WAITING_TIME_SEC = 10  # Wait for mirror node to ingest data
 
 
 # ============================================================================
@@ -74,7 +70,7 @@ async def executor_account(
     )
 
     # Wait for account creation to propagate to mirror nodes
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
 
@@ -119,30 +115,42 @@ async def toolkit(langchain_test_setup):
     return langchain_test_setup.toolkit
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
 async def execute_create_erc20(
-    agent_executor, input_text: str, config: RunnableConfig
-) -> ExecutedTransactionToolResponse:
-    """Execute ERC20 creation via the agent and return the parsed response dict."""
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute ERC20 creation via the agent and return the parsed raw data."""
     response = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
         config=config,
     )
 
-    # Extract the tool response
-    tool_response = extract_tool_response(response, "create_erc20_tool")
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(response)
 
-    # Ensure it's the correct type
-    if not isinstance(tool_response, ExecutedTransactionToolResponse):
-        raise TypeError(
-            f"Expected ExecutedTransactionToolResponse, got {type(tool_response)}"
-        )
+    if not parsed_tool_calls:
+        raise ValueError("The create_erc20_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
 
-    return tool_response
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "create_erc20_tool":
+        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of create_erc20_tool")
+
+    return tool_call.parsedData
 
 
 # ============================================================================
@@ -155,21 +163,25 @@ async def test_create_erc20_minimal_params(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating an ERC20 token with minimal params via natural language."""
     input_text = "Create an ERC20 token named MyERC20 with symbol M20"
-    response: ExecutedTransactionToolResponse = await execute_create_erc20(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_erc20(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    assert "ERC20 token created successfully" in response.human_message
-    assert response.extra is not None
-    erc20_address = response.extra.get("erc20_address")
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert "ERC20 token created successfully" in human_message
+    erc20_address = raw_data.get("erc20_address")
     assert erc20_address is not None
+    assert isinstance(erc20_address, str)
     assert erc20_address.startswith("0x")
 
     # Wait for transaction to propagate
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify on-chain contract info
     contract_info = await executor_wrapper.get_contract_info(erc20_address)
@@ -182,20 +194,23 @@ async def test_create_erc20_with_decimals_and_supply(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating an ERC20 token with decimals and initial supply."""
     input_text = "Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000"
-    response: ExecutedTransactionToolResponse = await execute_create_erc20(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_erc20(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    assert "ERC20 token created successfully" in response.human_message
-    assert response.extra is not None
-    erc20_address = response.extra.get("erc20_address")
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert "ERC20 token created successfully" in human_message
+    erc20_address = raw_data.get("erc20_address")
     assert erc20_address is not None
 
     # Wait for transaction to propagate
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify on-chain contract info
     contract_info = await executor_wrapper.get_contract_info(erc20_address)
@@ -207,6 +222,7 @@ async def test_create_erc20_with_decimals_and_supply(
 async def test_create_erc20_scheduled(
     agent_executor,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test scheduling the creation of an ERC20 token."""
     # Use a unique name to avoid collisions
@@ -214,12 +230,17 @@ async def test_create_erc20_scheduled(
     symbol = f"S{int(datetime.now().timestamp()) % 1000}"
     input_text = f'Create an ERC20 token named "{name}" with symbol {symbol}. Schedule this transaction instead of executing it immediately.'
 
-    response: ExecutedTransactionToolResponse = await execute_create_erc20(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_erc20(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
     # Validate response structure for a scheduled transaction
-    assert "Scheduled creation of ERC20 successfully" in response.human_message
-    assert response.raw is not None
-    assert response.raw.transaction_id is not None
-    assert response.raw.schedule_id is not None
+    assert "Scheduled creation of ERC20 successfully" in human_message
+    assert raw_data is not None
+    assert raw_data.get("transaction_id") is not None
+    assert raw_data.get("schedule_id") is not None
+    # We don't expect erc20_address yet since it's not executed immediately
+    assert raw_data.get("erc20_address") is None

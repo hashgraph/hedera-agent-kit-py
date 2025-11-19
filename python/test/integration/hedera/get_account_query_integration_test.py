@@ -33,9 +33,7 @@ async def test_get_account_info_for_valid_account(setup_operator):
     # Create a fresh account
     private_key = PrivateKey.generate_ed25519()
     created_resp = await operator_wrapper.create_account(
-        CreateAccountParametersNormalised(
-            key=private_key.public_key()
-        )
+        CreateAccountParametersNormalised(key=private_key.public_key())
     )
     created_account_id = created_resp.account_id
     await wait(MIRROR_NODE_WAITING_TIME)

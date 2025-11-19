@@ -365,7 +365,6 @@ class HederaParameterNormaliser:
             params: Raw topic creation parameters provided by the user.
             context: Application context (contains environment configuration).
             client: Hedera Client instance used for resolving account and operator info.
-            _mirror_node: Mirror node client (not used in this simplified implementation).
 
         Returns:
             CreateTopicParametersNormalised: A validated, SDK-ready parameter object

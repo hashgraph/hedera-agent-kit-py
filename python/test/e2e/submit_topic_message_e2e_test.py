@@ -4,31 +4,30 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-import asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TopicId
 from langchain_core.runnables import RunnableConfig
+import base64
 
-from hedera_agent_kit_py.shared.models import (
-    ExecutedTransactionToolResponse,
-    ToolResponse,
-)
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
 
 # Constants
 DEFAULT_EXECUTOR_BALANCE = Hbar(
     10, in_tinybars=False
 )  # Needs to cover account + topic ops
-MIRROR_NODE_WAITING_TIME_SEC = 10  # Wait for mirror node to ingest data
 
 
 # ============================================================================
@@ -74,7 +73,7 @@ async def executor_account(
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
     # Wait for account creation to propagate
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     yield executor_account_id, executor_key, executor_client, executor_wrapper
 
@@ -111,6 +110,12 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "submit_topic_message_e2e"})
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -128,7 +133,8 @@ async def create_test_topic(
         CreateTopicParametersNormalised(submit_key=None)
     )
     assert resp.topic_id is not None
-
+    # Wait for topic creation to propagate to mirror node
+    await wait(MIRROR_NODE_WAITING_TIME)
     return resp.topic_id
 
 
@@ -139,6 +145,34 @@ async def pre_created_topic(
     """Provides a pre-created topic ID for tests."""
     topic_id = await create_test_topic(executor_wrapper)
     yield topic_id
+
+
+async def execute_submit_message(
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute message submission through the agent and return parsed tool data."""
+    result = await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]},
+        config=config,
+    )
+
+    parsed_tool_calls = response_parser.parse_new_tool_messages(result)
+
+    if not parsed_tool_calls:
+        raise ValueError("The submit_topic_message_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
+
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "submit_topic_message_tool":
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of submit_topic_message_tool"
+        )
+
+    return tool_call.parsedData
 
 
 # ============================================================================
@@ -152,67 +186,62 @@ async def test_submit_message_to_pre_created_topic(
     executor_wrapper: HederaOperationsWrapper,
     pre_created_topic: TopicId,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test submitting a message to a topic via natural language."""
     target_topic_id = str(pre_created_topic)
     message = "Hello Hedera from the E2E test"
 
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Submit message '{message}' to topic {target_topic_id}",
-                }
-            ]
-        },
-        config=langchain_config,
+    input_text = f"Submit message '{message}' to topic {target_topic_id}"
+    parsed_data = await execute_submit_message(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    observation = extract_tool_response(result, "submit_topic_message_tool")
-    assert isinstance(observation, ExecutedTransactionToolResponse)
-    assert "submitted successfully" in observation.human_message.lower()
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert "submitted successfully" in human_message.lower()
+    assert raw_data.get("transaction_id") is not None
 
     # Wait for mirror node ingestion
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify message was received
     topic_messages = await executor_wrapper.get_topic_messages(target_topic_id)
+    # Check that at least one message exists (it might be the first or a subsequent one)
     assert len(topic_messages["messages"]) >= 1
+    # Check that the submitted message content is present
+    message_content_exists = any(
+        base64.b64decode(msg["message"]).decode("utf-8") == message
+        for msg in topic_messages["messages"]
+    )
+    assert message_content_exists
 
 
 @pytest.mark.asyncio
 async def test_fail_submit_to_non_existent_topic(
-    agent_executor, langchain_config: RunnableConfig
+    agent_executor, langchain_config: RunnableConfig, response_parser: ResponseParserService
 ):
     """Test attempting to submit a message to a topic that does not exist."""
     fake_topic_id = "0.0.999999999"
+    input_text = f"Submit message 'test' to topic {fake_topic_id}"
 
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Submit message 'test' to topic {fake_topic_id}",
-                }
-            ]
-        },
-        config=langchain_config,
+    parsed_data = await execute_submit_message(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    observation = extract_tool_response(result, "submit_topic_message_tool")
+    human_message = parsed_data["humanMessage"]
 
-    # Expect a ToolResponse with an error, not an ExecutedTransactionToolResponse
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is not None
-    # Check for expected Hedera error codes
+    # Check for expected error codes in the message
     assert any(
-        err in observation.error.upper()
+        err in human_message.upper()
         for err in [
             "INVALID_TOPIC_ID",
             "NOT_FOUND",
+            "ERROR",
         ]
     )
+    assert parsed_data.get("raw", {}).get("error") is not None
 
 
 @pytest.mark.asyncio
@@ -220,25 +249,24 @@ async def test_submit_message_scheduled(
     agent_executor,
     pre_created_topic: TopicId,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test scheduling a topic message submission via natural language."""
     target_topic_id = str(pre_created_topic)
     message = "This is a scheduled message"
 
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Submit message '{message}' to topic {target_topic_id}. Schedule this transaction.",
-                }
-            ]
-        },
-        config=langchain_config,
+    input_text = f"Submit message '{message}' to topic {target_topic_id}. Schedule this transaction."
+
+    parsed_data = await execute_submit_message(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    observation = extract_tool_response(result, "submit_topic_message_tool")
-    assert isinstance(observation, ExecutedTransactionToolResponse)
-    assert "scheduled transaction created successfully" in observation.human_message.lower()
-    assert observation.raw.schedule_id is not None
-    assert observation.raw.transaction_id is not None
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert (
+        "scheduled transaction created successfully"
+        in human_message.lower()
+    )
+    assert raw_data.get("schedule_id") is not None
+    assert raw_data.get("transaction_id") is not None

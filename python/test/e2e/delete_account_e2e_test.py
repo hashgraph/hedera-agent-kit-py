@@ -2,17 +2,26 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.general_utils import wait
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
+
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+
+
+# ============================================================================
+# SESSION-LEVEL FIXTURES
+# ============================================================================
 
 
 @pytest.fixture(scope="session")
@@ -23,6 +32,11 @@ def operator_client():
 @pytest.fixture(scope="session")
 def operator_wrapper(operator_client):
     return HederaOperationsWrapper(operator_client)
+
+
+# ============================================================================
+# FUNCTION-LEVEL FIXTURES
+# ============================================================================
 
 
 @pytest.fixture
@@ -68,8 +82,19 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "delete_account_e2e"})
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+
 async def create_test_account(
-    executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(0)
+        executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(0)
 ):
     return await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -79,9 +104,31 @@ async def create_test_account(
     )
 
 
+def extract_tool_human_message(
+        agent_result, response_parser: ResponseParserService, tool_name: str
+) -> str:
+    parsed_tool_calls = response_parser.parse_new_tool_messages(agent_result)
+
+    if not parsed_tool_calls:
+        raise ValueError("The tool was not called")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found")
+    if parsed_tool_calls[0].toolName != tool_name:
+        raise ValueError(
+            f"Incorrect tool name. Called {parsed_tool_calls[0].toolName} instead of {tool_name}"
+        )
+
+    return parsed_tool_calls[0].parsedData["humanMessage"]
+
+
+# ============================================================================
+# TEST CASES
+# ============================================================================
+
+
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_default_transfer(
-    agent_executor, executor_wrapper, executor_account, langchain_config
+        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
@@ -96,13 +143,15 @@ async def test_delete_pre_created_account_default_transfer(
         config=langchain_config,
     )
 
-    observation = extract_tool_response(result, "delete_account_tool")
-    assert "deleted" in observation.human_message.lower()
+    human_message = extract_tool_human_message(
+        result, response_parser, "delete_account_tool"
+    )
+    assert "deleted" in human_message.lower()
 
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_with_explicit_transfer(
-    agent_executor, executor_wrapper, executor_account, langchain_config
+        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
@@ -121,13 +170,15 @@ async def test_delete_pre_created_account_with_explicit_transfer(
         config=langchain_config,
     )
 
-    observation = extract_tool_response(result, "delete_account_tool")
-    assert "deleted" in observation.human_message.lower()
+    human_message = extract_tool_human_message(
+        result, response_parser, "delete_account_tool"
+    )
+    assert "deleted" in human_message.lower()
 
 
 @pytest.mark.asyncio
 async def test_delete_non_existent_account(
-    agent_executor, executor_wrapper, langchain_config
+        agent_executor, executor_wrapper, langchain_config, response_parser
 ):
     fake_account_id = "0.0.999999999"
 
@@ -140,9 +191,11 @@ async def test_delete_non_existent_account(
         config=langchain_config,
     )
 
-    observation = extract_tool_response(result, "delete_account_tool")
+    human_message = extract_tool_human_message(
+        result, response_parser, "delete_account_tool"
+    )
     assert any(
-        err in observation.human_message.upper()
+        err in human_message.upper()
         for err in [
             "INVALID_ACCOUNT_ID",
             "ACCOUNT_DELETED",
@@ -154,11 +207,13 @@ async def test_delete_non_existent_account(
 
 @pytest.mark.asyncio
 async def test_delete_account_with_natural_language_variations(
-    agent_executor, executor_wrapper, executor_account, langchain_config
+        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(
-        executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(5, in_tinybars=False)
+        executor_wrapper,
+        executor_client,
+        initial_balance_in_hbar=Hbar(5, in_tinybars=False),
     )
     target_account_id = str(resp.account_id)
 
@@ -178,10 +233,12 @@ async def test_delete_account_with_natural_language_variations(
         config=langchain_config,
     )
 
-    observation = extract_tool_response(result, "delete_account_tool")
-    assert "deleted" in observation.human_message.lower()
+    human_message = extract_tool_human_message(
+        result, response_parser, "delete_account_tool"
+    )
+    assert "deleted" in human_message.lower()
 
-    await wait(5000)
+    await wait(MIRROR_NODE_WAITING_TIME)
 
     operator_balance_after = executor_wrapper.get_account_hbar_balance(
         str(executor_client.operator_account_id)

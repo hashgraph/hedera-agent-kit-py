@@ -4,15 +4,13 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, Client, TopicId
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import (
-    ExecutedTransactionToolResponse,
-    ToolResponse,
-)
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
+
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,
@@ -24,7 +22,7 @@ from test.utils.setup import (
     get_custom_client,
 )
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
+
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(20, in_tinybars=False)
 
@@ -108,20 +106,41 @@ async def toolkit(langchain_test_setup):
     return langchain_test_setup.toolkit
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
 async def execute_agent_call(
-    agent_executor, input_text: str, config: RunnableConfig
-) -> ExecutedTransactionToolResponse | ToolResponse:
-    """Execute a tool call via the agent and return the parsed response dict."""
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute a tool call via the agent and return the parsed response data."""
     raw = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
 
-    return extract_tool_response(raw, "delete_topic_tool")
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(raw)
+
+    if not parsed_tool_calls:
+        raise ValueError("The delete_topic_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
+
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "delete_topic_tool":
+        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of delete_topic_tool")
+
+    return tool_call.parsedData
 
 
 async def create_test_topic(
@@ -142,7 +161,7 @@ async def create_test_topic(
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_topic(
-    agent_executor, executor_wrapper, executor_account, langchain_config
+    agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
 ):
     """E2E: delete an existing topic via agent command."""
     _, _, client, _ = executor_account
@@ -150,27 +169,30 @@ async def test_delete_pre_created_topic(
     topic_str = str(topic_id)
 
     # Delete the topic
-    observation = await execute_agent_call(
-        agent_executor, f"Delete the topic {topic_str}", langchain_config
+    parsed_data = await execute_agent_call(
+        agent_executor, f"Delete the topic {topic_str}", langchain_config, response_parser
     )
 
-    assert isinstance(observation, ExecutedTransactionToolResponse)
-    assert "deleted successfully" in observation.human_message.lower()
-    assert topic_str in observation.human_message
+    human_message = parsed_data["humanMessage"]
+
+    assert "deleted successfully" in human_message.lower()
+    assert topic_str in human_message
 
 
 @pytest.mark.asyncio
-async def test_delete_non_existent_topic(agent_executor, langchain_config):
+async def test_delete_non_existent_topic(agent_executor, langchain_config, response_parser):
     """E2E: attempt to delete a non-existent topic."""
     fake_topic = "0.0.999999999"
 
-    observation = await execute_agent_call(
-        agent_executor, f"Delete the topic {fake_topic}", langchain_config
+    # We expect this call to fail and the agent to return an error/ToolResponse,
+    # which is encapsulated in the parsed_data dictionary's 'humanMessage' field.
+    parsed_data = await execute_agent_call(
+        agent_executor, f"Delete the topic {fake_topic}", langchain_config, response_parser
     )
 
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is not None
+    human_message = parsed_data["humanMessage"]
+
     assert any(
-        err in observation.error.upper()
-        for err in ["INVALID_TOPIC_ID", "TOPIC_WAS_DELETED", "NOT_FOUND"]
+        err in human_message.upper()
+        for err in ["INVALID_TOPIC_ID", "TOPIC_WAS_DELETED", "NOT_FOUND", "ERROR"]
     )

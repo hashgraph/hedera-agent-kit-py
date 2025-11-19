@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pprint import pprint
 
 from dotenv import load_dotenv
 from hiero_sdk_python import Network, AccountId, PrivateKey, Client
@@ -9,23 +10,32 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
 from hedera_agent_kit_py.langchain import HederaAgentKitTool
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
 from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
-core_account_plugin
+    core_account_plugin,
 )
 from hedera_agent_kit_py.plugins.core_account_query_plugin import (
     core_account_query_plugin_tool_names,
-    core_account_query_plugin)
+    core_account_query_plugin,
+)
 from hedera_agent_kit_py.plugins.core_consensus_plugin import (
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
 )
-from hedera_agent_kit_py.plugins.core_consensus_query_plugin import(
+from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
     core_consensus_query_plugin_tool_names,
-    core_consensus_query_plugin)
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names, core_evm_plugin
-from hedera_agent_kit_py.plugins.core_misc_query_plugin import core_misc_query_plugin_tool_names, core_misc_query_plugin
+    core_consensus_query_plugin,
+)
+from hedera_agent_kit_py.plugins.core_evm_plugin import (
+    core_evm_plugin_tool_names,
+    core_evm_plugin,
+)
+from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
+    core_misc_query_plugin_tool_names,
+    core_misc_query_plugin,
+)
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -51,7 +61,6 @@ GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
 GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
 
 
-
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
@@ -59,6 +68,8 @@ async def bootstrap():
     # Hedera Client setup (Testnet)
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
+
+    print(f"using openai api key: {os.getenv('OPENAI_API_KEY')}")
 
     network: Network = Network(
         network="testnet"
@@ -109,6 +120,8 @@ async def bootstrap():
         checkpointer=InMemorySaver(),
     )
 
+    response_parsing_service: ResponseParserService = ResponseParserService(tools=tools)
+
     print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
     print("Available plugin tools:")
     print("- example_greeting_tool: Generate personalized greetings")
@@ -139,10 +152,26 @@ async def bootstrap():
                 context=configuration.context,
                 config=config,
             )
-            final_message = response["messages"][-1]
-            print(f"AI: {final_message.content}")
+
+            parsed_data = response_parsing_service.parse_new_tool_messages(response)
+
+            ## 1. Handle case when NO tool was called (simple chat)
+            if not parsed_data:
+                print(f"AI: {response['messages'][-1].content}")
+
+            ## 2. Handle tool calls
+            else:
+                tool_call = parsed_data[0]
+                print(f"AI: {response['messages'][-1].content}")  # <- agent response text generated based on the tool call response
+                print("\n=== Tool Data ===")
+                print("= Direct tool response =\n", tool_call.parsedData["humanMessage"]) # <- you can use this string for a deterministic tool human-readable response.
+                print("\n= Full tool response =")
+                pprint(tool_call.parsedData)  # <- you can use this object for convenient tool response extraction
+
         except Exception as e:
             print("Error:", e)
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import transaction_tool_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -133,6 +134,7 @@ class DeleteAccountTool(Tool):
         self.name: str = "Delete Account"
         self.description: str = delete_account_prompt(context)
         self.parameters: type[DeleteAccountParameters] = DeleteAccountParameters
+        self.outputParser = transaction_tool_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: DeleteAccountParameters

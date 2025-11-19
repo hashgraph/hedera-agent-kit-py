@@ -23,6 +23,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import untyped_query_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -122,6 +123,7 @@ class GetAccountQueryTool(Tool):
         self.name: str = "Get Account Query"
         self.description: str = get_account_query_prompt(context)
         self.parameters: type[AccountQueryParameters] = AccountQueryParameters
+        self.outputParser = untyped_query_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: AccountQueryParameters
