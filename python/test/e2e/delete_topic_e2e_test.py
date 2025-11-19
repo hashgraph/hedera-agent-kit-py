@@ -138,7 +138,9 @@ async def execute_agent_call(
 
     tool_call = parsed_tool_calls[0]
     if tool_call.toolName != "delete_topic_tool":
-        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of delete_topic_tool")
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of delete_topic_tool"
+        )
 
     return tool_call.parsedData
 
@@ -161,7 +163,11 @@ async def create_test_topic(
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_topic(
-    agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
+    agent_executor,
+    executor_wrapper,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     """E2E: delete an existing topic via agent command."""
     _, _, client, _ = executor_account
@@ -170,7 +176,10 @@ async def test_delete_pre_created_topic(
 
     # Delete the topic
     parsed_data = await execute_agent_call(
-        agent_executor, f"Delete the topic {topic_str}", langchain_config, response_parser
+        agent_executor,
+        f"Delete the topic {topic_str}",
+        langchain_config,
+        response_parser,
     )
 
     human_message = parsed_data["humanMessage"]
@@ -180,14 +189,19 @@ async def test_delete_pre_created_topic(
 
 
 @pytest.mark.asyncio
-async def test_delete_non_existent_topic(agent_executor, langchain_config, response_parser):
+async def test_delete_non_existent_topic(
+    agent_executor, langchain_config, response_parser
+):
     """E2E: attempt to delete a non-existent topic."""
     fake_topic = "0.0.999999999"
 
     # We expect this call to fail and the agent to return an error/ToolResponse,
     # which is encapsulated in the parsed_data dictionary's 'humanMessage' field.
     parsed_data = await execute_agent_call(
-        agent_executor, f"Delete the topic {fake_topic}", langchain_config, response_parser
+        agent_executor,
+        f"Delete the topic {fake_topic}",
+        langchain_config,
+        response_parser,
     )
 
     human_message = parsed_data["humanMessage"]

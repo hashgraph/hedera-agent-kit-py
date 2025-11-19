@@ -29,7 +29,7 @@ class HederaAgentKitTool(BaseTool):
         schema: Type[BaseModel],
         description: str,
         name: str,
-        response_parsing_function: Optional[Callable[[str], Any]] = None
+        response_parsing_function: Optional[Callable[[str], Any]] = None,
     ):
         """Create a LangChain tool that proxies to a Hedera Agent Kit API method.
 

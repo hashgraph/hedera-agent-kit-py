@@ -35,7 +35,9 @@ async def test_update_account_memo(agent_executor, toolkit, monkeypatch):
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
@@ -60,7 +62,9 @@ async def test_update_max_automatic_token_associations(
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
@@ -83,7 +87,9 @@ async def test_update_decline_staking_reward(agent_executor, toolkit, monkeypatc
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 

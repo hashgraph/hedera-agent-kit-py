@@ -94,7 +94,7 @@ async def response_parser(langchain_test_setup):
 
 
 async def create_test_account(
-        executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(0)
+    executor_wrapper, executor_client, initial_balance_in_hbar=Hbar(0)
 ):
     return await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -105,7 +105,7 @@ async def create_test_account(
 
 
 def extract_tool_human_message(
-        agent_result, response_parser: ResponseParserService, tool_name: str
+    agent_result, response_parser: ResponseParserService, tool_name: str
 ) -> str:
     parsed_tool_calls = response_parser.parse_new_tool_messages(agent_result)
 
@@ -128,7 +128,11 @@ def extract_tool_human_message(
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_default_transfer(
-        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
+    agent_executor,
+    executor_wrapper,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
@@ -151,7 +155,11 @@ async def test_delete_pre_created_account_default_transfer(
 
 @pytest.mark.asyncio
 async def test_delete_pre_created_account_with_explicit_transfer(
-        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
+    agent_executor,
+    executor_wrapper,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(executor_wrapper, executor_client)
@@ -178,7 +186,7 @@ async def test_delete_pre_created_account_with_explicit_transfer(
 
 @pytest.mark.asyncio
 async def test_delete_non_existent_account(
-        agent_executor, executor_wrapper, langchain_config, response_parser
+    agent_executor, executor_wrapper, langchain_config, response_parser
 ):
     fake_account_id = "0.0.999999999"
 
@@ -207,7 +215,11 @@ async def test_delete_non_existent_account(
 
 @pytest.mark.asyncio
 async def test_delete_account_with_natural_language_variations(
-        agent_executor, executor_wrapper, executor_account, langchain_config, response_parser
+    agent_executor,
+    executor_wrapper,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     _, _, executor_client, _ = executor_account
     resp = await create_test_account(

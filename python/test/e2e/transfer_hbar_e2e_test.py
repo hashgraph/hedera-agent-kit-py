@@ -55,7 +55,7 @@ def operator_wrapper(operator_client):
 
 @pytest.fixture
 async def executor_account(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
     """
     Create a temporary executor account for tests.
@@ -96,7 +96,7 @@ async def executor_wrapper(executor_account):
 
 @pytest.fixture
 async def recipient_account(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[str, None]:
     """
     Create a temporary recipient account for tests.
@@ -161,10 +161,10 @@ async def response_parser(langchain_test_setup):
 
 
 async def execute_transfer(
-        agent_executor,
-        input_text: str,
-        config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
 ) -> dict[str, Any]:
     """Execute a transfer via the agent and return the parsed tool data."""
     result = await agent_executor.ainvoke(
@@ -189,13 +189,13 @@ async def execute_transfer(
 
 
 def assert_balance_changed(
-        balance_before: int, balance_after: int, expected_amount: Decimal
+    balance_before: int, balance_after: int, expected_amount: Decimal
 ):
     """Assert that the balance changed by the expected amount."""
     actual_change = balance_after - balance_before
     expected_change = to_tinybars(expected_amount)
     assert (
-            actual_change == expected_change
+        actual_change == expected_change
     ), f"Balance change mismatch: expected {expected_change}, got {actual_change}"
 
 
@@ -206,7 +206,11 @@ def assert_balance_changed(
 
 @pytest.mark.asyncio
 async def test_simple_transfer(
-        agent_executor, recipient_account, executor_wrapper, langchain_config, response_parser
+    agent_executor,
+    recipient_account,
+    executor_wrapper,
+    langchain_config,
+    response_parser,
 ):
     """Test a basic HBAR transfer without memo."""
     amount = Decimal("0.1")
@@ -226,7 +230,11 @@ async def test_simple_transfer(
 
 @pytest.mark.asyncio
 async def test_transfer_with_memo(
-        agent_executor, recipient_account, executor_wrapper, langchain_config, response_parser
+    agent_executor,
+    recipient_account,
+    executor_wrapper,
+    langchain_config,
+    response_parser,
 ):
     """Test HBAR transfer with a memo field."""
     amount = Decimal("0.05")
@@ -249,7 +257,11 @@ async def test_transfer_with_memo(
 #     reason="Skipping this test temporarily due to LLM hallucinations. The LLM hallucinates some account after trying to crate an invalid transfer instead showing that to the user")
 @pytest.mark.asyncio
 async def test_invalid_params(
-        agent_executor, executor_wrapper, recipient_account, langchain_config, response_parser
+    agent_executor,
+    executor_wrapper,
+    recipient_account,
+    langchain_config,
+    response_parser,
 ):
     """Test that invalid parameters result in proper error handling."""
     amount = Decimal("0.05")
@@ -261,7 +273,7 @@ async def test_invalid_params(
         agent_executor, input_text, langchain_config, response_parser
     )
 
-    # If the tool call itself failed due to invalid input (which is expected here), 
+    # If the tool call itself failed due to invalid input (which is expected here),
     # the parsed_data should contain an error field.
     error_message = parsed_data["raw"].get("error")
 

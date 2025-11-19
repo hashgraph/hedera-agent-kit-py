@@ -48,7 +48,11 @@ async def test_match_create_account_tool_with_default_params(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -71,7 +75,11 @@ async def test_match_create_account_with_memo_and_initial_balance(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -96,7 +104,11 @@ async def test_match_create_account_with_explicit_public_key(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -120,7 +132,11 @@ async def test_parse_max_automatic_token_associations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -146,7 +162,11 @@ async def test_match_and_extract_params_for_scheduled_create_account(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -180,7 +200,11 @@ async def test_handle_various_natural_language_variations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="Operation Mocked - this is a test call and can be ended here"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(

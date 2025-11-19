@@ -36,9 +36,9 @@ def transaction_tool_output_parser(raw_output: str) -> ParserOutput:
 
     # Handle RETURN_BYTES mode
     if (
-            "bytes_data" in parsed_object
-            and "type" in parsed_object
-            and parsed_object["type"] == "return_bytes"
+        "bytes_data" in parsed_object
+        and "type" in parsed_object
+        and parsed_object["type"] == "return_bytes"
     ):
         try:
             return_bytes_response = ReturnBytesToolResponse.from_dict(parsed_object)
@@ -54,11 +54,11 @@ def transaction_tool_output_parser(raw_output: str) -> ParserOutput:
 
     # Handle EXECUTE_TRANSACTION mode
     if (
-            "raw" in parsed_object
-            and "human_message" in parsed_object
-            and isinstance(parsed_object["raw"], dict)
-            and "type" in parsed_object
-            and parsed_object["type"] == "executed_transaction"
+        "raw" in parsed_object
+        and "human_message" in parsed_object
+        and isinstance(parsed_object["raw"], dict)
+        and "type" in parsed_object
+        and parsed_object["type"] == "executed_transaction"
     ):
         raw_data = parsed_object.pop("raw")
         human_message = parsed_object.pop("human_message")
@@ -124,7 +124,9 @@ def untyped_query_output_parser(raw_output: str) -> ParserOutput:
         }
 
     if not isinstance(parsed_object, dict):
-        print(f"untyped_query_output_parser: Parsed object is not a dict: {type(parsed_object)}")
+        print(
+            f"untyped_query_output_parser: Parsed object is not a dict: {type(parsed_object)}"
+        )
         return {
             "raw": {
                 "status": "PARSE_ERROR",
