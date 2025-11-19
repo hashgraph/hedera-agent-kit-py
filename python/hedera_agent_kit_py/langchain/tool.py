@@ -6,7 +6,7 @@ JSON-formatted results.
 """
 
 import json
-from typing import Any, Type
+from typing import Any, Type, Callable, Optional
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -20,6 +20,7 @@ class HederaAgentKitTool(BaseTool):
 
     hedera_api: HederaAgentAPI = Field(exclude=True)
     method: str
+    responseParsingFunction: Optional[Callable[[str], Any]] = None
 
     def __init__(
         self,
@@ -28,6 +29,7 @@ class HederaAgentKitTool(BaseTool):
         schema: Type[BaseModel],
         description: str,
         name: str,
+        response_parsing_function: Optional[Callable[[str], Any]] = None
     ):
         """Create a LangChain tool that proxies to a Hedera Agent Kit API method.
 
@@ -46,6 +48,7 @@ class HederaAgentKitTool(BaseTool):
             hedera_api=hedera_api,
             method=method,
         )
+        self.responseParsingFunction = response_parsing_function
 
     async def _run(self, **kwargs: Any) -> str:
         """Run the Hedera API method synchronously."""

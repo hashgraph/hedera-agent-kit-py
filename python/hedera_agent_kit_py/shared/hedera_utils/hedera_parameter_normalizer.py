@@ -1,9 +1,11 @@
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
+from hiero_sdk_python.contract.contract_id import ContractId
+from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
+from web3 import Web3
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
@@ -22,11 +24,24 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    SubmitTopicMessageParameters,
+    SubmitTopicMessageParametersNormalised,
+    DeleteTopicParameters,
+    DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    GetTopicInfoParameters,
+    ExchangeRateQueryParameters,
+    ContractExecuteTransactionParametersNormalised,
+    CreateERC20Parameters,
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
 )
+
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    AccountQueryParametersNormalised,
+)
+
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
@@ -325,12 +340,22 @@ class HederaParameterNormaliser:
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
 
+    @classmethod
+    def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
+        """Parse and validate account query parameters"""
+        parsed_params: AccountQueryParametersNormalised = cast(
+            AccountQueryParametersNormalised,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountQueryParametersNormalised
+            ),
+        )
+        return parsed_params
+
     @staticmethod
     async def normalise_create_topic_params(
         params: CreateTopicParameters,
         context: Context,
         client: Client,
-        mirror_node,
     ) -> CreateTopicParametersNormalised:
         """Normalise 'create topic' parameters into a format compatible with the Python SDK.
 
@@ -344,7 +369,6 @@ class HederaParameterNormaliser:
             params: Raw topic creation parameters provided by the user.
             context: Application context (contains environment configuration).
             client: Hedera Client instance used for resolving account and operator info.
-            mirror_node: Mirror node client (not used in this simplified implementation).
 
         Returns:
             CreateTopicParametersNormalised: A validated, SDK-ready parameter object
@@ -368,21 +392,136 @@ class HederaParameterNormaliser:
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        account_public_key: PublicKey = await AccountResolver.get_default_public_key(
+            context, client
+        )
+
         # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
+            admin_key=account_public_key,
         )
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
+            normalised.submit_key = account_public_key
 
         return normalised
+
+    @staticmethod
+    async def normalise_create_erc20_params(
+        params: CreateERC20Parameters,
+        factory_address: str,
+        ERC20_FACTORY_ABI: list[str],
+        factory_contract_function_name: str,
+        context: Context,
+        client: Client,
+    ) -> ContractExecuteTransactionParametersNormalised:
+        """Normalise ERC20 creation parameters for BaseERC20Factory contract deployment.
+
+        This method mirrors the TypeScript `normaliseCreateERC20Params` logic and prepares
+        the encoded contract function call along with optional scheduling information.
+
+        Args:
+            params: Raw ERC20 creation parameters.
+            factory_address: The address/ID of the ERC20 factory contract.
+            ERC20_FACTORY_ABI: ABI of the BaseERC20Factory contract.
+            factory_contract_function_name: Function to invoke (e.g., 'deployToken').
+            context: Application context.
+            client: Active Hedera client instance.
+
+        Returns:
+            ContractExecuteTransactionParametersNormalised: Normalised parameters ready for execution.
+        """
+        # Validate and parse parameters
+        parsed_params: CreateERC20Parameters = cast(
+            CreateERC20Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateERC20Parameters
+            ),
+        )
+
+        w3 = Web3()
+        contract = w3.eth.contract(abi=ERC20_FACTORY_ABI)
+        encoded_data = contract.encode_abi(
+            abi_element_identifier=factory_contract_function_name,
+            args=[
+                parsed_params.token_name,
+                parsed_params.token_symbol,
+                parsed_params.decimals,
+                parsed_params.initial_supply,
+            ],
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=ContractId.from_string(factory_address),
+            function_parameters=function_parameters,
+            gas=3_000_000,  # TODO: make configurable
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_get_topic_info(
+        params: GetTopicInfoParameters,
+    ):
+        """
+        Normalizes the input parameters for the 'get_topic_info' operation to ensure
+        they adhere to the expected schema format. This function parses the input
+        parameters utilizing a schema and type casts the result to the appropriate
+        data type.
+
+        :param params: The parameters for the 'get_topic_info' operation. These
+            parameters should be of type 'GetTopicInfoParameters'.
+        :type params: GetTopicInfoParameters
+
+        :return: Parsed and normalized parameters after being verified against
+            the schema.
+        :rtype: GetTopicInfoParameters
+        """
+        parsed_params: GetTopicInfoParameters = cast(
+            GetTopicInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTopicInfoParameters
+            ),
+        )
+
+        return parsed_params
+
+    @staticmethod
+    def normalise_get_exchange_rate(
+        params: ExchangeRateQueryParameters,
+    ) -> ExchangeRateQueryParameters:
+        """
+        Normalises and parses the given exchange rate query parameters using a predefined
+        schema. This method ensures that the input parameters adhere to the required structure
+        and format specified by the schema.
+
+        :param params: The exchange rate query parameters to be normalised. The parameter
+            must conform to the type `ExchangeRateQueryParameters`.
+        :type params: ExchangeRateQueryParameters
+
+        :return: A parsed and normalised instance of `ExchangeRateQueryParameters`.
+        :rtype: ExchangeRateQueryParameters
+        """
+        parsed_params: ExchangeRateQueryParameters = cast(
+            ExchangeRateQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ExchangeRateQueryParameters
+            ),
+        )
+
+        return parsed_params
 
     @staticmethod
     def normalise_delete_account(
@@ -503,6 +642,87 @@ class HederaParameterNormaliser:
             account_params=account_params,
             scheduling_params=scheduling_params,
         )
+
+    @staticmethod
+    async def normalise_submit_topic_message(
+        params: SubmitTopicMessageParameters,
+        context: Context,
+        client: Client,
+    ) -> SubmitTopicMessageParametersNormalised:
+        """Normalize submit topic message parameters.
+
+        This function:
+          - Validates and parses the raw parameters using the SubmitTopicMessageParameters schema.
+          - Converts the topic_id string to basic_types_pb2.TopicID.
+          - Normalizes optional scheduling parameters when is_scheduled is True.
+
+        Args:
+            params: Raw topic message submission parameters provided by the user.
+            context: Application context (contains environment configuration).
+            client: Hedera Client instance used for resolving scheduling parameters.
+
+        Returns:
+            SubmitTopicMessageParametersNormalised: A validated, SDK-ready parameter object
+            with topic_id converted to basic_types_pb2.TopicID and scheduling params normalized.
+
+        Raises:
+            ValueError: If parameter validation fails.
+        """
+
+        # Validate and parse parameters
+        parsed_params: SubmitTopicMessageParameters = cast(
+            SubmitTopicMessageParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, SubmitTopicMessageParameters
+            ),
+        )
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return SubmitTopicMessageParametersNormalised(
+            topic_id=TopicId.from_string(parsed_params.topic_id),
+            message=parsed_params.message,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_delete_topic(
+        params: DeleteTopicParameters,
+    ) -> DeleteTopicParametersNormalised:
+        """Normalise delete topic parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete topic parameters.
+
+        Returns:
+            DeleteTopicParametersNormalised: Normalised delete topic parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If validation fails.
+        """
+
+        # First, validate against the basic schema
+        parsed_params: DeleteTopicParameters = cast(
+            DeleteTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteTopicParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.topic_id):
+            raise ValueError("Topic ID must be a Hedera address")
+
+        parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
 
     @staticmethod
     def normalise_get_transaction_record_params(

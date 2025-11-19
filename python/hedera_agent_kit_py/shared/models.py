@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from hiero_sdk_python import AccountId, TokenId, TopicId, TransactionId
+from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
 
 
@@ -59,6 +60,7 @@ class RawTransactionResponse:
     transaction_id: Optional[TransactionId] = None
     topic_id: Optional[TopicId] = None
     schedule_id: Optional[ScheduleId] = None
+    contract_id: Optional[ContractId] = None
     error: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -70,6 +72,7 @@ class RawTransactionResponse:
             "transaction_id": str(self.transaction_id) if self.transaction_id else None,
             "topic_id": str(self.topic_id) if self.topic_id else None,
             "schedule_id": str(self.schedule_id) if self.schedule_id else None,
+            "contract_id": str(self.contract_id) if self.contract_id else None,
             "error": self.error,
         }
 
@@ -97,6 +100,11 @@ class RawTransactionResponse:
             schedule_id=(
                 ScheduleId.from_string(data["schedule_id"])
                 if data.get("schedule_id")
+                else None
+            ),
+            contract_id=(
+                ContractId.from_string(data["contract_id"])
+                if data.get("contract_id")
                 else None
             ),
             error=data.get("error"),

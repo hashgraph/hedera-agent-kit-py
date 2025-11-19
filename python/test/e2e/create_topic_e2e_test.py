@@ -4,19 +4,18 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-import json
-from typing import AsyncGenerator, cast
+from typing import AsyncGenerator, Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
@@ -112,39 +111,38 @@ async def toolkit(langchain_test_setup):
     return langchain_test_setup.toolkit
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
 async def execute_create_topic(
-    agent_executor, input_text: str, config: RunnableConfig
-) -> ExecutedTransactionToolResponse:
-    """Execute topic creation via the agent and return the parsed response dict."""
+    agent_executor, input_text: str, config: RunnableConfig, response_parser: ResponseParserService
+) -> dict[str, Any]:
+    """Execute topic creation via the agent and return the parsed raw data."""
     response = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
         config=config,
     )
 
-    # Find the ToolMessage in the response
-    messages = response.get("messages", [])
-    tool_message = next(
-        (
-            m
-            for m in messages
-            if m.__class__.__name__ == "ToolMessage"
-            or getattr(m, "name", None) == "create_topic_tool"
-        ),
-        None,
-    )
+    parsed_tool_calls = response_parser.parse_new_tool_messages(response)
 
-    if not tool_message:
-        raise ValueError("No ToolMessage found in agent response")
+    if not parsed_tool_calls:
+        raise ValueError("The create_topic_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
 
-    # The ToolMessage content is a JSON string — parse it
-    result = json.loads(tool_message.content)
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "create_topic_tool":
+        raise ValueError(f"Incorrect tool name. Called {tool_call.toolName} instead of create_topic_tool")
 
-    return ExecutedTransactionToolResponse.from_dict(result)
+    return tool_call.parsedData
 
 
 # ============================================================================
@@ -157,14 +155,20 @@ async def test_create_topic_with_default_settings(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating a topic with default settings."""
     input_text = "Create a new Hedera topic"
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_topic(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
+    raw_data = parsed_data["raw"]
+
+    # Wait for mirror node ingestion
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
     assert topic_info is not None
     assert topic_info.submit_key is None
     assert topic_info.memo == ""
@@ -176,15 +180,21 @@ async def test_create_topic_with_memo_and_submit_key(
     executor_wrapper: HederaOperationsWrapper,
     executor_account,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating a topic with memo and submit key."""
     _, _, executor_client, _ = executor_account
     input_text = 'Create a topic with memo "E2E test topic" and set submit key'
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_topic(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
+    raw_data = parsed_data["raw"]
+
+    # Wait for mirror node ingestion
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
     assert (
         topic_info.submit_key.ECDSA_secp256k1
         == executor_client.operator_private_key.public_key().to_bytes_raw()
@@ -196,14 +206,20 @@ async def test_create_topic_with_memo_and_no_submit_key(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating a topic with memo and without submit key restriction."""
     input_text = (
         'Create a topic with memo "E2E test topic" and do not restrict submit access'
     )
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_create_topic(
+        agent_executor, input_text, langchain_config, response_parser
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
+    raw_data = parsed_data["raw"]
+
+    # Wait for mirror node ingestion
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
     assert topic_info.submit_key is None

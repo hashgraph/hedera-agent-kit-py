@@ -70,12 +70,12 @@ def langchain_config():
 
 
 async def create_test_account(
-    executor_wrapper, executor_client, initial_balance_in_tinybar=0
+    executor_wrapper, executor_client, initial_balance_in_hbars=Hbar(0)
 ):
     return await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_client.operator_private_key.public_key(),
-            initial_balance=initial_balance_in_tinybar,
+            initial_balance=initial_balance_in_hbars,
         )
     )
 

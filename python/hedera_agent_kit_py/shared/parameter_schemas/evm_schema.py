@@ -10,7 +10,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 
 
 class ContractExecuteTransactionParametersNormalised(
-    OptionalScheduledTransactionParamsNormalised
+    OptionalScheduledTransactionParamsNormalised,
+    BaseModelWithArbitraryTypes,
 ):
     contract_id: ContractId
     function_parameters: bytes
@@ -48,7 +49,9 @@ class TransferERC721Parameters(OptionalScheduledTransactionParams):
     contract_id: Annotated[str, Field(description="The id of the ERC721 contract.")]
     from_address: Annotated[
         Optional[str],
-        Field(description="Address from which the token will be transferred."),
+        Field(
+            description="Address from which the token wContractExecuteTransactionParametersNormalisedill be transferred."
+        ),
     ] = None
     to_address: Annotated[
         str, Field(description="Address to which the token will be transferred.")
