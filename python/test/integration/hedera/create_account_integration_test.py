@@ -69,7 +69,6 @@ async def test_create_account_with_executor_public_key_by_default(setup_accounts
     """Test creating an account with an executor public key by default."""
     executor_client: Client = setup_accounts["executor_client"]
     executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
-    operator_wrapper: HederaOperationsWrapper = setup_accounts["operator_wrapper"]
     context: Context = setup_accounts["context"]
 
     params = CreateAccountParameters()
@@ -103,7 +102,6 @@ async def test_create_account_with_initial_balance_and_memo(setup_accounts):
     """Test creating an account with initial balance and memo."""
     executor_client: Client = setup_accounts["executor_client"]
     executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
-    operator_wrapper: HederaOperationsWrapper = setup_accounts["operator_wrapper"]
     context: Context = setup_accounts["context"]
 
     params = CreateAccountParameters(
@@ -142,7 +140,6 @@ async def test_create_account_with_initial_balance_and_memo(setup_accounts):
 async def test_create_account_with_explicit_public_key(setup_accounts):
     """Test creating an account with an explicit public key."""
     executor_client: Client = setup_accounts["executor_client"]
-    operator_wrapper: HederaOperationsWrapper = setup_accounts["operator_wrapper"]
     executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
     context: Context = setup_accounts["context"]
 

@@ -12,11 +12,14 @@ from typing import List, Dict
 from hedera_agent_kit_py.shared.tool import Tool
 from .configuration import Context
 from .plugin import Plugin
+from ..plugins import core_consensus_plugin
 from ..plugins.core_account_plugin import core_account_plugin
+from ..plugins.core_account_query_plugin import core_account_query_plugin
 
 CORE_PLUGINS: List[Plugin] = [
-    core_account_plugin
-    # TODO: Add more core plugins here
+    core_account_plugin,
+    core_account_query_plugin,
+    core_consensus_plugin,
 ]
 
 

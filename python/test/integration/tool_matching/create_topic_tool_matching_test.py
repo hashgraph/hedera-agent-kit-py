@@ -44,7 +44,9 @@ async def test_match_create_topic_tool_with_default_params(
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="mocked topic response")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
@@ -69,7 +71,9 @@ async def test_match_create_topic_with_memo_and_submit_key(
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="mocked topic response")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
@@ -106,7 +110,9 @@ async def test_handle_various_natural_language_variations(
 
     hedera_api = toolkit.get_hedera_agentkit_api()
     mock_run = AsyncMock(
-        return_value=ToolResponse(human_message="mocked topic response")
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
     )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
