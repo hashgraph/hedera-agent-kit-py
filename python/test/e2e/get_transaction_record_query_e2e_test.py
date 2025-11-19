@@ -11,11 +11,16 @@ from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
-    CreateAccountParametersNormalised, TransferHbarParametersNormalised,
+    CreateAccountParametersNormalised,
+    TransferHbarParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.verification import extract_tool_response
 
@@ -100,9 +105,7 @@ async def executor_wrapper(executor_account):
 @pytest.fixture
 def langchain_config():
     """Provide a standard LangChain runnable config."""
-    return RunnableConfig(
-        configurable={"thread_id": "get_transaction_record_e2e"}
-    )
+    return RunnableConfig(configurable={"thread_id": "get_transaction_record_e2e"})
 
 
 # ============================================================================
@@ -162,9 +165,7 @@ async def test_fetch_record_sdk_at_style(
 
     assert isinstance(observation, ToolResponse)
     assert observation.error is None
-    assert (
-        f"Transaction Details for {str(tx_id)}" in observation.human_message
-    )
+    assert f"Transaction Details for {str(tx_id)}" in observation.human_message
 
 
 @pytest.mark.asyncio

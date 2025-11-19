@@ -106,9 +106,7 @@ async def executor_wrapper(executor_account):
 @pytest.fixture
 def langchain_config():
     """Provide a standard LangChain runnable config."""
-    return RunnableConfig(
-        configurable={"thread_id": "get_transaction_record_e2e"}
-    )
+    return RunnableConfig(configurable={"thread_id": "get_transaction_record_e2e"})
 
 
 # ============================================================================
@@ -192,9 +190,7 @@ async def test_fetch_record_sdk_at_style(
     assert isinstance(observation, ToolResponse)
     assert observation.error is None
     # The normalizer converts the @ format to the - format, which is used in the query and post_process
-    assert (
-        f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
-    )
+    assert f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
 
 
 @pytest.mark.asyncio
