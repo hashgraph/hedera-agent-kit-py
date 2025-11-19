@@ -1,6 +1,11 @@
+"""End-to-end tests for submit topic message tool.
+
+This module provides full testing from user-simulated input, through the LLM,
+tools up to on-chain execution.
+"""
+
 from decimal import Decimal
-from pprint import pprint
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
@@ -10,18 +15,18 @@ from hedera_agent_kit_py.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
 )
 from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
+
 
 # Constants
-(TRANSFER_HBAR_TOOL,) = core_account_plugin_tool_names
+TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
 DEFAULT_RECIPIENT_BALANCE = 0
 
@@ -104,7 +109,7 @@ async def recipient_account(
     """
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_RECIPIENT_BALANCE,
+            initial_balance=Hbar(DEFAULT_RECIPIENT_BALANCE),
             key=operator_client.operator_private_key.public_key(),
         )
     )
@@ -144,16 +149,43 @@ async def toolkit(langchain_test_setup):
     return langchain_test_setup.toolkit
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
-async def execute_transfer(agent_executor, input_text: str, config: RunnableConfig):
-    """Execute a transfer via the agent and return the response."""
-    return await agent_executor.ainvoke(
+async def execute_transfer(
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute a transfer via the agent and return the parsed tool data."""
+    result = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
+
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(result)
+
+    if not parsed_tool_calls:
+        raise ValueError("The transfer_hbar_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
+
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != TRANSFER_HBAR_TOOL:
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of {TRANSFER_HBAR_TOOL}"
+        )
+
+    return tool_call.parsedData
 
 
 def assert_balance_changed(
@@ -174,14 +206,23 @@ def assert_balance_changed(
 
 @pytest.mark.asyncio
 async def test_simple_transfer(
-    agent_executor, recipient_account, executor_wrapper, langchain_config
+    agent_executor,
+    recipient_account,
+    executor_wrapper,
+    langchain_config,
+    response_parser,
 ):
     """Test a basic HBAR transfer without memo."""
     amount = Decimal("0.1")
     balance_before = executor_wrapper.get_account_hbar_balance(str(recipient_account))
 
     input_text = f"Transfer {amount} HBAR to {recipient_account}"
-    await execute_transfer(agent_executor, input_text, langchain_config)
+    parsed_data = await execute_transfer(
+        agent_executor, input_text, langchain_config, response_parser
+    )
+
+    assert parsed_data.get("error") is None
+    assert "hbar successfully transferred" in parsed_data["humanMessage"].lower()
 
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert_balance_changed(balance_before, balance_after, amount)
@@ -189,7 +230,11 @@ async def test_simple_transfer(
 
 @pytest.mark.asyncio
 async def test_transfer_with_memo(
-    agent_executor, recipient_account, executor_wrapper, langchain_config
+    agent_executor,
+    recipient_account,
+    executor_wrapper,
+    langchain_config,
+    response_parser,
 ):
     """Test HBAR transfer with a memo field."""
     amount = Decimal("0.05")
@@ -197,28 +242,49 @@ async def test_transfer_with_memo(
     balance_before = executor_wrapper.get_account_hbar_balance(str(recipient_account))
 
     input_text = f'Transfer {amount} HBAR to {recipient_account} with memo "{memo}"'
-    await execute_transfer(agent_executor, input_text, langchain_config)
+    parsed_data = await execute_transfer(
+        agent_executor, input_text, langchain_config, response_parser
+    )
+
+    assert parsed_data.get("error") is None
+    assert "hbar successfully transferred" in parsed_data["humanMessage"].lower()
 
     balance_after = executor_wrapper.get_account_hbar_balance(str(recipient_account))
     assert_balance_changed(balance_before, balance_after, amount)
 
 
-## This test happens to fail The LLM hallucinates some account after trying to crate an invalid transfer instead showing that to the user
 # @pytest.mark.skip(
 #     reason="Skipping this test temporarily due to LLM hallucinations. The LLM hallucinates some account after trying to crate an invalid transfer instead showing that to the user")
 @pytest.mark.asyncio
 async def test_invalid_params(
-    agent_executor, executor_wrapper, recipient_account, langchain_config
+    agent_executor,
+    executor_wrapper,
+    recipient_account,
+    langchain_config,
+    response_parser,
 ):
     """Test that invalid parameters result in proper error handling."""
     amount = Decimal("0.05")
+    # Using an intentionally invalid account ID (0.0.0)
     input_text = f"Can you move {amount} HBARs to account with ID 0.0.0?"
-    response = await execute_transfer(agent_executor, input_text, langchain_config)
 
-    tool_response_obj: ExecutedTransactionToolResponse = extract_tool_response(
-        response, "transfer_hbar_tool"
+    # We don't assert execution success, only that the agent attempts to call the tool
+    parsed_data = await execute_transfer(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    pprint(tool_response_obj)
 
-    assert isinstance(tool_response_obj.error, str), "Error should be a string"
-    assert tool_response_obj.error.strip() != "", "Error message should not be empty"
+    # If the tool call itself failed due to invalid input (which is expected here),
+    # the parsed_data should contain an error field.
+    error_message = parsed_data["raw"].get("error")
+
+    assert isinstance(error_message, str), "Error should be a string"
+    assert error_message.strip() != "", "Error message should not be empty"
+    # Checking for common Hedera SDK error message components related to invalid account ID
+    assert any(
+        err in error_message
+        for err in [
+            "INVALID_ACCOUNT_ID",
+            "Account ID",
+            "0.0.0",
+        ]
+    )

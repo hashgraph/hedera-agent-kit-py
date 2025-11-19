@@ -8,13 +8,15 @@ using a Hedera `Client`, the runtime `Context`, and validated parameters.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Type
+from typing import Any, Type, Callable, Union, Dict, Optional
 
 from hiero_sdk_python import Client
 from pydantic import BaseModel
 
 from .configuration import Context
 from .models import ToolResponse
+
+ParserOutput = Dict[str, Union[Any, str]]
 
 
 class Tool(ABC):
@@ -26,6 +28,7 @@ class Tool(ABC):
     name: str
     description: str
     parameters: Type[BaseModel]
+    outputParser: Optional[Callable[[str], ParserOutput]] = None
 
     @abstractmethod
     async def execute(

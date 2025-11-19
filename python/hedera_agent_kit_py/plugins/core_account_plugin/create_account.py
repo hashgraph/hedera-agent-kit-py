@@ -30,6 +30,9 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
+    transaction_tool_output_parser,
+)
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -153,6 +156,7 @@ class CreateAccountTool(Tool):
         self.name: str = "Create Account"
         self.description: str = create_account_prompt(context)
         self.parameters: type[CreateAccountParameters] = CreateAccountParameters
+        self.outputParser = transaction_tool_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: CreateAccountParameters
