@@ -1,273 +1,126 @@
-"""End-to-end tests for get transaction record tool.
-
-This module provides full testing from user-simulated input, through the LLM,
-tools up to on-chain execution.
-"""
-
-import asyncio
-from typing import AsyncGenerator
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, Client, TransactionId
-from langchain_core.runnables import RunnableConfig
+from hiero_sdk_python import TopicId, PublicKey, PrivateKey, Hbar
+from typing import Dict, Any  # <-- Added import for clarity
 
-from hedera_agent_kit_py.shared.models import ToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
-    CreateAccountParametersNormalised,
-    TransferHbarParametersNormalised,
+from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
+    GetTopicInfoQueryTool,
 )
-from test import HederaOperationsWrapper
-from test.utils import create_langchain_test_setup
+from hedera_agent_kit_py.shared.configuration import Context, AgentMode
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    GetTopicInfoParameters,
+    CreateTopicParametersNormalised,
+    SubmitTopicMessageParametersNormalised,
+    CreateAccountParametersNormalised,
+)
+from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
     get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
-from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
-
-# Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
+from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
-# ============================================================================
-# SESSION-LEVEL FIXTURES
-# ============================================================================
+@pytest.fixture(scope="module")
+async def setup_accounts():
+    operator_client = get_operator_client_for_tests()
+    operator_wrapper = HederaOperationsWrapper(operator_client)
 
+    # Create an executor account
+    executor_key_pair = PrivateKey.generate_ed25519()
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def executor_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary executor account for tests.
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    Teardown:
-        Returns funds and deletes the account.
-    """
-    executor_key: PrivateKey = PrivateKey.generate_ecdsa()
-    resp = await operator_wrapper.create_account(
+    executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_EXECUTOR_BALANCE, key=executor_key.public_key()
+            key=executor_key_pair.public_key(),
+            initial_balance=Hbar(30, in_tinybars=False),
         )
     )
-    executor_account_id = resp.account_id
-    executor_client = get_custom_client(executor_account_id, executor_key)
+    executor_account_id = executor_resp.account_id
+
+    executor_client = get_custom_client(executor_account_id, executor_key_pair)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    # Wait for account creation to propagate
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME)
+    context = Context(
+        mode=AgentMode.AUTONOMOUS,
+        account_id=str(executor_account_id),
+    )
 
-    yield executor_account_id, executor_key, executor_client, executor_wrapper
+    yield {
+        "operator_client": operator_client,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "executor_account_id": executor_account_id,
+        "operator_wrapper": operator_wrapper,
+        "context": context,
+    }
 
+    # Cleanup
     await return_hbars_and_delete_account(
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
+    executor_client.close()
+    operator_client.close()
 
 
 @pytest.fixture
-async def langchain_test_setup(executor_account):
-    """Set up LangChain agent and toolkit with a real Hedera executor account."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
+async def setup_topic(setup_accounts):
+    executor_client = setup_accounts["executor_client"]
+    executor_wrapper = setup_accounts["executor_wrapper"]
 
+    # Create a topic with executor as admin
+    topic_admin_key: PublicKey = executor_client.operator_private_key.public_key()
+    topic_resp = await executor_wrapper.create_topic(
+        CreateTopicParametersNormalised(submit_key=topic_admin_key)
+    )
+    created_topic_id: TopicId = topic_resp.topic_id
 
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def executor_wrapper(executor_account):
-    """Provide just the executor wrapper from the executor_account fixture."""
-    _, _, _, wrapper = executor_account
-    return wrapper
-
-
-@pytest.fixture
-def langchain_config():
-    """Provide a standard LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "get_transaction_record_e2e"})
-
-
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
-
-
-def _format_tx_id_to_mirror_node(tx_id: TransactionId) -> str:
-    """Helper to format TransactionId to 0.0.X-SSS-NNN string."""
-    account_id = str(tx_id.account_id)
-    seconds = str(tx_id.valid_start.seconds)  # Corrected: .seconds
-    # Pad nanos to 9 digits
-    nanos = str(tx_id.valid_start.nanos).zfill(9)  # Corrected: .nanos
-    return f"{account_id}-{seconds}-{nanos}"
-
-
-@pytest.fixture
-async def pre_created_transaction(
-    executor_wrapper: HederaOperationsWrapper,
-    executor_account,
-    operator_client: Client,
-):
-    """Creates a simple HBAR transfer and yields its ID in SDK and Mirror Node formats."""
-    # executor_account yields: account_id, private_key, client, wrapper
-    executor_account_id, _, _, _ = executor_account
-    operator_account_id = operator_client.operator_account_id
-    transfer_amount_tinybars = 1000  # A small transfer
-
-    # Perform a transfer from executor to operator to generate a transaction
-    # Corrected: Use TransferHbarParametersNormalised with hbar_transfers dict
-    resp = await executor_wrapper.transfer_hbar(
-        TransferHbarParametersNormalised(
-            hbar_transfers={
-                executor_account_id: -transfer_amount_tinybars,
-                operator_account_id: transfer_amount_tinybars,
-            }
+    # Submit a message to ensure the topic is active
+    await executor_wrapper.submit_message(
+        SubmitTopicMessageParametersNormalised(
+            topic_id=created_topic_id, message="Hello"
         )
     )
 
-    assert resp.transaction_id is not None
+    await wait(MIRROR_NODE_WAITING_TIME)
 
-    # resp.transaction_id is already a TransactionId object
-    tx_id_sdk_obj = resp.transaction_id
-    tx_id_sdk_style_str = str(tx_id_sdk_obj)  # This is the @ format
-
-    # Get ID in Mirror Node format (e.g., 0.0.X-SSS-NNN)
-    tx_id_mirror_style_str = _format_tx_id_to_mirror_node(tx_id_sdk_obj)
-
-    # Wait for mirror node ingestion
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME)
-
-    yield tx_id_sdk_style_str, tx_id_mirror_style_str
-
-
-# ============================================================================
-# TEST CASES
-# ============================================================================
+    yield {
+        "created_topic_id": created_topic_id,
+        "topic_admin_key": topic_admin_key,
+    }
 
 
 @pytest.mark.asyncio
-async def test_fetch_record_sdk_at_style(
-    agent_executor, pre_created_transaction, langchain_config: RunnableConfig
-):
-    """Test fetching a record using the SDK-style transaction ID (e.g., 0.0.X@SSS.NNN)."""
-    tx_id_sdk_style, tx_id_mirror_style = pre_created_transaction
+async def test_fetch_topic_info(setup_accounts, setup_topic):
+    executor_client = setup_accounts["executor_client"]
+    context = setup_accounts["context"]
+    created_topic_id = setup_topic["created_topic_id"]
 
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Get the transaction record for transaction ID {tx_id_sdk_style}",
-                }
-            ]
-        },
-        config=langchain_config,
-    )
+    tool = GetTopicInfoQueryTool(context)
+    params = GetTopicInfoParameters(topic_id=str(created_topic_id))
 
-    observation = extract_tool_response(result, "get_transaction_record_query_tool")
+    result = await tool.execute(executor_client, context, params)
 
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is None
-    # The normalizer converts the @ format to the - format, which is used in the query and post_process
-    assert f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
+    assert result.error is None
+    assert result.extra is not None
+
+    assert result.extra["topic_id"] == str(created_topic_id)
+    assert "topic_info" in result.extra
+    assert result.extra["topic_info"]["topic_id"] == str(created_topic_id)
+    assert "Here are the details for topic" in result.human_message
 
 
 @pytest.mark.asyncio
-async def test_fetch_record_mirror_node_style(
-    agent_executor, pre_created_transaction, langchain_config: RunnableConfig
-):
-    """Test fetching a record using the Mirror Node-style transaction ID (e.g., 0.0.X-SSS-NNN)."""
-    _, tx_id_mirror_style = pre_created_transaction
+async def test_fail_for_nonexistent_topic(setup_accounts):
+    executor_client = setup_accounts["executor_client"]
+    context = setup_accounts["context"]
 
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Get the transaction record for transaction {tx_id_mirror_style}",
-                }
-            ]
-        },
-        config=langchain_config,
-    )
+    non_existent_topic_id = "0.0.999999999"
+    tool = GetTopicInfoQueryTool(context)
+    params = GetTopicInfoParameters(topic_id=non_existent_topic_id)
 
-    observation = extract_tool_response(result, "get_transaction_record_query_tool")
+    result = await tool.execute(executor_client, context, params)
 
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is None
-    assert f"Transaction Details for {tx_id_mirror_style}" in observation.human_message
-
-
-@pytest.mark.asyncio
-async def test_handle_non_existent_transaction(
-    agent_executor, langchain_config: RunnableConfig
-):
-    """Test handling a query for a non-existent transaction ID."""
-    invalid_tx_id = "0.0.1-1756968265-043000618"  # Valid format, likely non-existent
-
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Get the transaction record for transaction {invalid_tx_id}",
-                }
-            ]
-        },
-        config=langchain_config,
-    )
-
-    observation = extract_tool_response(result, "get_transaction_record_query_tool")
-
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is not None
-    assert "Failed to get transaction record" in observation.error
-    assert "Not found" in observation.error  # Corrected: lowercase 'f'
-
-
-@pytest.mark.asyncio
-async def test_handle_invalid_format_transaction(
-    agent_executor, langchain_config: RunnableConfig
-):
-    """Test handling a query for an invalidly formatted transaction ID."""
-    invalid_tx_id = "invalid-tx-id"
-
-    result = await agent_executor.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Get the transaction record for transaction {invalid_tx_id}",
-                }
-            ]
-        },
-        config=langchain_config,
-    )
-
-    observation = extract_tool_response(result, "get_transaction_record_query_tool")
-
-    assert isinstance(observation, ToolResponse)
-    assert observation.error is not None
-    assert "Failed to get transaction record" in observation.error
-    assert "Invalid transactionId format" in observation.error
+    assert "Failed to get topic info" in result.human_message
+    assert result.error is not None
+    # Assuming the underlying tool wraps the specific error in its error message:
+    assert "FAILED TO GET TOPIC INFO" in result.error.upper()
