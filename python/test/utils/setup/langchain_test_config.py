@@ -23,6 +23,7 @@ from hedera_agent_kit_py.plugins.core_evm_plugin import (
     core_evm_plugin_tool_names,
     core_evm_plugin,
 )
+from hedera_agent_kit_py.plugins.core_misc_query_plugin import (core_misc_query_plugin_tool_names, core_misc_query_plugin)
 from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
     core_transaction_query_plugin, core_transaction_query_plugin_tool_names,
 )
