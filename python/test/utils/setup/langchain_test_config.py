@@ -10,10 +10,6 @@ from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
     core_consensus_query_plugin,
     core_consensus_query_plugin_tool_names,
 )
-from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
-    core_misc_query_plugin_tool_names,
-    core_misc_query_plugin,
-)
 from hedera_agent_kit_py.plugins.core_account_query_plugin import (
     core_account_query_plugin,
     core_account_query_plugin_tool_names,
@@ -26,6 +22,14 @@ from hedera_agent_kit_py.plugins.core_consensus_plugin import (
 from hedera_agent_kit_py.plugins.core_evm_plugin import (
     core_evm_plugin_tool_names,
     core_evm_plugin,
+)
+from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
+    core_misc_query_plugin_tool_names,
+    core_misc_query_plugin,
+)
+from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
+    core_transaction_query_plugin,
+    core_transaction_query_plugin_tool_names,
 )
 from hedera_agent_kit_py.plugins.core_token_plugin import (
     core_token_plugin_tool_names,
@@ -44,6 +48,9 @@ CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_HBAR_BALANCE_QUERY_TOOL"
+]
+GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
+    "GET_TRANSACTION_RECORD_QUERY_TOOL"
 ]
 CREATE_ERC20_TOOL = core_evm_plugin_tool_names["CREATE_ERC20_TOOL"]
 SUBMIT_TOPIC_MESSAGE_TOOL = core_consensus_plugin_tool_names[
@@ -102,6 +109,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         SUBMIT_TOPIC_MESSAGE_TOOL,
         GET_ACCOUNT_QUERY_TOOL,
         CREATE_FUNGIBLE_TOKEN_TOOL,
+        GET_TRANSACTION_RECORD_QUERY_TOOL,
     ],
     plugins=[
         core_account_plugin,
@@ -110,6 +118,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         core_consensus_query_plugin,
         core_misc_query_plugin,
         core_evm_plugin,
+        core_transaction_query_plugin,
         core_token_plugin,
     ],
     agent_mode=AgentMode.AUTONOMOUS,

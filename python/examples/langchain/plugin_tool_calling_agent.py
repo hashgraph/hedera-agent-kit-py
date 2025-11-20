@@ -40,6 +40,10 @@ from hedera_agent_kit_py.plugins.core_token_plugin import (
     core_token_plugin_tool_names,
     core_token_plugin,
 )
+from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
+    core_transaction_query_plugin,
+    core_transaction_query_plugin_tool_names,
+)
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -64,6 +68,10 @@ GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
 ]
 
 GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+
+GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
+    "GET_TRANSACTION_RECORD_QUERY_TOOL"
+]
 
 
 async def bootstrap():
@@ -96,6 +104,7 @@ async def bootstrap():
             SUBMIT_TOPIC_MESSAGE_TOOL,
             GET_ACCOUNT_QUERY_TOOL,
             CREATE_FUNGIBLE_TOKEN_TOOL,
+            GET_TRANSACTION_RECORD_QUERY_TOOL,
         ],
         plugins=[
             core_consensus_plugin,
@@ -105,6 +114,7 @@ async def bootstrap():
             core_evm_plugin,
             core_account_plugin,
             core_token_plugin,
+            core_transaction_query_plugin,
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
