@@ -36,7 +36,10 @@ from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
     core_misc_query_plugin_tool_names,
     core_misc_query_plugin,
 )
-from hedera_agent_kit_py.plugins.core_token_plugin import core_token_plugin_tool_names, core_token_plugin
+from hedera_agent_kit_py.plugins.core_token_plugin import (
+    core_token_plugin_tool_names,
+    core_token_plugin,
+)
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -92,7 +95,7 @@ async def bootstrap():
             CREATE_ERC20_TOOL,
             SUBMIT_TOPIC_MESSAGE_TOOL,
             GET_ACCOUNT_QUERY_TOOL,
-            CREATE_FUNGIBLE_TOKEN_TOOL
+            CREATE_FUNGIBLE_TOKEN_TOOL,
         ],
         plugins=[
             core_consensus_plugin,

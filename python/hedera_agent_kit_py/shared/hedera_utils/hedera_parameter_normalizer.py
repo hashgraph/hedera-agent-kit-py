@@ -2,7 +2,15 @@ from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python.contract.contract_id import ContractId
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId, SupplyType
+from hiero_sdk_python import (
+    AccountId,
+    PublicKey,
+    Timestamp,
+    Client,
+    Hbar,
+    TopicId,
+    SupplyType,
+)
 from hiero_sdk_python.hapi.services.basic_types_pb2 import TokenSupplyType
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
@@ -35,7 +43,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     GetTopicInfoParameters,
     ExchangeRateQueryParameters,
     ContractExecuteTransactionParametersNormalised,
-    CreateERC20Parameters, CreateFungibleTokenParameters, CreateFungibleTokenParametersNormalised,
+    CreateERC20Parameters,
+    CreateFungibleTokenParameters,
+    CreateFungibleTokenParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
@@ -724,10 +734,10 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_create_fungible_token_params(
-            params: CreateFungibleTokenParameters,
-            context: Context,
-            client: Client,
-            mirrornode: IHederaMirrornodeService,
+        params: CreateFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
     ) -> CreateFungibleTokenParametersNormalised:
         """Normalize parameters for creating a fungible token."""
 
@@ -741,9 +751,7 @@ class HederaParameterNormaliser:
 
         # Treasury resolution
         default_account_id = (
-            str(client.operator_account_id)
-            if client.operator_account_id
-            else None
+            str(client.operator_account_id) if client.operator_account_id else None
         )
 
         treasury_account_id = parsed_params.treasury_account_id or default_account_id
@@ -753,7 +761,7 @@ class HederaParameterNormaliser:
 
         # Resolve decimals + supply units
         decimals = parsed_params.decimals or 0
-        initial_supply = int((parsed_params.initial_supply or 0) * (10 ** decimals))
+        initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
 
         # Resolve Supply Type
         if parsed_params.supply_type is None:
@@ -771,11 +779,11 @@ class HederaParameterNormaliser:
         if supply_type == SupplyType.FINITE:
             # default 1 million tokens (in whole units)
             raw_max_supply = parsed_params.max_supply or 1_000_000
-            max_supply = int(raw_max_supply * (10 ** decimals))
+            max_supply = int(raw_max_supply * (10**decimals))
 
             # Hedera requires NON-ZERO initial supply for finite tokens
             if initial_supply == 0:
-                initial_supply = 1 * (10 ** decimals)
+                initial_supply = 1 * (10**decimals)
 
         # Validation
         if max_supply is not None and initial_supply > max_supply:
@@ -810,10 +818,8 @@ class HederaParameterNormaliser:
         scheduling_params: ScheduleCreateParams | None = None
         if getattr(parsed_params, "scheduling_params", None):
             if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = (
-                    await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                        parsed_params.scheduling_params, context, client
-                    )
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
                 )
 
         # Construct TokenParams

@@ -47,10 +47,8 @@ def create_fungible_token_prompt(context: Context = {}) -> str:
         A string describing the tool, its parameters, and usage instructions.
     """
     context_snippet: str = PromptGenerator.get_context_snippet(context)
-    treasury_account_desc: str = (
-        PromptGenerator.get_account_parameter_description(
-            "treasury_account_id", context
-        )
+    treasury_account_desc: str = PromptGenerator.get_account_parameter_description(
+        "treasury_account_id", context
     )
     usage_instructions: str = PromptGenerator.get_parameter_usage_instructions()
     scheduled_params_desc: str = (
@@ -64,9 +62,9 @@ This tool creates a fungible token on Hedera.
 
 Parameters:
 - token_name (str, required): The name of the token
-- token_symbol (str, optional): The symbol of the token
+- token_symbol (str, required): The symbol of the token, required
 - initial_supply (int, optional): The initial supply of the token, defaults to 0
-- supply_type (str, optional): The supply type of the token. Can be "finite" or "infinite". Defaults to "finite"
+- supply_type (int, optional): The supply type of the token. Can be finite = 1 or infinite = 0. Defaults to finite = 1
 - max_supply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified
 - decimals (int, optional): The number of decimals the token supports. Defaults to 0
 - {treasury_account_desc}
@@ -131,9 +129,7 @@ async def create_fungible_token(
         pprint(normalised_params)
 
         # Build transaction
-        tx = HederaBuilder.create_fungible_token(
-            normalised_params
-        )
+        tx = HederaBuilder.create_fungible_token(normalised_params)
 
         # Execute transaction and post-process result
         return await handle_transaction(tx, client, context, post_process)

@@ -5,7 +5,8 @@ from hiero_sdk_python import (
     Client,
     PrivateKey,
     Network,
-    AccountId, SupplyType,
+    AccountId,
+    SupplyType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
@@ -51,7 +52,7 @@ def mock_mirrornode():
 
 @pytest.mark.asyncio
 async def test_normalise_create_fungible_token_defaults(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should use correct defaults for minimal input (Infinite supply, operator treasury)."""
     params = CreateFungibleTokenParameters(
@@ -77,7 +78,9 @@ async def test_normalise_create_fungible_token_defaults(
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
     assert str(tp.auto_renew_account_id) == TEST_OPERATOR_ID
     assert tp.supply_type == SupplyType.FINITE
-    assert tp.max_supply == 100000000 # 10^6 * 10^decimals = default max supply for finite
+    assert (
+        tp.max_supply == 100000000
+    )  # 10^6 * 10^decimals = default max supply for finite
 
     # Keys should be None by default for Infinite supply if is_supply_key not set
     assert result.scheduling_params is None
@@ -85,7 +88,7 @@ async def test_normalise_create_fungible_token_defaults(
 
 @pytest.mark.asyncio
 async def test_normalise_finite_supply_logic_and_math(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """
     Should enforce FINITE supply if max_supply is provided,
@@ -120,7 +123,7 @@ async def test_normalise_finite_supply_logic_and_math(
 
 @pytest.mark.asyncio
 async def test_normalise_explicit_finite_supply_defaults(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """
     Should default max_supply to 1,000,000 if supply_type is explicitly FINITE
@@ -147,7 +150,7 @@ async def test_normalise_explicit_finite_supply_defaults(
 
 @pytest.mark.asyncio
 async def test_validates_initial_vs_max_supply(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should raise ValueError if initial_supply > max_supply."""
     params = CreateFungibleTokenParameters(
@@ -166,7 +169,7 @@ async def test_validates_initial_vs_max_supply(
 
 @pytest.mark.asyncio
 async def test_resolves_supply_key_from_mirrornode(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should fetch the treasury account's key from mirror node if is_supply_key is True."""
     # Setup mirror node to return a specific key
@@ -192,7 +195,7 @@ async def test_resolves_supply_key_from_mirrornode(
 
 @pytest.mark.asyncio
 async def test_falls_back_to_operator_key_if_mirror_fails(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should fall back to client operator key if mirror node lookup fails or returns no key."""
     # Setup mirror node to fail
@@ -216,24 +219,22 @@ async def test_falls_back_to_operator_key_if_mirror_fails(
 
 
 @pytest.mark.asyncio
-async def test_process_scheduling_params(
-        mock_context, mock_client, mock_mirrornode
-):
+async def test_process_scheduling_params(mock_context, mock_client, mock_mirrornode):
     """Should process scheduling params if is_scheduled is True."""
     mock_sched_return = ScheduleCreateParams(wait_for_expiry=True)
 
     # Spy on the scheduling normalizer
     with patch.object(
-            HederaParameterNormaliser,
-            "normalise_scheduled_transaction_params",
-            new_callable=AsyncMock,
-            return_value=mock_sched_return,
+        HederaParameterNormaliser,
+        "normalise_scheduled_transaction_params",
+        new_callable=AsyncMock,
+        return_value=mock_sched_return,
     ) as mock_sched_norm:
         scheduling_input = SchedulingParams(is_scheduled=True)
         params = CreateFungibleTokenParameters(
             token_name="Sched Token",
             token_symbol="SCH",
-            scheduling_params=scheduling_input
+            scheduling_params=scheduling_input,
         )
 
         result = await HederaParameterNormaliser.normalise_create_fungible_token_params(
