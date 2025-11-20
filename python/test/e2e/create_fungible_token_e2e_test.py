@@ -3,6 +3,7 @@
 This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
+
 from pprint import pprint
 from typing import AsyncGenerator, Any
 
@@ -16,7 +17,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(50, in_tinybars=False)
@@ -46,7 +51,7 @@ def operator_wrapper(operator_client):
 
 @pytest.fixture
 async def executor_account(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
     """Create a temporary executor account for tests.
 
@@ -122,7 +127,7 @@ async def response_parser(langchain_test_setup):
 
 
 def extract_token_id(
-        agent_result: dict[str, Any], response_parser: ResponseParserService, tool_name: str
+    agent_result: dict[str, Any], response_parser: ResponseParserService, tool_name: str
 ) -> str:
     """Helper to parse the agent result and extract the created token ID."""
     parsed_tool_calls = response_parser.parse_new_tool_messages(agent_result)
@@ -149,7 +154,7 @@ def extract_token_id(
 
 
 async def execute_agent_request(
-        agent_executor, input_text: str, config: RunnableConfig
+    agent_executor, input_text: str, config: RunnableConfig
 ):
     """Execute a request via the agent and return the response."""
     return await agent_executor.ainvoke(
@@ -164,17 +169,19 @@ async def execute_agent_request(
 
 @pytest.mark.asyncio
 async def test_create_fungible_token_minimal_params(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating a fungible token with minimal params via natural language."""
     input_text = "Create a fungible token named MyToken with symbol MTK"
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
 
-    token_id_str = extract_token_id(result, response_parser, "create_fungible_token_tool")
+    token_id_str = extract_token_id(
+        result, response_parser, "create_fungible_token_tool"
+    )
 
     # Verify on-chain
     token_info = executor_wrapper.get_token_info(token_id_str)
@@ -185,10 +192,10 @@ async def test_create_fungible_token_minimal_params(
 
 @pytest.mark.asyncio
 async def test_create_fungible_token_complex_params(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test creating a token with supply, decimals, and finite supply type."""
     input_text = (
@@ -197,8 +204,9 @@ async def test_create_fungible_token_complex_params(
     )
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
-    token_id_str = extract_token_id(result, response_parser, "create_fungible_token_tool")
-
+    token_id_str = extract_token_id(
+        result, response_parser, "create_fungible_token_tool"
+    )
 
     # Verify on-chain
     token_info = executor_wrapper.get_token_info(token_id_str)
@@ -217,9 +225,9 @@ async def test_create_fungible_token_complex_params(
 
 @pytest.mark.asyncio
 async def test_schedule_create_fungible_token(
-        agent_executor,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test scheduling creation of a FT successfully."""
     input_text = (
@@ -238,9 +246,9 @@ async def test_schedule_create_fungible_token(
 
 @pytest.mark.asyncio
 async def test_create_fungible_token_invalid_params(
-        agent_executor,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test handling invalid requests gracefully (initial supply > max supply)."""
     input_text = (

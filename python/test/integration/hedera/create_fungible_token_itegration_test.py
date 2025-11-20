@@ -65,7 +65,9 @@ async def test_create_token_with_minimal_params(setup_client):
     assert token_info.symbol == params.token_symbol
     assert token_info.decimals == 0
     assert token_info.supply_type == SupplyType.FINITE
-    assert token_info.total_supply == 1 # NOTE: SDK forces non-zero supply for FINITE supply type
+    assert (
+        token_info.total_supply == 1
+    )  # NOTE: SDK forces non-zero supply for FINITE supply type
 
 
 @pytest.mark.asyncio

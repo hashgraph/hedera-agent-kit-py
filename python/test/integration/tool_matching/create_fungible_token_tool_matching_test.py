@@ -2,6 +2,7 @@
 This module tests whether the LLM correctly extracts parameters and matches
 the correct tool when given various natural language inputs.
 """
+
 from pprint import pprint
 from unittest.mock import AsyncMock
 
@@ -45,7 +46,9 @@ async def test_match_create_fungible_token_minimal(
     agent_executor, toolkit, monkeypatch
 ):
     """Test that the tool matches when only the required token name is provided."""
-    input_text = "Create a new fungible token named 'GoldCoin', symbol 'GC' and decimals 8"
+    input_text = (
+        "Create a new fungible token named 'GoldCoin', symbol 'GC' and decimals 8"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -70,9 +73,7 @@ async def test_match_create_fungible_token_full_spec(
     agent_executor, toolkit, monkeypatch
 ):
     """Test tool matching with full specification including supply and decimals."""
-    input_text = (
-        "Create a new token called 'Stable Dollar' with symbol 'USD', 6 decimals and initial supply 10000"
-    )
+    input_text = "Create a new token called 'Stable Dollar' with symbol 'USD', 6 decimals and initial supply 10000"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -113,7 +114,7 @@ async def test_parse_finite_supply_and_max_supply(agent_executor, toolkit, monke
     assert args[0] == CREATE_FUNGIBLE_TOKEN_TOOL
     assert payload.get("token_name") == "Limited"
     assert payload.get("max_supply") == 500000
-    assert payload.get("supply_type") == 1 # SupplyType.FINITE = 1
+    assert payload.get("supply_type") == 1  # SupplyType.FINITE = 1
 
 
 @pytest.mark.asyncio
@@ -135,7 +136,7 @@ async def test_parse_infinite_supply(agent_executor, toolkit, monkeypatch):
     payload = args[1]
     assert args[0] == CREATE_FUNGIBLE_TOKEN_TOOL
     assert payload.get("token_name") == "UtilityToken"
-    assert payload.get("supply_type") == 0 # SupplyType.INFINITE = 0
+    assert payload.get("supply_type") == 0  # SupplyType.INFINITE = 0
     assert payload.get("decimals") == 2
 
 
