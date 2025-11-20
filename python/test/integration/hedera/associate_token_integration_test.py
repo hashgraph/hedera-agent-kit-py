@@ -6,10 +6,10 @@ from hiero_sdk_python import (
     PrivateKey,
     Hbar,
     AccountId,
+    SupplyType,
 )
 from hiero_sdk_python.account.account_balance import AccountBalance
-from hiero_sdk_python.hapi.services.basic_types_pb2 import TokenSupplyType
-from hiero_sdk_python.tokens.token_create_transaction import TokenKeys
+from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
 from hedera_agent_kit_py.plugins.core_token_plugin import AssociateTokenTool
 from hedera_agent_kit_py.shared import AgentMode
@@ -30,17 +30,6 @@ from test.utils.setup import (
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
-
-
-FT_PARAMS = {
-    "token_name": "AssocToken",
-    "token_symbol": "ASSOC",
-    "token_memo": "FT",
-    "initial_supply": 0,
-    "decimals": 0,
-    "max_supply": 1000,
-    "supply_type": TokenSupplyType.FINITE,
-}
 
 
 @pytest.fixture(scope="module")
@@ -76,6 +65,16 @@ async def setup_accounts():
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
+    FT_PARAMS = TokenParams(
+        token_name="AssocToken",
+        token_symbol="ASSOC",
+        initial_supply=1,  # SDK forces non-zero initial supply for tokens with finite supply
+        decimals=0,
+        max_supply=1000,
+        supply_type=SupplyType.FINITE,  # SupplyType.FINITE = 1
+        treasury_account_id=token_executor_account_id,
+    )
+
     yield {
         "operator_client": operator_client,
         "executor_client": executor_client,
@@ -85,6 +84,7 @@ async def setup_accounts():
         "token_executor_wrapper": token_executor_wrapper,
         "token_executor_account_id": token_executor_account_id,
         "context": context,
+        "FT_PARAMS": FT_PARAMS,
     }
 
     # Teardown
@@ -106,32 +106,24 @@ async def setup_accounts():
 
 
 async def create_test_token(
-    token_executor_wrapper: HederaOperationsWrapper,
-    token_executor_client: Client,
-    token_executor_account_id: AccountId,
-    params_override: dict = {},
+    executor_wrapper: HederaOperationsWrapper,
+    executor_client: Client,
+    treasury_account_id: AccountId,
+    ft_params: TokenParams,
 ):
-    token_public_key = token_executor_client.operator_private_key.public_key()
-    token_account_id_str = str(token_executor_account_id)
+    # Keys can be the treasury's key
+    treasury_public_key = executor_client.operator_private_key.public_key()
 
-    base_params = {
-        **FT_PARAMS,
-        "supply_key": token_public_key,
-        "admin_key": token_public_key,
-        "treasury_account_id": token_account_id_str,
-        "auto_renew_account_id": token_account_id_str,
-    }
-
-    # FIXME: cannot be implemented with use of Public Key
     keys: TokenKeys = TokenKeys(
-        supply_key=token_public_key,
-        admin_key=token_public_key,
+        supply_key=treasury_public_key,
+        admin_key=treasury_public_key,
     )
 
     create_params = CreateFungibleTokenParametersNormalised(
-        token_params=FT_PARAMS, keys=None
+        token_params=ft_params, keys=keys
     )
-    resp = await token_executor_wrapper.create_fungible_token(create_params)
+
+    resp = await executor_wrapper.create_fungible_token(create_params)
     return resp.token_id
 
 
@@ -146,9 +138,13 @@ async def test_associate_token_to_executor_account(setup_accounts):
     ]
     token_executor_account_id: AccountId = setup_accounts["token_executor_account_id"]
     context: Context = setup_accounts["context"]
+    ft_params: TokenParams = setup_accounts["FT_PARAMS"]
 
     token_id_ft = await create_test_token(
-        token_executor_wrapper, token_executor_client, token_executor_account_id
+        token_executor_wrapper,
+        token_executor_client,
+        token_executor_account_id,
+        ft_params,
     )
 
     tool = AssociateTokenTool(context)
@@ -181,18 +177,32 @@ async def test_associate_two_tokens_to_executor_account(setup_accounts):
     ]
     token_executor_account_id: AccountId = setup_accounts["token_executor_account_id"]
     context: Context = setup_accounts["context"]
+    ft_params: TokenParams = setup_accounts["FT_PARAMS"]
 
     # Create first token
     token_id_ft1 = await create_test_token(
-        token_executor_wrapper, token_executor_client, token_executor_account_id
+        token_executor_wrapper,
+        token_executor_client,
+        token_executor_account_id,
+        ft_params,
     )
 
-    # Create second token
+    ft_params_2 = TokenParams(
+        token_name="token2",
+        supply_type=SupplyType.FINITE,
+        initial_supply=1,
+        decimals=0,
+        max_supply=500,
+        token_symbol="TKN2",
+        treasury_account_id=token_executor_account_id,
+    )
+
+    # Create a second token
     token_id_ft2 = await create_test_token(
         token_executor_wrapper,
         token_executor_client,
         token_executor_account_id,
-        {"token_name": "AssocToken2", "token_symbol": "ASSOC2", "token_memo": "FT2"},
+        ft_params_2,
     )
 
     await wait(MIRROR_NODE_WAITING_TIME)
