@@ -103,7 +103,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         core_account_query_plugin,
         core_consensus_query_plugin,
         core_misc_query_plugin,
-        core_evm_plugin
+        core_evm_plugin,
     ],
     agent_mode=AgentMode.AUTONOMOUS,
 )

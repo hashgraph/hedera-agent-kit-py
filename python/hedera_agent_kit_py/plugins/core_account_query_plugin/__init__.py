@@ -3,7 +3,7 @@ from hedera_agent_kit_py.shared.plugin import Plugin
 from .get_hbar_balance import GetHbarBalanceTool, GET_HBAR_BALANCE_QUERY_TOOL
 
 core_account_query_plugin = Plugin(
-    name="core-account-plugin",
+    name="core-account-query-plugin",
     version="1.0.0",
     description="A plugin for the Hedera Account Service",
     tools=lambda context: [GetHbarBalanceTool(context), GetAccountQueryTool(context)],

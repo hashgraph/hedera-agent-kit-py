@@ -46,7 +46,11 @@ async def test_simple_message_submission(agent_executor, toolkit, monkeypatch):
 
     # Mock the underlying Hedera API run method
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     # Invoke agent
@@ -70,7 +74,11 @@ async def test_submission_with_memo(agent_executor, toolkit, monkeypatch):
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(
@@ -114,7 +122,11 @@ async def test_natural_language_variations(
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(return_value=ToolResponse(human_message="mocked response"))
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
     await agent_executor.ainvoke(

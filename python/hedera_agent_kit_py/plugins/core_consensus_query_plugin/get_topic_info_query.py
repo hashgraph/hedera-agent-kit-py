@@ -28,6 +28,9 @@ from hedera_agent_kit_py.shared.parameter_schemas.consensus_schema import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
+    untyped_query_output_parser,
+)
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -150,7 +153,7 @@ async def get_topic_info_query(
         rather than raising, to keep tool behavior consistent for callers.
     """
     try:
-        parsedParams: GetTopicInfoParameters = (
+        parsed_params: GetTopicInfoParameters = (
             HederaParameterNormaliser.normalise_get_topic_info(params)
         )
 
@@ -158,15 +161,15 @@ async def get_topic_info_query(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )
         topic_info: TopicInfo = await mirrornode_service.get_topic_info(
-            parsedParams.topic_id
+            parsed_params.topic_id
         )
         # Add the topic_id to the response if not present
         if "topic_id" not in topic_info:
-            topic_info["topic_id"] = parsedParams.topic_id
+            topic_info["topic_id"] = parsed_params.topic_id
 
         return ToolResponse(
             human_message=post_process(topic_info),
-            extra={"topic_info": topic_info, "topic_id": parsedParams.topic_id},
+            extra={"topic_info": topic_info, "topic_id": parsed_params.topic_id},
         )
 
     except Exception as e:
@@ -194,6 +197,7 @@ class GetTopicInfoQueryTool(Tool):
         self.name: str = "Get Topic Info"
         self.description: str = get_topic_info_query_prompt(context)
         self.parameters: type[GetTopicInfoParameters] = GetTopicInfoParameters
+        self.outputParser = untyped_query_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: GetTopicInfoParameters

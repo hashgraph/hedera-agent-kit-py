@@ -6,6 +6,7 @@ from hiero_sdk_python import Client
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
 from hedera_agent_kit_py.shared.configuration import Context, Configuration
 from .client_setup import get_operator_client_for_tests
@@ -27,11 +28,13 @@ class LangchainTestSetup:
         agent: Any,
         toolkit: "HederaLangchainToolkit",
         cleanup: Callable[[], None],
+        response_parser: ResponseParserService,
     ):
         self.client = client
         self.agent = agent
         self.toolkit = toolkit
         self.cleanup = cleanup
+        self.response_parser = response_parser
 
 
 async def create_langchain_test_setup(
@@ -100,6 +103,8 @@ async def create_langchain_test_setup(
         checkpointer=InMemorySaver(),
     )
 
+    response_parser = ResponseParserService(tools=tools)
+
     # Cleanup function
     def cleanup():
         try:
@@ -108,5 +113,9 @@ async def create_langchain_test_setup(
             pass
 
     return LangchainTestSetup(
-        client=client, agent=agent, toolkit=toolkit, cleanup=cleanup
+        client=client,
+        agent=agent,
+        toolkit=toolkit,
+        cleanup=cleanup,
+        response_parser=response_parser,
     )

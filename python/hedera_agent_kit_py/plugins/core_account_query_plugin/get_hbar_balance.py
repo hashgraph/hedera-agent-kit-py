@@ -24,6 +24,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
+    untyped_query_output_parser,
+)
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -142,6 +145,7 @@ class GetHbarBalanceTool(Tool):
         self.parameters: type[AccountBalanceQueryParameters] = (
             AccountBalanceQueryParameters
         )
+        self.outputParser = untyped_query_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: AccountBalanceQueryParameters

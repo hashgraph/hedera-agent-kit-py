@@ -3,10 +3,12 @@
 This module validates querying topic information through the full LLM → tool → mirror node flow.
 """
 
+from typing import Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,
@@ -20,7 +22,6 @@ from test.utils.setup import (
 )
 
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils.verification import extract_tool_response
 
 
 @pytest.fixture(scope="session")
@@ -86,6 +87,41 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "1"})
 
 
+@pytest.fixture
+async def response_parser(langchain_setup):
+    """Provide the LangChain response parser."""
+    return langchain_setup.response_parser
+
+
+async def execute_get_topic_info_query(
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute topic info query through the agent and return parsed tool data."""
+    query_result = await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]},
+        config=config,
+    )
+
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(query_result)
+
+    if not parsed_tool_calls:
+        raise ValueError("The get_topic_info_query_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
+
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "get_topic_info_query_tool":
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of get_topic_info_query_tool"
+        )
+
+    return tool_call.parsedData
+
+
 @pytest.mark.asyncio
 async def test_get_topic_info_via_agent(
     operator_client,
@@ -93,6 +129,7 @@ async def test_get_topic_info_via_agent(
     agent_executor,
     executor_wrapper,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching topic info through the agent executor."""
     executor_account_id, _, executor_client, _ = executor_account
@@ -118,14 +155,15 @@ async def test_get_topic_info_via_agent(
 
     # Query topic info via agent
     input_text = f"Get topic info for {topic_id}"
-    query_result = await agent_executor.ainvoke(
-        {"messages": [{"role": "user", "content": input_text}]},
-        config=langchain_config,
+    parsed_data = await execute_get_topic_info_query(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(query_result, "get_topic_info_query_tool")
 
-    assert observation.error is None
-    topic_info = observation.extra.get("topic_info")
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert parsed_data.get("error") is None
+    topic_info = raw_data.get("topic_info")
     assert topic_info is not None
     assert topic_info["topic_id"] == str(topic_id)
-    assert "Here are the details for topic" in observation.human_message
+    assert "Here are the details for topic" in human_message

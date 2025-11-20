@@ -4,23 +4,23 @@ This module validates querying account information through the LangChain agent,
 Hedera client interaction, and Mirror Node queries.
 """
 
+from typing import Any
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 from langchain_core.runnables import RunnableConfig
 
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import (
     create_langchain_test_setup,
-    wait,
 )
 from test.utils.setup import (
     get_operator_client_for_tests,
     MIRROR_NODE_WAITING_TIME,
 )
-from test.utils.verification import extract_tool_response
 
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
@@ -74,19 +74,44 @@ async def hedera_ops(operator_client):
     return HederaOperationsWrapper(operator_client)
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
 async def execute_get_account_query(
-    agent_executor, input_text: str, config: RunnableConfig
-):
-    """Execute account query through the agent."""
-    return await agent_executor.ainvoke(
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute account query through the agent and return parsed tool data."""
+    query_result = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
         config=config,
     )
+
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(query_result)
+
+    if not parsed_tool_calls:
+        raise ValueError("The get_account_query_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
+
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "get_account_query_tool":
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of get_account_query_tool"
+        )
+
+    return tool_call.parsedData
 
 
 # ============================================================================
@@ -99,6 +124,7 @@ async def test_get_account_query_for_newly_created_account(
     agent_executor,
     hedera_ops,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching account info for a newly created account via agent."""
     private_key = PrivateKey.generate_ed25519()
@@ -112,18 +138,24 @@ async def test_get_account_query_for_newly_created_account(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     input_text = f"Get account info for {account_id}"
-    query_result = await execute_get_account_query(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_get_account_query(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(query_result, "get_account_query_tool")
 
-    assert observation.error is None
-    assert f"Details for {account_id}" in observation.human_message
-    assert "Balance:" in observation.human_message
-    assert "Public Key:" in observation.human_message
-    assert "EVM address:" in observation.human_message
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
 
-    # Direct validation
+    assert raw_data.get("error") is None
+    assert f"Details for {account_id}" in human_message
+    assert "Balance:" in human_message
+    assert "Public Key:" in human_message
+    assert "EVM address:" in human_message
+
+    assert str(raw_data.get("account_id")) == str(account_id)
+    assert raw_data.get("account", {}).get("balance") is not None
+    assert raw_data.get("account", {}).get("account_public_key") is not None
+
+    # Direct validation against a client call
     info = hedera_ops.get_account_info(str(account_id))
     assert str(info.account_id) == str(account_id)
     assert info.balance is not None
@@ -137,22 +169,29 @@ async def test_get_account_query_for_operator_account(
     operator_client,
     hedera_ops,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching account info for the operator account via agent."""
     operator_id = str(operator_client.operator_account_id)
 
     input_text = f"Query details for account {operator_id}"
-    query_result = await execute_get_account_query(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_get_account_query(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(query_result, "get_account_query_tool")
 
-    assert observation.error is None
-    assert f"Details for {operator_id}" in observation.human_message
-    assert "Balance:" in observation.human_message
-    assert "Public Key:" in observation.human_message
-    assert "EVM address:" in observation.human_message
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
 
+    assert parsed_data.get("error") is None
+    assert f"Details for {operator_id}" in human_message
+    assert "Balance:" in human_message
+    assert "Public Key:" in human_message
+    assert "EVM address:" in human_message
+
+    # Direct validation using raw data
+    assert str(raw_data.get("account_id")) == operator_id
+
+    # Direct validation against client call
     info = hedera_ops.get_account_info(operator_id)
     assert str(info.account_id) == operator_id
 
@@ -161,15 +200,19 @@ async def test_get_account_query_for_operator_account(
 async def test_get_account_query_for_nonexistent_account(
     agent_executor,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test that querying a nonexistent account fails gracefully."""
     fake_account_id = "0.0.999999999"
 
     input_text = f"Get account info for {fake_account_id}"
-    query_result = await execute_get_account_query(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_get_account_query(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(query_result, "get_account_query_tool")
 
-    assert "Failed" in observation.human_message
-    assert fake_account_id in observation.human_message
+    human_message = parsed_data["humanMessage"]
+
+    # Check for a failure message in the human message or error field
+    assert "Failed" in human_message
+    assert fake_account_id in human_message
+    assert parsed_data["raw"].get("error") is not None
