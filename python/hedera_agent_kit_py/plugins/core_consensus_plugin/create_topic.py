@@ -16,12 +16,6 @@ from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
-    IHederaMirrornodeService,
-)
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
-    get_mirrornode_service,
-)
 from hedera_agent_kit_py.shared.models import (
     ToolResponse,
     RawTransactionResponse,
@@ -34,7 +28,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import transaction_tool_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -99,15 +93,10 @@ async def create_topic(
         It accepts raw params, validates, and normalizes them before performing the transaction.
     """
     try:
-        # Get mirror node service
-        mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
         # Normalize parameters
         normalised_params: CreateTopicParametersNormalised = (
             await HederaParameterNormaliser.normalise_create_topic_params(
-                params, context, client, mirrornode_service
+                params, context, client
             )
         )
 
@@ -142,6 +131,7 @@ class CreateTopicTool(Tool):
         self.name: str = "Create Topic"
         self.description: str = create_topic_prompt(context)
         self.parameters: type[CreateTopicParameters] = CreateTopicParameters
+        self.outputParser = transaction_tool_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: CreateTopicParameters

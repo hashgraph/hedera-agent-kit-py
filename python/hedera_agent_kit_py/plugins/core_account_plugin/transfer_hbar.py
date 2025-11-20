@@ -28,6 +28,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import transaction_tool_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -147,6 +148,7 @@ class TransferHbarTool(Tool):
         self.name: str = "Transfer HBAR"
         self.description: str = transfer_hbar_prompt(context)
         self.parameters: type[TransferHbarParameters] = TransferHbarParameters
+        self.outputParser = transaction_tool_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: TransferHbarParameters

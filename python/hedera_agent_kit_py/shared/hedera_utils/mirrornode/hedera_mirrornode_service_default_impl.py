@@ -58,7 +58,6 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
         raw_data: Dict[str, Any] = await self._fetch_json(
             url, context=f"account {account_id}"
         )
-        print(raw_data)
 
         if not raw_data.get("account") or "balance" not in raw_data:
             raise ValueError(f"Account {account_id} not found")

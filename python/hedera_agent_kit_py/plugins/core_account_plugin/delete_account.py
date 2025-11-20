@@ -30,6 +30,7 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit_py.shared.tool import Tool
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import transaction_tool_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -55,6 +56,7 @@ def delete_account_prompt(context: Context = {}) -> str:
 This tool will delete an existing Hedera account. The remaining balance of the account will be transferred to the transfer_account_id if provided, otherwise the operator account will be used.
 
 Parameters:
+- {account_desc}
 - account_id (str, required): The account ID to delete
 - transfer_account_id (str, optional): The account ID to transfer the remaining balance to. If not provided, the operator account will be used.
 
@@ -132,6 +134,7 @@ class DeleteAccountTool(Tool):
         self.name: str = "Delete Account"
         self.description: str = delete_account_prompt(context)
         self.parameters: type[DeleteAccountParameters] = DeleteAccountParameters
+        self.outputParser = transaction_tool_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: DeleteAccountParameters

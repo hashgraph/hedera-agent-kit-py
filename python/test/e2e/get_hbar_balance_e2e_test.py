@@ -4,27 +4,24 @@ This module provides full E2E testing from simulated user input through the
 LangChain agent, Hedera client interaction, to on-chain balance queries.
 """
 
-from decimal import Decimal
-from typing import AsyncGenerator, Any, cast
+from typing import AsyncGenerator, Any
 import pytest
 
 from hiero_sdk_python import PrivateKey, Hbar
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
     get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
-from test.utils.verification import extract_tool_response
 from test.utils.teardown import return_hbars_and_delete_account
-from test.utils import wait
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
 
@@ -98,35 +95,44 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "1"})
 
 
+@pytest.fixture
+async def response_parser(langchain_test_setup):
+    """Provide the LangChain response parser."""
+    return langchain_test_setup.response_parser
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
 async def execute_get_hbar_balance(
-    agent_executor, input_text: str, config: RunnableConfig
-):
-    """Execute balance query through the agent."""
-    return await agent_executor.ainvoke(
+    agent_executor,
+    input_text: str,
+    config: RunnableConfig,
+    response_parser: ResponseParserService,
+) -> dict[str, Any]:
+    """Execute balance query through the agent and return parsed tool data."""
+    result = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
         config=config,
     )
 
+    # Use the new parsing logic
+    parsed_tool_calls = response_parser.parse_new_tool_messages(result)
 
-def extract_balance_info(agent_result: dict[str, Any]) -> tuple[str, str]:
-    """Extract account ID and balance from the agent result."""
-    observation = extract_tool_response(agent_result, "get_hbar_balance_query_tool")
-    parsed_observation = cast(ToolResponse, observation)
-    print(f"observation: {observation}")
-    print(f"parsed_observation: {parsed_observation}")
+    if not parsed_tool_calls:
+        raise ValueError("The get_hbar_balance_query_tool was not called.")
+    if len(parsed_tool_calls) > 1:
+        raise ValueError("Multiple tool calls were found.")
 
-    account_id = parsed_observation.extra.get("account_id")
-    balance = parsed_observation.extra.get("balance")
+    tool_call = parsed_tool_calls[0]
+    if tool_call.toolName != "get_hbar_balance_query_tool":
+        raise ValueError(
+            f"Incorrect tool name. Called {tool_call.toolName} instead of get_hbar_balance_query_tool"
+        )
 
-    if not account_id or balance is None:
-        raise ValueError("Missing account_id or balance in tool response")
-
-    return account_id, balance
+    return tool_call.parsedData
 
 
 # ============================================================================
@@ -139,24 +145,28 @@ async def test_get_hbar_balance_for_executor_account(
     agent_executor,
     executor_account,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for executor (default) account."""
     executor_account_id, _, executor_client, executor_wrapper = executor_account
     executor_id_str = str(executor_account_id)
 
+    # Get expected balance directly (before agent call)
     expected_balance = executor_wrapper.get_account_hbar_balance(executor_id_str)
 
     input_text = f"What is the HBAR balance of {executor_id_str}?"
-    result = await execute_get_hbar_balance(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_get_hbar_balance(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
-    assert observation is not None
-    assert observation.error is None
-    assert executor_id_str in observation.human_message
-    assert str(int(expected_balance)) in observation.human_message
-    assert "HBAR Balance" in observation.human_message
+    human_message = parsed_data["humanMessage"]
+    raw_data = parsed_data["raw"]
+
+    assert parsed_data.get("error") is None
+    assert executor_id_str in human_message
+
+    assert str(int(expected_balance)) in raw_data.get("balance")
+    assert "HBAR Balance" in human_message
 
 
 @pytest.mark.asyncio
@@ -164,6 +174,7 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     agent_executor,
     executor_account,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for a specific account with nonzero balance."""
     _, _, _, executor_wrapper = executor_account
@@ -179,14 +190,15 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     input_text = f"What is the HBAR balance of {account_id}?"
-    result = await execute_get_hbar_balance(
-        agent_executor, input_text, langchain_config
+    parsed_data = await execute_get_hbar_balance(
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
-    assert str(account_id) in observation.human_message
-    assert str(hbar_balance) in observation.human_message
-    assert observation.error is None
+    human_message = parsed_data["humanMessage"]
+
+    assert str(account_id) in human_message
+    assert str(hbar_balance) in human_message
+    assert parsed_data.get("error") is None
 
     await return_hbars_and_delete_account(
         executor_wrapper,
@@ -200,6 +212,7 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
     agent_executor,
     executor_account,
     langchain_config,
+    response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for an account with zero HBAR."""
     _, _, executor_client, executor_wrapper = executor_account
@@ -215,14 +228,16 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
 
     input_text = f"What is the HBAR balance of {account_id}?"
     result = await execute_get_hbar_balance(
-        agent_executor, input_text, langchain_config
+        agent_executor, input_text, langchain_config, response_parser
     )
-    observation = extract_tool_response(result, "get_hbar_balance_query_tool")
 
-    assert str(account_id) in observation.human_message
-    assert "0" in observation.human_message
-    assert observation.extra.get("balance") == "0"
-    assert observation.error is None
+    human_message = result["humanMessage"]
+    raw_data = result["raw"]
+
+    assert str(account_id) in human_message
+    assert "0" in human_message
+    assert raw_data.get("balance") == "0"
+    assert result.get("error") is None
 
     await return_hbars_and_delete_account(
         executor_wrapper,
