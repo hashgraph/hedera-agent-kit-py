@@ -24,7 +24,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateFungibleTokenParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
@@ -124,7 +128,9 @@ async def create_test_token(
         admin_key=token_public_key,
     )
 
-    create_params = CreateFungibleTokenParametersNormalised(token_params=FT_PARAMS, keys=None)
+    create_params = CreateFungibleTokenParametersNormalised(
+        token_params=FT_PARAMS, keys=None
+    )
     resp = await token_executor_wrapper.create_fungible_token(create_params)
     return resp.token_id
 
@@ -153,7 +159,9 @@ async def test_associate_token_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(str(executor_account_id))
+    balances: AccountBalance = executor_wrapper.get_account_balances(
+        str(executor_account_id)
+    )
     associated = balances.token_balances.get(token_id_ft) is not None
 
     assert result is not None
@@ -197,7 +205,9 @@ async def test_associate_two_tokens_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(str(executor_account_id))
+    balances: AccountBalance = executor_wrapper.get_account_balances(
+        str(executor_account_id)
+    )
     associated_first = balances.token_balances.get(token_id_ft1) is not None
     associated_second = balances.token_balances.get(token_id_ft2) is not None
 
