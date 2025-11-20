@@ -1,10 +1,11 @@
-"""End-to-end tests for create topic tool.
+"""End-to-end tests for create ERC20 tool.
 
 This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-import json
+import asyncio
+from datetime import datetime
 from typing import AsyncGenerator
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
@@ -18,9 +19,12 @@ from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
+from test.utils.verification import extract_tool_response
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+# ERC20 creation is more expensive than topic creation
+DEFAULT_EXECUTOR_BALANCE = Hbar(20, in_tinybars=False)
+MIRROR_NODE_WAITING_TIME_SEC = 10  # Wait for mirror node to ingest data
 
 
 # ============================================================================
@@ -69,6 +73,9 @@ async def executor_account(
         executor_client
     )
 
+    # Wait for account creation to propagate to mirror nodes
+    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+
     yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
 
     await return_hbars_and_delete_account(
@@ -88,7 +95,7 @@ async def executor_wrapper(executor_account):
 @pytest.fixture
 def langchain_config():
     """Provide a standard LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "create_topic_e2e"})
+    return RunnableConfig(configurable={"thread_id": "create_erc20_e2e"})
 
 
 @pytest.fixture
@@ -117,34 +124,25 @@ async def toolkit(langchain_test_setup):
 # ============================================================================
 
 
-async def execute_create_topic(
+async def execute_create_erc20(
     agent_executor, input_text: str, config: RunnableConfig
 ) -> ExecutedTransactionToolResponse:
-    """Execute topic creation via the agent and return the parsed response dict."""
+    """Execute ERC20 creation via the agent and return the parsed response dict."""
     response = await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
         config=config,
     )
 
-    # Find the ToolMessage in the response
-    messages = response.get("messages", [])
-    tool_message = next(
-        (
-            m
-            for m in messages
-            if m.__class__.__name__ == "ToolMessage"
-            or getattr(m, "name", None) == "create_topic_tool"
-        ),
-        None,
-    )
+    # Extract the tool response
+    tool_response = extract_tool_response(response, "create_erc20_tool")
 
-    if not tool_message:
-        raise ValueError("No ToolMessage found in agent response")
+    # Ensure it's the correct type
+    if not isinstance(tool_response, ExecutedTransactionToolResponse):
+        raise TypeError(
+            f"Expected ExecutedTransactionToolResponse, got {type(tool_response)}"
+        )
 
-    # The ToolMessage content is a JSON string — parse it
-    result = json.loads(tool_message.content)
-
-    return ExecutedTransactionToolResponse.from_dict(result)
+    return tool_response
 
 
 # ============================================================================
@@ -153,57 +151,75 @@ async def execute_create_topic(
 
 
 @pytest.mark.asyncio
-async def test_create_topic_with_default_settings(
+async def test_create_erc20_minimal_params(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
 ):
-    """Test creating a topic with default settings."""
-    input_text = "Create a new Hedera topic"
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
+    """Test creating an ERC20 token with minimal params via natural language."""
+    input_text = "Create an ERC20 token named MyERC20 with symbol M20"
+    response: ExecutedTransactionToolResponse = await execute_create_erc20(
         agent_executor, input_text, langchain_config
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
-    assert topic_info is not None
-    assert topic_info.submit_key is None
-    assert topic_info.memo == ""
+    assert "ERC20 token created successfully" in response.human_message
+    assert response.extra is not None
+    erc20_address = response.extra.get("erc20_address")
+    assert erc20_address is not None
+    assert erc20_address.startswith("0x")
+
+    # Wait for transaction to propagate
+    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+
+    # Verify on-chain contract info
+    contract_info = await executor_wrapper.get_contract_info(erc20_address)
+    assert contract_info is not None
+    assert contract_info.contract_id is not None
 
 
 @pytest.mark.asyncio
-async def test_create_topic_with_memo_and_submit_key(
+async def test_create_erc20_with_decimals_and_supply(
     agent_executor,
     executor_wrapper: HederaOperationsWrapper,
-    executor_account,
     langchain_config: RunnableConfig,
 ):
-    """Test creating a topic with memo and submit key."""
-    _, _, executor_client, _ = executor_account
-    input_text = 'Create a topic with memo "E2E test topic" and set submit key'
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
+    """Test creating an ERC20 token with decimals and initial supply."""
+    input_text = "Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000"
+    response: ExecutedTransactionToolResponse = await execute_create_erc20(
         agent_executor, input_text, langchain_config
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
-    assert (
-        topic_info.submit_key.ECDSA_secp256k1
-        == executor_client.operator_private_key.public_key().to_bytes_raw()
-    )
+    assert "ERC20 token created successfully" in response.human_message
+    assert response.extra is not None
+    erc20_address = response.extra.get("erc20_address")
+    assert erc20_address is not None
+
+    # Wait for transaction to propagate
+    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
+
+    # Verify on-chain contract info
+    contract_info = await executor_wrapper.get_contract_info(erc20_address)
+    assert contract_info is not None
+    assert contract_info.contract_id is not None
 
 
 @pytest.mark.asyncio
-async def test_create_topic_with_memo_and_no_submit_key(
+async def test_create_erc20_scheduled(
     agent_executor,
-    executor_wrapper: HederaOperationsWrapper,
     langchain_config: RunnableConfig,
 ):
-    """Test creating a topic with memo and without submit key restriction."""
-    input_text = (
-        'Create a topic with memo "E2E test topic" and do not restrict submit access'
-    )
-    response: ExecutedTransactionToolResponse = await execute_create_topic(
+    """Test scheduling the creation of an ERC20 token."""
+    # Use a unique name to avoid collisions
+    name = f"SchedERC-{int(datetime.now().timestamp())}"
+    symbol = f"S{int(datetime.now().timestamp()) % 1000}"
+    input_text = f'Create an ERC20 token named "{name}" with symbol {symbol}. Schedule this transaction instead of executing it immediately.'
+
+    response: ExecutedTransactionToolResponse = await execute_create_erc20(
         agent_executor, input_text, langchain_config
     )
 
-    topic_info = executor_wrapper.get_topic_info(str(response.raw.topic_id))
-    assert topic_info.submit_key is None
+    # Validate response structure for a scheduled transaction
+    assert "Scheduled creation of ERC20 successfully" in response.human_message
+    assert response.raw is not None
+    assert response.raw.transaction_id is not None
+    assert response.raw.schedule_id is not None

@@ -55,6 +55,7 @@ def delete_account_prompt(context: Context = {}) -> str:
 This tool will delete an existing Hedera account. The remaining balance of the account will be transferred to the transfer_account_id if provided, otherwise the operator account will be used.
 
 Parameters:
+- {account_desc}
 - account_id (str, required): The account ID to delete
 - transfer_account_id (str, optional): The account ID to transfer the remaining balance to. If not provided, the operator account will be used.
 

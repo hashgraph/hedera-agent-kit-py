@@ -4,7 +4,6 @@ This module provides full E2E testing from simulated user input through the
 LangChain agent, Hedera client interaction, to on-chain balance queries.
 """
 
-from decimal import Decimal
 from typing import AsyncGenerator, Any, cast
 import pytest
 

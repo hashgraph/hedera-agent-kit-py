@@ -39,14 +39,14 @@ async def setup_accounts():
     # Create recipients
     recipient_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=0, key=operator_client.operator_private_key.public_key()
+            initial_balance=Hbar(0), key=operator_client.operator_private_key.public_key()
         )
     )
     recipient_account_id = recipient_resp.account_id
 
     recipient_resp2 = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=0, key=operator_client.operator_private_key.public_key()
+            initial_balance=Hbar(0), key=operator_client.operator_private_key.public_key()
         )
     )
     recipient_account_id2 = recipient_resp2.account_id
