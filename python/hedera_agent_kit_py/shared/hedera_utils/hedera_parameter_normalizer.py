@@ -729,18 +729,9 @@ class HederaParameterNormaliser:
             client: Client,
             mirrornode: IHederaMirrornodeService,
     ) -> CreateFungibleTokenParametersNormalised:
-        """Normalize parameters for creating a fungible token.
+        """Normalize parameters for creating a fungible token."""
 
-        Args:
-            params: The raw input parameters.
-            context: The runtime context.
-            client: The Hedera client.
-            mirrornode: The Mirrornode service instance.
-
-        Returns:
-            The normalized parameters are ready for transaction building.
-        """
-        # Validate and parse parameters
+        # Parse + validate against schema
         parsed_params: CreateFungibleTokenParameters = cast(
             CreateFungibleTokenParameters,
             HederaParameterNormaliser.parse_params_with_schema(
@@ -748,49 +739,43 @@ class HederaParameterNormaliser:
             ),
         )
 
-        # Resolve Treasury Account
+        # Treasury resolution
         default_account_id = (
             str(client.operator_account_id)
             if client.operator_account_id
             else None
         )
+
         treasury_account_id = parsed_params.treasury_account_id or default_account_id
 
         if not treasury_account_id:
             raise ValueError("Must include treasury account ID")
 
-        # Resolve Decimals and Supply
-        decimals = parsed_params.decimals
-        initial_supply = int(parsed_params.initial_supply * (10 ** decimals))
+        # Resolve decimals + supply units
+        decimals = parsed_params.decimals or 0
+        initial_supply = int((parsed_params.initial_supply or 0) * (10 ** decimals))
 
         # Resolve Supply Type
-        supply_type = SupplyType.INFINITE
-
-        # Check the explicit supply_type parameter (if provided)
-        if parsed_params.supply_type is not None:
-            if parsed_params.supply_type == 0 or parsed_params.supply_type == SupplyType.INFINITE:
+        if parsed_params.supply_type is None:
+            supply_type = SupplyType.FINITE  # SPEC DEFAULT
+        else:
+            if parsed_params.supply_type in (0, SupplyType.INFINITE, "infinite"):
                 supply_type = SupplyType.INFINITE
-            elif parsed_params.supply_type == 1 or parsed_params.supply_type == SupplyType.FINITE:
+            elif parsed_params.supply_type in (1, SupplyType.FINITE, "finite"):
                 supply_type = SupplyType.FINITE
+            else:
+                raise ValueError("Invalid supply_type; must be finite or infinite.")
 
-        # Override: If max_supply is explicitly set and positive, the token MUST be FINITE.
-        if parsed_params.max_supply is not None and parsed_params.max_supply > 0:
-            supply_type = SupplyType.FINITE
-
-        # Resolve Max Supply (only needed if supply_type is FINITE)
         max_supply = None
-        if supply_type == SupplyType.FINITE:
-            # Default to 1,000,000 if max_supply was not specified, and convert to base units.
-            raw_max = (
-                parsed_params.max_supply
-                if parsed_params.max_supply is not None
-                else 1_000_000
-            )
-            max_supply = int(raw_max * (10 ** decimals))
 
-            # Python sdk requires non-zero initial supply if the token supply is finite
-            if not parsed_params.initial_supply:
-                initial_supply = int(1 * (10 ** decimals)) # mint 1 token
+        if supply_type == SupplyType.FINITE:
+            # default 1 million tokens (in whole units)
+            raw_max_supply = parsed_params.max_supply or 1_000_000
+            max_supply = int(raw_max_supply * (10 ** decimals))
+
+            # Hedera requires NON-ZERO initial supply for finite tokens
+            if initial_supply == 0:
+                initial_supply = 1 * (10 ** decimals)
 
         # Validation
         if max_supply is not None and initial_supply > max_supply:
@@ -798,15 +783,20 @@ class HederaParameterNormaliser:
                 f"Initial supply ({initial_supply}) cannot exceed max supply ({max_supply})"
             )
 
-        # Resolve Supply Key
+        if parsed_params.is_supply_key is None:
+            # default: true when supply finite OR max_supply provided
+            is_supply_key = supply_type == SupplyType.FINITE
+        else:
+            is_supply_key = parsed_params.is_supply_key
+
         supply_key: Optional[PublicKey] = None
-        if parsed_params.is_supply_key or supply_type == SupplyType.FINITE:
-            # Try to fetch key from mirror node, fall back to the client operator
+
+        if is_supply_key:
             public_key = None
             try:
                 account_info = await mirrornode.get_account(treasury_account_id)
                 if account_info.get("account_public_key"):
-                    public_key = account_info.get("account_public_key")
+                    public_key = account_info["account_public_key"]
             except Exception:
                 pass
 
@@ -820,8 +810,10 @@ class HederaParameterNormaliser:
         scheduling_params: ScheduleCreateParams | None = None
         if getattr(parsed_params, "scheduling_params", None):
             if parsed_params.scheduling_params.is_scheduled:
-                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
-                    parsed_params.scheduling_params, context, client
+                scheduling_params = (
+                    await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                        parsed_params.scheduling_params, context, client
+                    )
                 )
 
         # Construct TokenParams
