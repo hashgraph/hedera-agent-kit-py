@@ -24,6 +24,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
 )
 from hedera_agent_kit_py.shared.tool import Tool
 from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import untyped_query_output_parser
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
 
@@ -63,8 +64,14 @@ def format_supply(supply: Optional[str], decimals_str: Optional[str]) -> str:
     if not supply:
         return "N/A"
 
+    if not decimals_str:
+        return "the token has no supplied decimals"
+
+    if decimals_str == "0":
+        return supply
+
     try:
-        decimals = int(decimals_str or "0")
+        decimals = int(decimals_str)
         amount = float(supply)
         calculated = amount / (10**decimals)
         # Format with commas
@@ -220,6 +227,7 @@ class GetTokenInfoQueryTool(Tool):
         self.name: str = "Get Token Info"
         self.description: str = get_token_info_query_prompt(context)
         self.parameters: type[GetTokenInfoParameters] = GetTokenInfoParameters
+        self.outputParser = untyped_query_output_parser
 
     async def execute(
         self, client: Client, context: Context, params: GetTokenInfoParameters
