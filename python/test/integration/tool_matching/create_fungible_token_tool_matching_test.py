@@ -172,6 +172,24 @@ async def test_match_and_extract_params_for_scheduled_creation(
 
 
 @pytest.mark.asyncio
+async def test_parse_infinite_supply(agent_executor, toolkit, monkeypatch):
+    """Test parsing for infinite supply type."""
+    input_text = "Create a token with 2 decimals and 1000 initial balance"
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(return_value=MOCKED_RESPONSE)
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
+
+    # the params lacks token symbol and name, so the tool should not be called
+    mock_run.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_tool_available(toolkit):
     """Test that create fungible token tool is available in the toolkit."""
     tools = toolkit.get_tools()

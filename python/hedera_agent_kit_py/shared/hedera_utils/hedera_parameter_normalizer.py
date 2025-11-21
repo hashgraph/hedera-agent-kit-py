@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pprint import pprint
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python.contract.contract_id import ContractId
@@ -765,6 +766,11 @@ class HederaParameterNormaliser:
         # Resolve decimals + supply units
         decimals = parsed_params.decimals or 0
         initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
+
+        if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
+            raise ValueError(
+                f"Cannot set max supply and INFINITE supply type"
+            )
 
         # Resolve Supply Type
         if parsed_params.supply_type is None:

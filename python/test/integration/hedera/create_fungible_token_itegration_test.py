@@ -174,3 +174,61 @@ async def test_fail_when_max_supply_is_less_than_initial_supply(setup_client):
     assert result.error is not None
     assert "Failed to create fungible token" in result.human_message
     assert "cannot exceed max" in result.error
+
+@pytest.mark.asyncio
+async def test_fail_decimals_are_negative(setup_client):
+    client, _, context = setup_client
+
+    params = CreateFungibleTokenParameters(
+        token_name="BadToken",
+        token_symbol="BAD",
+        initial_supply=2000,
+        decimals=-2,
+    )
+
+    tool = CreateFungibleTokenTool(context)
+    result: ToolResponse = await tool.execute(client, context, params)
+
+    assert result.error is not None
+    assert "Failed to create fungible token: Decimals must be a non-negative integer" in result.human_message
+
+@pytest.mark.asyncio
+async def test_fail_when_max_supply_is_set_along_infinite_supply_amount(setup_client):
+    client, _, context = setup_client
+
+    params = CreateFungibleTokenParameters(
+        token_name="BadToken",
+        token_symbol="BAD",
+        initial_supply=5,
+        max_supply=1000,
+        supply_type=0, # inifinite
+        decimals=2,
+    )
+
+    tool = CreateFungibleTokenTool(context)
+    result: ToolResponse = await tool.execute(client, context, params)
+
+    assert result.error is not None
+    assert "Failed to create fungible token" in result.human_message
+    assert "Cannot set max supply and INFINITE supply type" in result.error
+
+
+@pytest.mark.asyncio
+async def test_fail_when_negative_initial_supply(setup_client):
+    client, _, context = setup_client
+
+    params = CreateFungibleTokenParameters(
+        token_name="BadToken",
+        token_symbol="BAD",
+        initial_supply=-5,
+        max_supply=1000,
+        decimals=2,
+    )
+
+    tool = CreateFungibleTokenTool(context)
+    result: ToolResponse = await tool.execute(client, context, params)
+
+    assert result.error is not None
+    assert "Failed to create fungible token" in result.human_message
+    assert "Initial supply must be a non-negative integer" in result.error
+

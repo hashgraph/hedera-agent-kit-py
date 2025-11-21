@@ -61,8 +61,8 @@ def create_fungible_token_prompt(context: Context = {}) -> str:
 This tool creates a fungible token on Hedera.
 
 Parameters:
-- token_name (str, required): The name of the token
-- token_symbol (str, required): The symbol of the token, required
+- token_name (str, required): The name of the token, required. If not explicitly specified, do not call this tool and ask user for specific token name.
+- token_symbol (str, required): The symbol of the token, required.  If not explicitly specified, do not call this tool and ask user for specific token symbol 
 - initial_supply (int, optional): The initial supply of the token, defaults to 0
 - supply_type (int, optional): The supply type of the token. Can be finite = 1 or infinite = 0. Defaults to finite = 1
 - max_supply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified
@@ -125,8 +125,6 @@ async def create_fungible_token(
                 params, context, client, mirrornode_service
             )
         )
-
-        pprint(normalised_params)
 
         # Build transaction
         tx = HederaBuilder.create_fungible_token(normalised_params)
