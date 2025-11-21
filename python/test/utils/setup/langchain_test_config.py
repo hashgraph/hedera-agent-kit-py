@@ -60,6 +60,7 @@ GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
 ]
 
 GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
+UPDATE_TOPIC_TOOL = core_consensus_plugin_tool_names["UPDATE_TOPIC_TOOL"]
 
 
 @dataclass
@@ -108,6 +109,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         GET_ACCOUNT_QUERY_TOOL,
         GET_TRANSACTION_RECORD_QUERY_TOOL,
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+        UPDATE_TOPIC_TOOL,
     ],
     plugins=[
         core_account_plugin,
