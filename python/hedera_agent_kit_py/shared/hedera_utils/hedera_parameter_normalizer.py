@@ -44,6 +44,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    GetTokenInfoParameters,
+)
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
@@ -801,7 +804,6 @@ class HederaParameterNormaliser:
         Returns:
             The normalized parameters are ready for transaction building.
         """
-        print(f"params: {params}")
         parsed_params: UpdateTopicParameters = cast(
             UpdateTopicParameters,
             HederaParameterNormaliser.parse_params_with_schema(
@@ -826,7 +828,9 @@ class HederaParameterNormaliser:
         # Resolve Auto Renew Account
         auto_renew_account = None
         if parsed_params.auto_renew_account_id:
-            auto_renew_account = AccountId.from_string(parsed_params.auto_renew_account_id)
+            auto_renew_account = AccountId.from_string(
+                parsed_params.auto_renew_account_id
+            )
 
         # Resolve Expiration Time
         expiration_time = None
@@ -847,3 +851,28 @@ class HederaParameterNormaliser:
             auto_renew_period=parsed_params.auto_renew_period,
             expiration_time=expiration_time,
         )
+
+    @staticmethod
+    def normalise_get_token_info(
+        params: GetTokenInfoParameters,
+    ) -> GetTokenInfoParameters:
+        """Normalize parameters for getting token info.
+
+        Args:
+            params: The raw input parameters.
+
+        Returns:
+            The validated parameters.
+
+        Raises:
+            ValueError: If token_id is missing.
+        """
+        parsed_params: GetTokenInfoParameters = cast(
+            GetTokenInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTokenInfoParameters
+            ),
+        )
+        if not parsed_params.token_id:
+            raise ValueError("Token ID is required to fetch token info.")
+        return parsed_params
