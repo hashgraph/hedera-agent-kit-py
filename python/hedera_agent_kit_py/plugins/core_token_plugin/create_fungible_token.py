@@ -59,6 +59,8 @@ def create_fungible_token_prompt(context: Context = {}) -> str:
 {context_snippet}
 
 This tool creates a fungible token on Hedera.
+*NOTE*: if token_name or token_symbol are not specified, do not call this tool and ask user for specific token name and symbol!
+ONLY token_name and token_symbol ARE REQUIRED!
 
 Parameters:
 - token_name (str, required): The name of the token, required. If not explicitly specified, do not call this tool and ask user for specific token name.

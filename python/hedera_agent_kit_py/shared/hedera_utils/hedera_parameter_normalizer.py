@@ -776,9 +776,7 @@ class HederaParameterNormaliser:
         initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
 
         if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
-            raise ValueError(
-                f"Cannot set max supply and INFINITE supply type"
-            )
+            raise ValueError(f"Cannot set max supply and INFINITE supply type")
 
         # Resolve Supply Type
         if parsed_params.supply_type is None:

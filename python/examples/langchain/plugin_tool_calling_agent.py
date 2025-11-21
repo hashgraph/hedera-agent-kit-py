@@ -66,6 +66,7 @@ GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
 
+
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
@@ -97,7 +98,7 @@ async def bootstrap():
             GET_ACCOUNT_QUERY_TOOL,
             CREATE_FUNGIBLE_TOKEN_TOOL,
             GET_TRANSACTION_RECORD_QUERY_TOOL,
-            GET_TOKEN_INFO_QUERY_TOOL
+            GET_TOKEN_INFO_QUERY_TOOL,
         ],
         plugins=[
             core_consensus_plugin,
@@ -108,7 +109,7 @@ async def bootstrap():
             core_account_plugin,
             core_token_plugin,
             core_transaction_query_plugin,
-            core_token_query_plugin
+            core_token_query_plugin,
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
