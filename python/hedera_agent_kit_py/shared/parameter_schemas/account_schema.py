@@ -208,18 +208,18 @@ class TransferHbarWithAllowanceParameters(TransferHbarParameters):
     """Same as TransferHbarParameters — used when allowance applies."""
 
 
-class DeleteHbarAllowanceParameters(BaseModelWithArbitraryTypes):
-    owner_account_id: Optional[str] = None
-    spender_account_id: str
-    transaction_memo: Optional[str] = None
-
-
 class TransferHbarWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
     hbar_approved_transfers: dict["AccountId", int] = Field(
         description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )
+    transaction_memo: Optional[str] = None
+
+
+class DeleteHbarAllowanceParameters(BaseModelWithArbitraryTypes):
+    owner_account_id: Optional[str] = None
+    spender_account_id: str
     transaction_memo: Optional[str] = None
 
 
