@@ -12,34 +12,25 @@ from langgraph.checkpoint.memory import InMemorySaver
 from hedera_agent_kit_py.langchain import HederaAgentKitTool
 from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.plugins.core_account_plugin import (
+from hedera_agent_kit_py.plugins import (
     core_account_plugin_tool_names,
     core_account_plugin,
-)
-from hedera_agent_kit_py.plugins.core_account_query_plugin import (
-    core_account_query_plugin_tool_names,
+    core_consensus_query_plugin,
+    core_consensus_query_plugin_tool_names,
     core_account_query_plugin,
-)
-from hedera_agent_kit_py.plugins.core_consensus_plugin import (
+    core_account_query_plugin_tool_names,
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
-)
-from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
-    core_consensus_query_plugin_tool_names,
-    core_consensus_query_plugin,
-)
-from hedera_agent_kit_py.plugins.core_evm_plugin import (
     core_evm_plugin_tool_names,
     core_evm_plugin,
-)
-from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
     core_misc_query_plugin_tool_names,
     core_misc_query_plugin,
-)
-from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
     core_transaction_query_plugin,
     core_transaction_query_plugin_tool_names,
+    core_token_query_plugin_tool_names,
+    core_token_query_plugin,
 )
+
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -68,6 +59,9 @@ GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
     "GET_TRANSACTION_RECORD_QUERY_TOOL"
 ]
 
+GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
+    "GET_TOKEN_INFO_QUERY_TOOL"
+]
 
 async def bootstrap():
     # Initialize LLM
@@ -99,6 +93,7 @@ async def bootstrap():
             SUBMIT_TOPIC_MESSAGE_TOOL,
             GET_ACCOUNT_QUERY_TOOL,
             GET_TRANSACTION_RECORD_QUERY_TOOL,
+            GET_TOKEN_INFO_QUERY_TOOL
         ],
         plugins=[
             core_consensus_plugin,
@@ -108,6 +103,7 @@ async def bootstrap():
             core_evm_plugin,
             core_account_plugin,
             core_transaction_query_plugin,
+            core_token_query_plugin
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )

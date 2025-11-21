@@ -23,7 +23,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
@@ -54,7 +58,7 @@ def operator_wrapper(operator_client):
 
 @pytest.fixture
 async def executor_account(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
     """Create a temporary executor account for tests.
 
@@ -121,7 +125,9 @@ async def response_parser(langchain_test_setup):
 
 
 @pytest.fixture
-async def test_topic(executor_wrapper, executor_account) -> AsyncGenerator[TopicId, None]:
+async def test_topic(
+    executor_wrapper, executor_account
+) -> AsyncGenerator[TopicId, None]:
     """Creates a topic with admin and submit keys set to the executor's key.
 
     This corresponds to the `beforeEach` setup in the TS tests.
@@ -150,7 +156,7 @@ async def test_topic(executor_wrapper, executor_account) -> AsyncGenerator[Topic
 
 
 async def execute_agent_request(
-        agent_executor, input_text: str, config: RunnableConfig
+    agent_executor, input_text: str, config: RunnableConfig
 ):
     """Execute a request via the agent and return the response."""
     return await agent_executor.ainvoke(
@@ -159,7 +165,7 @@ async def execute_agent_request(
 
 
 def extract_tool_result(
-        agent_result: dict[str, Any], response_parser: ResponseParserService
+    agent_result: dict[str, Any], response_parser: ResponseParserService
 ) -> Any:
     """Helper to extract tool data from response."""
     tool_calls = response_parser.parse_new_tool_messages(agent_result)
@@ -175,12 +181,12 @@ def extract_tool_result(
 
 @pytest.mark.asyncio
 async def test_update_topic_keys_explicit(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        executor_account,
-        test_topic: TopicId,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_account,
+    test_topic: TopicId,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test changing topic keys using explicitly provided values."""
     _, _, executor_client, _ = executor_account
@@ -190,7 +196,9 @@ async def test_update_topic_keys_explicit(
     new_submit_key = PrivateKey.generate_ed25519().public_key()
     new_submit_key_str = new_submit_key.to_string()
 
-    input_text = f"For topic {topic_id_str}, change the submit key to: {new_submit_key_str}."
+    input_text = (
+        f"For topic {topic_id_str}, change the submit key to: {new_submit_key_str}."
+    )
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
     tool_call = extract_tool_result(result, response_parser)
@@ -203,7 +211,9 @@ async def test_update_topic_keys_explicit(
     topic_info = executor_wrapper.get_topic_info(topic_id_str)
 
     # Admin key should remain unchanged (executor's key)
-    assert str(topic_info.admin_key.ed25519.hex()) == str(executor_client.operator_private_key.public_key().to_string())
+    assert str(topic_info.admin_key.ed25519.hex()) == str(
+        executor_client.operator_private_key.public_key().to_string()
+    )
 
     # Submit key should be the new key
     assert topic_info.submit_key.ed25519.hex() == new_submit_key.to_string()
@@ -211,12 +221,12 @@ async def test_update_topic_keys_explicit(
 
 @pytest.mark.asyncio
 async def test_update_topic_keys_default(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        executor_account,
-        test_topic: TopicId,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_account,
+    test_topic: TopicId,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test changing topic keys using 'my key' (default values) and updating memo."""
     _, _, executor_client, _ = executor_account
@@ -234,17 +244,19 @@ async def test_update_topic_keys_default(
     topic_info = executor_wrapper.get_topic_info(topic_id_str)
 
     # Submit key should be the executor's key
-    assert str(topic_info.submit_key.ed25519.hex()) == str(executor_client.operator_private_key.public_key().to_string())
+    assert str(topic_info.submit_key.ed25519.hex()) == str(
+        executor_client.operator_private_key.public_key().to_string()
+    )
     assert topic_info.memo == "just updated"
 
 
 @pytest.mark.asyncio
 async def test_fail_update_no_submit_key(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        executor_account,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_account,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test failure when updating a topic that was created without a submit key."""
     _, _, executor_client, _ = executor_account
@@ -272,7 +284,9 @@ async def test_fail_update_no_submit_key(
     human_message = tool_call.parsedData["humanMessage"]
     raw_error = tool_call.parsedData["raw"].get("error", "")
 
-    expected_error_substr = "Cannot update submit_key: topic was created without a submit_key"
+    expected_error_substr = (
+        "Cannot update submit_key: topic was created without a submit_key"
+    )
 
     assert expected_error_substr in human_message or expected_error_substr in raw_error
     assert "Failed to update topic" in human_message
@@ -280,12 +294,12 @@ async def test_fail_update_no_submit_key(
 
 @pytest.mark.asyncio
 async def test_update_autorenew_account(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        executor_account,
-        test_topic: TopicId,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_account,
+    test_topic: TopicId,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test updating the autoRenewAccountId."""
     _, _, executor_client, _ = executor_account
@@ -295,15 +309,16 @@ async def test_update_autorenew_account(
     secondary_key = executor_client.operator_private_key
     secondary_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(0),
-            key=secondary_key.public_key()
+            initial_balance=Hbar(0), key=secondary_key.public_key()
         )
     )
     secondary_account_id = str(secondary_resp.account_id)
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    input_text = f"For topic {topic_id_str} set auto renew account id to {secondary_account_id}."
+    input_text = (
+        f"For topic {topic_id_str} set auto renew account id to {secondary_account_id}."
+    )
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
     tool_call = extract_tool_result(result, response_parser)
@@ -313,17 +328,20 @@ async def test_update_autorenew_account(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     topic_info = executor_wrapper.get_topic_info(topic_id_str)
-    assert topic_info.auto_renew_account.accountNum == AccountId.from_string(secondary_account_id).num
+    assert (
+        topic_info.auto_renew_account.accountNum
+        == AccountId.from_string(secondary_account_id).num
+    )
 
 
 @pytest.mark.asyncio
 async def test_reject_unauthorized_update(
-        agent_executor,
-        executor_wrapper: HederaOperationsWrapper,
-        operator_wrapper: HederaOperationsWrapper,
-        operator_client,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    operator_wrapper: HederaOperationsWrapper,
+    operator_client,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test that updates are rejected if the agent does not hold the admin key."""
 
@@ -331,8 +349,7 @@ async def test_reject_unauthorized_update(
     outsider_key = PrivateKey.generate_ed25519()
     outsider_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_EXECUTOR_BALANCE,
-            key=outsider_key.public_key()
+            initial_balance=DEFAULT_EXECUTOR_BALANCE, key=outsider_key.public_key()
         )
     )
     outsider_id = outsider_resp.account_id
@@ -342,8 +359,7 @@ async def test_reject_unauthorized_update(
     # 2. Outsider creates a topic (Admin Key = Outsider Key)
     resp = await outsider_wrapper.create_topic(
         CreateTopicParametersNormalised(
-            admin_key=outsider_key.public_key(),
-            memo="outsider-topic"
+            admin_key=outsider_key.public_key(), memo="outsider-topic"
         )
     )
     outsider_topic_id = str(resp.topic_id)
@@ -367,7 +383,5 @@ async def test_reject_unauthorized_update(
 
     # Cleanup outsider
     await return_hbars_and_delete_account(
-        outsider_wrapper,
-        outsider_id,
-        operator_client.operator_account_id
+        outsider_wrapper, outsider_id, operator_client.operator_account_id
     )

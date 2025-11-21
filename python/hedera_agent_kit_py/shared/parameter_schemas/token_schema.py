@@ -248,3 +248,9 @@ class DeleteTokenParameters(OptionalScheduledTransactionParams):
 
 class DeleteTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     token_id: TokenId
+
+
+class GetTokenInfoParameters(BaseModelWithArbitraryTypes):
+    token_id: Annotated[
+        Optional[str], Field(description="The token ID to query (e.g., 0.0.12345).")
+    ] = None
