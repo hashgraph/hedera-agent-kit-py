@@ -2,39 +2,27 @@ import os
 from dataclasses import dataclass
 from typing import List
 
-from hedera_agent_kit_py.plugins.core_account_plugin import (
+from hedera_agent_kit_py.plugins import (
     core_account_plugin_tool_names,
     core_account_plugin,
-)
-from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
     core_consensus_query_plugin,
     core_consensus_query_plugin_tool_names,
-)
-from hedera_agent_kit_py.plugins.core_account_query_plugin import (
     core_account_query_plugin,
     core_account_query_plugin_tool_names,
-)
-
-from hedera_agent_kit_py.plugins.core_consensus_plugin import (
     core_consensus_plugin_tool_names,
     core_consensus_plugin,
-)
-from hedera_agent_kit_py.plugins.core_token_plugin import (
+    core_evm_plugin_tool_names,
+    core_evm_plugin,
+    core_misc_query_plugin_tool_names,
+    core_misc_query_plugin,
+    core_transaction_query_plugin,
+    core_transaction_query_plugin_tool_names,
+    core_token_query_plugin_tool_names,
+    core_token_query_plugin,
     core_token_plugin_tool_names,
     core_token_plugin,
 )
-from hedera_agent_kit_py.plugins.core_evm_plugin import (
-    core_evm_plugin_tool_names,
-    core_evm_plugin,
-)
-from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
-    core_misc_query_plugin_tool_names,
-    core_misc_query_plugin,
-)
-from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
-    core_transaction_query_plugin,
-    core_transaction_query_plugin_tool_names,
-)
+
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
@@ -43,6 +31,9 @@ DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
 CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
+TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "TRANSFER_HBAR_WITH_ALLOWANCE_TOOL"
+]
 CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
@@ -63,6 +54,9 @@ GET_TOPIC_INFO_QUERY_TOOL = core_consensus_query_plugin_tool_names[
 GET_ACCOUNT_QUERY_TOOL = core_account_query_plugin_tool_names["GET_ACCOUNT_QUERY_TOOL"]
 ASSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["ASSOCIATE_TOKEN_TOOL"]
 UPDATE_TOPIC_TOOL = core_consensus_plugin_tool_names["UPDATE_TOPIC_TOOL"]
+GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
+    "GET_TOKEN_INFO_QUERY_TOOL"
+]
 
 
 @dataclass
@@ -111,7 +105,9 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         GET_ACCOUNT_QUERY_TOOL,
         GET_TRANSACTION_RECORD_QUERY_TOOL,
         ASSOCIATE_TOKEN_TOOL,
+        TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
         UPDATE_TOPIC_TOOL,
+        GET_TOKEN_INFO_QUERY_TOOL,
     ],
     plugins=[
         core_account_plugin,
@@ -122,6 +118,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         core_evm_plugin,
         core_transaction_query_plugin,
         core_token_plugin,
+        core_token_query_plugin,
     ],
     agent_mode=AgentMode.AUTONOMOUS,
 )
