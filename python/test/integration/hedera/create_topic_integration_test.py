@@ -4,11 +4,10 @@ This module tests the topic creation tool by calling it directly with parameters
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
 
-from secrets import token_urlsafe
 from typing import cast
 
 import pytest
-from hiero_sdk_python import Client, PublicKey, client, PrivateKey, Hbar
+from hiero_sdk_python import Client, PrivateKey, Hbar
 
 from hedera_agent_kit_py.plugins.core_consensus_plugin import CreateTopicTool
 from hedera_agent_kit_py.shared import AgentMode

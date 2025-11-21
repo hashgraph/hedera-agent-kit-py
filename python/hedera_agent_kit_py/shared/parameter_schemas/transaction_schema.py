@@ -25,6 +25,5 @@ class TransactionRecordQueryParameters(BaseModelWithArbitraryTypes):
     ] = None
 
 
-## TODO: adapt to the Python SDK Transaction Constructor impl
 class TransactionRecordQueryParametersNormalised(TransactionRecordQueryParameters):
     """Normalized form of TransactionRecordQueryParameters. Currently identical."""
