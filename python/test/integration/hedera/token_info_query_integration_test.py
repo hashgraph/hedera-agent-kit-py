@@ -15,7 +15,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import GetTokenInfoParameters
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    GetTokenInfoParameters,
+)
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
     get_operator_client_for_tests,
@@ -74,9 +76,9 @@ async def setup_accounts():
 
 
 async def create_test_token(
-        executor_wrapper: HederaOperationsWrapper,
-        executor_client: Client,
-        ft_params: TokenParams,
+    executor_wrapper: HederaOperationsWrapper,
+    executor_client: Client,
+    ft_params: TokenParams,
 ):
     # Use executor's key for admin/supply
     public_key = executor_client.operator_private_key.public_key()

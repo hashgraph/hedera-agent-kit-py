@@ -46,14 +46,16 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteTopicParametersNormalised,
     CreateTopicParametersNormalised,
     DeleteAccountParametersNormalised,
-    CreateAccountParametersNormalised, ApproveHbarAllowanceParametersNormalised,
+    CreateAccountParametersNormalised,
+    ApproveHbarAllowanceParametersNormalised,
     ApproveTokenAllowanceParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
     DeleteTokenParametersNormalised,
     CreateNonFungibleTokenParametersNormalised,
-    CreateFungibleTokenParametersNormalised, ApproveNftAllowanceParametersNormalised,
+    CreateFungibleTokenParametersNormalised,
+    ApproveNftAllowanceParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
 )
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
@@ -315,28 +317,36 @@ class HederaOperationsWrapper:
             owner_account_id, spender_account_id
         )
 
-    async def approve_hbar_allowance(self, params: ApproveHbarAllowanceParametersNormalised) -> RawTransactionResponse:
+    async def approve_hbar_allowance(
+        self, params: ApproveHbarAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
         tx = HederaBuilder.approve_hbar_allowance(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
         return result.raw
 
-    async def approve_token_allowance(self, params: ApproveTokenAllowanceParametersNormalised) -> RawTransactionResponse:
+    async def approve_token_allowance(
+        self, params: ApproveTokenAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
         tx = HederaBuilder.approve_token_allowance(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
         return result.raw
 
-    async def approve_nft_allowance(self, params: ApproveNftAllowanceParametersNormalised) -> RawTransactionResponse:
+    async def approve_nft_allowance(
+        self, params: ApproveNftAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
         tx = HederaBuilder.approve_nft_allowance(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
         return result.raw
 
-    async def mint_nft(self, params: MintNonFungibleTokenParametersNormalised) -> RawTransactionResponse:
+    async def mint_nft(
+        self, params: MintNonFungibleTokenParametersNormalised
+    ) -> RawTransactionResponse:
         tx = HederaBuilder.mint_non_fungible_token(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()

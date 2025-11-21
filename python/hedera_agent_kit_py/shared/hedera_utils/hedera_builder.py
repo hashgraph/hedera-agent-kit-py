@@ -433,7 +433,7 @@ class HederaBuilder:
 
     @staticmethod
     def _build_account_allowance_approve_tx(
-            params,
+        params,
     ) -> AccountAllowanceApproveTransaction:
         """Helper to build an AccountAllowanceApproveTransaction with optional memo."""
 
