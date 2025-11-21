@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
@@ -38,6 +39,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateERC20Parameters,
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
+    UpdateTopicParameters,
+    UpdateTopicParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
@@ -826,4 +829,67 @@ class HederaParameterNormaliser:
         return TransactionRecordQueryParametersNormalised(
             transaction_id=transaction_id,
             nonce=parsed_params.nonce,
+        )
+
+    @staticmethod
+    async def normalise_update_topic(
+        params: UpdateTopicParameters,
+        context: Context,
+        client: Client,
+    ) -> UpdateTopicParametersNormalised:
+        """Normalize parameters for updating a topic.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+
+        Returns:
+            The normalized parameters are ready for transaction building.
+        """
+        print(f"params: {params}")
+        parsed_params: UpdateTopicParameters = cast(
+            UpdateTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, UpdateTopicParameters
+            ),
+        )
+        topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        # Determine the default user public key (operator key)
+        user_public_key = None
+        if client.operator_private_key:
+            user_public_key = client.operator_private_key.public_key()
+
+        # Resolve Keys
+        admin_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.admin_key, user_public_key
+        )
+        submit_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.submit_key, user_public_key
+        )
+
+        # Resolve Auto Renew Account
+        auto_renew_account = None
+        if parsed_params.auto_renew_account_id:
+            auto_renew_account = AccountId.from_string(parsed_params.auto_renew_account_id)
+
+        # Resolve Expiration Time
+        expiration_time = None
+        if parsed_params.expiration_time:
+            if isinstance(parsed_params.expiration_time, datetime):
+                expiration_time = parsed_params.expiration_time
+            else:
+                expiration_time = datetime.fromisoformat(
+                    str(parsed_params.expiration_time).replace("Z", "+00:00")
+                )
+
+        return UpdateTopicParametersNormalised(
+            topic_id=topic_id,
+            memo=parsed_params.topic_memo,
+            admin_key=admin_key,
+            submit_key=submit_key,
+            auto_renew_account=auto_renew_account,
+            auto_renew_period=parsed_params.auto_renew_period,
+            expiration_time=expiration_time,
         )
