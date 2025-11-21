@@ -65,9 +65,7 @@ async def setup_environment():
 
     # LangChain Setup
     lc_setup = await create_langchain_test_setup(custom_client=executor_client)
-    langchain_config = RunnableConfig(
-        configurable={"thread_id": "get_token_info_e2e"}
-    )
+    langchain_config = RunnableConfig(configurable={"thread_id": "get_token_info_e2e"})
 
     await wait(MIRROR_NODE_WAITING_TIME)
 

@@ -3,7 +3,15 @@ from decimal import Decimal
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python.contract.contract_id import ContractId
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar, TopicId
+from hiero_sdk_python import (
+    AccountId,
+    PublicKey,
+    Timestamp,
+    Client,
+    Hbar,
+    TopicId,
+    TokenId,
+)
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from pydantic import BaseModel, ValidationError
 from web3 import Web3
@@ -48,6 +56,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
+    DissociateTokenParameters,
+    DissociateTokenParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -940,3 +950,54 @@ class HederaParameterNormaliser:
         if not parsed_params.token_id:
             raise ValueError("Token ID is required to fetch token info.")
         return parsed_params
+
+    @staticmethod
+    async def normalise_dissociate_token_params(
+        params: DissociateTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> DissociateTokenParametersNormalised:
+        """Normalize parameters for dissociating tokens.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+
+        Returns:
+            The normalized parameters are ready for transaction building.
+        """
+        parsed_params: DissociateTokenParameters = cast(
+            DissociateTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DissociateTokenParameters
+            ),
+        )
+
+        # Resolve Account ID (default to operator if not provided)
+        account_id_str = parsed_params.account_id
+        if not account_id_str and client.operator_account_id:
+            account_id_str = str(client.operator_account_id)
+
+        if not account_id_str:
+            raise ValueError("Account ID is required for token dissociation.")
+
+        account_id = AccountId.from_string(account_id_str)
+
+        # Resolve Token IDs
+        token_ids = [TokenId.from_string(t_id) for t_id in parsed_params.token_ids]
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return DissociateTokenParametersNormalised(
+            token_ids=token_ids,
+            account_id=account_id,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )

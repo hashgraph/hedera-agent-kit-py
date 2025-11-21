@@ -156,6 +156,7 @@ class DissociateTokenParameters(OptionalScheduledTransactionParams):
 class DissociateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     token_ids: List[TokenId]
     account_id: AccountId
+    transaction_memo: Optional[str] = None
 
 
 class UpdateTokenParameters(OptionalScheduledTransactionParams):

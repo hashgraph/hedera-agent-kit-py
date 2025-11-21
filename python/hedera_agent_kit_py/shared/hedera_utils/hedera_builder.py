@@ -303,7 +303,7 @@ class HederaBuilder:
     @staticmethod
     def dissociate_token(
         params: DissociateTokenParametersNormalised,
-    ) -> TokenDissociateTransaction:
+    ):
         """Build a TokenDissociateTransaction.
 
         Args:
@@ -312,7 +312,16 @@ class HederaBuilder:
         Returns:
             TokenDissociateTransaction: Transaction ready for submission.
         """
-        return TokenDissociateTransaction(**vars(params))
+        tx = TokenDissociateTransaction(
+            account_id=params.account_id, token_ids=params.token_ids
+        )
+
+        if getattr(params, "transaction_memo", None):
+            tx.set_transaction_memo(params.transaction_memo)
+
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def create_account(params: CreateAccountParametersNormalised) -> Transaction:
@@ -431,7 +440,7 @@ class HederaBuilder:
 
     @staticmethod
     def _build_account_allowance_approve_tx(
-            params,
+        params,
     ) -> AccountAllowanceApproveTransaction:
         """Helper to build an AccountAllowanceApproveTransaction with optional memo."""
 
