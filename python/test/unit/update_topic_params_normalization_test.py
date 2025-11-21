@@ -34,7 +34,7 @@ async def test_normalise_topic_only(mock_context, mock_client):
     params = UpdateTopicParameters(topic_id=TEST_TOPIC_ID)
 
     with patch.object(
-            HederaParameterNormaliser, "resolve_key", return_value=None
+        HederaParameterNormaliser, "resolve_key", return_value=None
     ) as mock_resolve:
         res = await HederaParameterNormaliser.normalise_update_topic(
             params, mock_context, mock_client
@@ -96,11 +96,11 @@ async def test_normalise_keys(mock_context, mock_client):
     )
 
     with patch.object(
-            HederaParameterNormaliser,
-            "resolve_key",
-            side_effect=lambda val, default: (
-                    TEST_USER_KEY if val is True else PublicKey.from_string(val)
-            ),
+        HederaParameterNormaliser,
+        "resolve_key",
+        side_effect=lambda val, default: (
+            TEST_USER_KEY if val is True else PublicKey.from_string(val)
+        ),
     ) as mock_resolve:
         res = await HederaParameterNormaliser.normalise_update_topic(
             params, mock_context, mock_client

@@ -143,7 +143,7 @@ class UpdateTopicParametersNormalised(BaseModelWithArbitraryTypes):
     submit_key: Optional[PublicKey] = None
 
     auto_renew_account: Annotated[
-        Optional[ AccountId],
+        Optional[AccountId],
         Field(description="Account paying for topic renewal."),
     ] = None
 

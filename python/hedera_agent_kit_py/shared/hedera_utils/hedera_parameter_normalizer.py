@@ -55,6 +55,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
+    TransferHbarWithAllowanceParametersNormalised,
+    TransferHbarWithAllowanceParameters,
+)
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    GetTokenInfoParameters,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -913,6 +918,68 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    async def normalise_transfer_hbar_with_allowance(
+        params: TransferHbarWithAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> TransferHbarWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring HBAR with allowance.
+
+        Args:
+            params: The raw input parameters.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferHbarWithAllowanceParameters = cast(
+            TransferHbarWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferHbarWithAllowanceParameters
+            ),
+        )
+
+        hbar_approved_transfers: dict[AccountId, int] = {}
+        total_tinybars = 0
+
+        if not parsed_params.source_account_id:
+            raise ValueError("source_account_id is required for allowance transfers")
+
+        owner_id = AccountId.from_string(parsed_params.source_account_id)
+
+        # Process recipients
+        for transfer in parsed_params.transfers:
+            amount_hbar = Hbar(transfer.amount)
+            amount_tiny = amount_hbar.to_tinybars()
+
+            if amount_tiny <= 0:
+                raise ValueError(f"Invalid transfer amount: {transfer.amount}")
+
+            total_tinybars += amount_tiny
+
+            recipient_id = AccountId.from_string(transfer.account_id)
+
+            current_val = hbar_approved_transfers.get(recipient_id, 0)
+            hbar_approved_transfers[recipient_id] = current_val + amount_tiny
+
+        # Add the owner deduction (negative amount)
+        current_owner_val = hbar_approved_transfers.get(owner_id, 0)
+        hbar_approved_transfers[owner_id] = current_owner_val - total_tinybars
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return TransferHbarWithAllowanceParametersNormalised(
+            hbar_approved_transfers=hbar_approved_transfers,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
     async def normalise_update_topic(
         params: UpdateTopicParameters,
         context: Context,
@@ -928,7 +995,6 @@ class HederaParameterNormaliser:
         Returns:
             The normalized parameters are ready for transaction building.
         """
-        print(f"params: {params}")
         parsed_params: UpdateTopicParameters = cast(
             UpdateTopicParameters,
             HederaParameterNormaliser.parse_params_with_schema(
@@ -953,7 +1019,9 @@ class HederaParameterNormaliser:
         # Resolve Auto Renew Account
         auto_renew_account = None
         if parsed_params.auto_renew_account_id:
-            auto_renew_account = AccountId.from_string(parsed_params.auto_renew_account_id)
+            auto_renew_account = AccountId.from_string(
+                parsed_params.auto_renew_account_id
+            )
 
         # Resolve Expiration Time
         expiration_time = None
@@ -974,3 +1042,28 @@ class HederaParameterNormaliser:
             auto_renew_period=parsed_params.auto_renew_period,
             expiration_time=expiration_time,
         )
+
+    @staticmethod
+    def normalise_get_token_info(
+        params: GetTokenInfoParameters,
+    ) -> GetTokenInfoParameters:
+        """Normalize parameters for getting token info.
+
+        Args:
+            params: The raw input parameters.
+
+        Returns:
+            The validated parameters.
+
+        Raises:
+            ValueError: If token_id is missing.
+        """
+        parsed_params: GetTokenInfoParameters = cast(
+            GetTokenInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTokenInfoParameters
+            ),
+        )
+        if not parsed_params.token_id:
+            raise ValueError("Token ID is required to fetch token info.")
+        return parsed_params
