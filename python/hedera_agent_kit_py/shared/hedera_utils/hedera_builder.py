@@ -431,21 +431,21 @@ class HederaBuilder:
 
     @staticmethod
     def _build_account_allowance_approve_tx(
-        params,
+            params,
     ) -> AccountAllowanceApproveTransaction:
-        """Helper to build an AccountAllowanceApproveTransaction with optional memo.
+        """Helper to build an AccountAllowanceApproveTransaction with optional memo."""
 
-        Args:
-            params: Normalised allowance approval parameters.
-
-        Returns:
-            AccountAllowanceApproveTransaction: Transaction ready for submission.
-        """
-        tx: AccountAllowanceApproveTransaction = AccountAllowanceApproveTransaction(
-            **vars(params)
+        tx = AccountAllowanceApproveTransaction(
+            hbar_allowances=getattr(params, "hbar_allowances", None),
+            token_allowances=getattr(params, "token_allowances", None),
+            nft_allowances=getattr(params, "nft_allowances", None),
         )
-        if getattr(params, "transaction_memo", None):
-            tx.set_transaction_memo(params.transaction_memo)
+
+        # Check for memo (getattr handles the missing check here too)
+        memo = getattr(params, "transaction_memo", None)
+        if memo:
+            tx.set_transaction_memo(memo)
+
         return tx
 
     @staticmethod

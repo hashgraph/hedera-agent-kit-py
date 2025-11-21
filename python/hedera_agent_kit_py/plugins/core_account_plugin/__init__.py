@@ -2,6 +2,10 @@ from hedera_agent_kit_py.shared.plugin import Plugin
 from .create_account import CreateAccountTool, CREATE_ACCOUNT_TOOL
 from .delete_account import DeleteAccountTool, DELETE_ACCOUNT_TOOL
 from .transfer_hbar import TransferHbarTool, TRANSFER_HBAR_TOOL
+from .transfer_hbar_with_allowance import (
+    TransferHbarWithAllowanceTool,
+    TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+)
 from .update_account import UpdateAccountTool, UPDATE_ACCOUNT_TOOL
 
 core_account_plugin = Plugin(
@@ -13,6 +17,7 @@ core_account_plugin = Plugin(
         DeleteAccountTool(context),
         CreateAccountTool(context),
         UpdateAccountTool(context),
+        TransferHbarWithAllowanceTool(context),
     ],
 )
 
@@ -21,6 +26,7 @@ core_account_plugin_tool_names = {
     "CREATE_ACCOUNT_TOOL": CREATE_ACCOUNT_TOOL,
     "UPDATE_ACCOUNT_TOOL": UPDATE_ACCOUNT_TOOL,
     "DELETE_ACCOUNT_TOOL": DELETE_ACCOUNT_TOOL,
+    "TRANSFER_HBAR_WITH_ALLOWANCE_TOOL": TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
 }
 
 __all__ = [
@@ -30,4 +36,5 @@ __all__ = [
     "DeleteAccountTool",
     "CreateAccountTool",
     "UpdateAccountTool",
+    "TransferHbarWithAllowanceTool",
 ]

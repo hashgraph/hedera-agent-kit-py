@@ -31,6 +31,9 @@ DELETE_ACCOUNT_TOOL = core_account_plugin_tool_names["DELETE_ACCOUNT_TOOL"]
 CREATE_ACCOUNT_TOOL = core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 UPDATE_ACCOUNT_TOOL = core_account_plugin_tool_names["UPDATE_ACCOUNT_TOOL"]
+TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "TRANSFER_HBAR_WITH_ALLOWANCE_TOOL"
+]
 CREATE_TOPIC_TOOL = core_consensus_plugin_tool_names["CREATE_TOPIC_TOOL"]
 DELETE_TOPIC_TOOL = core_consensus_plugin_tool_names["DELETE_TOPIC_TOOL"]
 GET_HBAR_BALANCE_QUERY_TOOL = core_account_query_plugin_tool_names[
@@ -101,6 +104,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         SUBMIT_TOPIC_MESSAGE_TOOL,
         GET_ACCOUNT_QUERY_TOOL,
         GET_TRANSACTION_RECORD_QUERY_TOOL,
+        TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
         UPDATE_TOPIC_TOOL,
         MINT_FUNGIBLE_TOKEN_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
