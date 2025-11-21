@@ -10,6 +10,7 @@ from hedera_agent_kit_py.plugins.core_consensus_plugin.submit_topic_message impo
     SUBMIT_TOPIC_MESSAGE_TOOL,
 )
 from hedera_agent_kit_py.shared.plugin import Plugin
+from .update_topic import UpdateTopicTool, UPDATE_TOPIC_TOOL
 
 core_consensus_plugin = Plugin(
     name="core-consensus-plugin",
@@ -19,6 +20,7 @@ core_consensus_plugin = Plugin(
         CreateTopicTool(context),
         DeleteTopicTool(context),
         SubmitTopicMessageTool(context),
+        UpdateTopicTool(context),
     ],
 )
 
@@ -26,6 +28,7 @@ core_consensus_plugin_tool_names = {
     "CREATE_TOPIC_TOOL": CREATE_TOPIC_TOOL,
     "SUBMIT_TOPIC_MESSAGE_TOOL": SUBMIT_TOPIC_MESSAGE_TOOL,
     "DELETE_TOPIC_TOOL": DELETE_TOPIC_TOOL,
+    "UPDATE_TOPIC_TOOL": UPDATE_TOPIC_TOOL,
 }
 
 __all__ = [
@@ -34,4 +37,5 @@ __all__ = [
     "CreateTopicTool",
     "DeleteTopicTool",
     "SubmitTopicMessageTool",
+    "UpdateTopicTool",
 ]
