@@ -37,7 +37,7 @@ def mock_mirrornode():
 
 @pytest.mark.asyncio
 async def test_normalise_mint_token_calculates_base_units(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should correctly convert amount to base units using decimals from mirror node."""
     # Setup mirror node response
@@ -60,7 +60,7 @@ async def test_normalise_mint_token_calculates_base_units(
 
 @pytest.mark.asyncio
 async def test_normalise_mint_token_zero_decimals(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should handle tokens with 0 decimals correctly."""
     mock_mirrornode.get_token_info.return_value = {"decimals": "0"}
@@ -76,7 +76,7 @@ async def test_normalise_mint_token_zero_decimals(
 
 @pytest.mark.asyncio
 async def test_raises_value_error_if_decimals_missing(
-        mock_context, mock_client, mock_mirrornode
+    mock_context, mock_client, mock_mirrornode
 ):
     """Should raise ValueError if mirror node response lacks decimals."""
     mock_mirrornode.get_token_info.return_value = {}  # No decimals field
@@ -90,24 +90,20 @@ async def test_raises_value_error_if_decimals_missing(
 
 
 @pytest.mark.asyncio
-async def test_processes_scheduling_params(
-        mock_context, mock_client, mock_mirrornode
-):
+async def test_processes_scheduling_params(mock_context, mock_client, mock_mirrornode):
     """Should normalize scheduling parameters if is_scheduled is True."""
     mock_mirrornode.get_token_info.return_value = {"decimals": "2"}
     mock_sched_return = ScheduleCreateParams(wait_for_expiry=True)
 
     with patch.object(
-            HederaParameterNormaliser,
-            "normalise_scheduled_transaction_params",
-            new_callable=AsyncMock,
-            return_value=mock_sched_return,
+        HederaParameterNormaliser,
+        "normalise_scheduled_transaction_params",
+        new_callable=AsyncMock,
+        return_value=mock_sched_return,
     ) as mock_sched_norm:
         scheduling_input = SchedulingParams(is_scheduled=True)
         params = MintFungibleTokenParameters(
-            token_id="0.0.777",
-            amount=100.0,
-            scheduling_params=scheduling_input
+            token_id="0.0.777", amount=100.0, scheduling_params=scheduling_input
         )
 
         result = await HederaParameterNormaliser.normalise_mint_fungible_token_params(

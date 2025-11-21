@@ -150,9 +150,7 @@ async def test_mint_additional_supply(setup_environment):
     ft_params: TokenParams = setup_environment["FT_PARAMS"]
 
     # 1. Setup: Create Token
-    token_id = await create_mintable_token(
-        executor_wrapper, executor_client, ft_params
-    )
+    token_id = await create_mintable_token(executor_wrapper, executor_client, ft_params)
     token_id_str = str(token_id)
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -198,9 +196,7 @@ async def test_schedule_minting(setup_environment):
     ft_params: TokenParams = setup_environment["FT_PARAMS"]
 
     # 1. Setup
-    token_id = await create_mintable_token(
-        executor_wrapper, executor_client, ft_params
-    )
+    token_id = await create_mintable_token(executor_wrapper, executor_client, ft_params)
     token_id_str = str(token_id)
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -234,9 +230,7 @@ async def test_fail_mint_max_supply_exceeded(setup_environment):
     ft_params: TokenParams = setup_environment["FT_PARAMS"]
 
     # 1. Setup
-    token_id = await create_mintable_token(
-        executor_wrapper, executor_client, ft_params
-    )
+    token_id = await create_mintable_token(executor_wrapper, executor_client, ft_params)
     token_id_str = str(token_id)
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -256,7 +250,10 @@ async def test_fail_mint_max_supply_exceeded(setup_environment):
 
     # Check for specific Hedera error code related to max supply
     # Note: precise error message depends on SDK/Tool wrapper exception handling
-    assert "TOKEN_MAX_SUPPLY_REACHED" in raw_error or "TOKEN_MAX_SUPPLY_REACHED" in human_message
+    assert (
+        "TOKEN_MAX_SUPPLY_REACHED" in raw_error
+        or "TOKEN_MAX_SUPPLY_REACHED" in human_message
+    )
 
 
 @pytest.mark.asyncio

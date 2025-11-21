@@ -5,7 +5,8 @@ from hiero_sdk_python import (
     Client,
     PrivateKey,
     Hbar,
-    TokenId, SupplyType,
+    TokenId,
+    SupplyType,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
@@ -110,10 +111,7 @@ async def test_mint_additional_supply(setup_environment):
     # Execute Tool
     # Amount 5 with decimals 2 -> 500 tiny units
     tool = MintFungibleTokenTool(context)
-    params = MintFungibleTokenParameters(
-        token_id=str(token_id),
-        amount=5
-    )
+    params = MintFungibleTokenParameters(token_id=str(token_id), amount=5)
 
     result: ToolResponse = await tool.execute(executor_client, context, params)
     exec_result = cast(ExecutedTransactionToolResponse, result)
@@ -143,10 +141,8 @@ async def test_schedule_minting_additional_supply(setup_environment):
         token_id=str(token_id),
         amount=5,
         scheduling_params=SchedulingParams(
-            is_scheduled=True,
-            wait_for_expiry=False,
-            admin_key=True
-        )
+            is_scheduled=True, wait_for_expiry=False, admin_key=True
+        ),
     )
 
     result: ToolResponse = await tool.execute(executor_client, context, params)
@@ -168,15 +164,15 @@ async def test_fail_minting_more_than_max_supply(setup_environment):
     # Max supply is 1000 tiny units (10.00).
     # Try to mint 5000.00 (500,000 tiny units), which exceeds limit significantly.
     tool = MintFungibleTokenTool(context)
-    params = MintFungibleTokenParameters(
-        token_id=str(token_id),
-        amount=5000
-    )
+    params = MintFungibleTokenParameters(token_id=str(token_id), amount=5000)
 
     result: ToolResponse = await tool.execute(executor_client, context, params)
 
     assert result.error is not None
-    assert "TOKEN_MAX_SUPPLY_REACHED" in result.error or "TOKEN_MAX_SUPPLY_REACHED" in result.human_message
+    assert (
+        "TOKEN_MAX_SUPPLY_REACHED" in result.error
+        or "TOKEN_MAX_SUPPLY_REACHED" in result.human_message
+    )
 
 
 @pytest.mark.asyncio
@@ -185,10 +181,7 @@ async def test_fail_non_existent_token(setup_environment):
     context: Context = setup_environment["context"]
 
     tool = MintFungibleTokenTool(context)
-    params = MintFungibleTokenParameters(
-        token_id="0.0.999999999",
-        amount=10
-    )
+    params = MintFungibleTokenParameters(token_id="0.0.999999999", amount=10)
 
     result: ToolResponse = await tool.execute(executor_client, context, params)
 

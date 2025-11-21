@@ -15,6 +15,8 @@ __all__ = [
     "core_evm_plugin_tool_names",
     "core_misc_query_plugin",
     "core_misc_query_plugin_tool_names",
+    "core_token_plugin_tool_names",
+    "core_token_plugin",
 ]
 
 from hedera_agent_kit_py.plugins.core_account_plugin import (
@@ -57,4 +59,9 @@ from hedera_agent_kit_py.plugins.core_token_query_plugin import (
 from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
     core_transaction_query_plugin,
     core_transaction_query_plugin_tool_names,
+)
+
+from hedera_agent_kit_py.plugins.core_token_plugin import (
+    core_token_plugin_tool_names,
+    core_token_plugin,
 )
