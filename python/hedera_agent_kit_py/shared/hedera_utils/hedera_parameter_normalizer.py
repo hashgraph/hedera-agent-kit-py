@@ -31,6 +31,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    AssociateTokenParameters,
+    AssociateTokenParametersNormalised,
     GetTopicInfoParameters,
     ExchangeRateQueryParameters,
     ContractExecuteTransactionParametersNormalised,
@@ -649,6 +651,50 @@ class HederaParameterNormaliser:
         return UpdateAccountParametersNormalised(
             account_params=account_params,
             scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_associate_token(
+        params: AssociateTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> AssociateTokenParametersNormalised:
+        """Normalise token association parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw token association parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            AssociateTokenParametersNormalised: Normalised token association parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If token IDs are invalid or account ID cannot be determined.
+        """
+        from hiero_sdk_python import TokenId
+
+        parsed_params: AssociateTokenParameters = cast(
+            AssociateTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AssociateTokenParameters
+            ),
+        )
+
+        # Resolve account ID (default to operator if not provided)
+        account_id = AccountId.from_string(
+            AccountResolver.resolve_account(parsed_params.account_id, context, client)
+        )
+
+        # Parse token IDs
+        token_ids = [
+            TokenId.from_string(token_id) for token_id in parsed_params.token_ids
+        ]
+
+        return AssociateTokenParametersNormalised(
+            account_id=account_id,
+            token_ids=token_ids,
         )
 
     @staticmethod
