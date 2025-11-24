@@ -436,7 +436,9 @@ class HederaBuilder:
         Returns:
             TokenAssociateTransaction: Transaction ready for submission.
         """
-        return TokenAssociateTransaction(**vars(params))
+        return TokenAssociateTransaction(
+            account_id=params.account_id, token_ids=params.token_ids
+        )
 
     @staticmethod
     def _build_account_allowance_approve_tx(

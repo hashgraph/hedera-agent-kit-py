@@ -48,7 +48,10 @@ from hedera_agent_kit_py.plugins.core_misc_query_plugin import (
     core_misc_query_plugin,
     core_misc_query_plugin_tool_names,
 )
-
+from hedera_agent_kit_py.plugins.core_token_plugin import (
+    core_token_plugin_tool_names,
+    core_token_plugin,
+)
 from hedera_agent_kit_py.plugins.core_token_query_plugin import (
     core_token_query_plugin_tool_names,
     core_token_query_plugin,
