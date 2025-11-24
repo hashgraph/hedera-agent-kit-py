@@ -20,7 +20,7 @@ from pydantic import BaseModel, ValidationError
 from web3 import Web3
 
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
+from hedera_agent_kit_py.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
@@ -54,6 +54,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateFungibleTokenParameters,
     UpdateTopicParameters,
     UpdateTopicParametersNormalised,
+    MintFungibleTokenParameters,
+    MintFungibleTokenParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
@@ -1163,5 +1165,53 @@ class HederaParameterNormaliser:
             token_ids=token_ids,
             account_id=account_id,
             transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_mint_fungible_token_params(
+        params: MintFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
+    ) -> MintFungibleTokenParametersNormalised:
+        """Normalize mint fungible token parameters.
+
+        Args:
+            params: Raw mint parameters.
+            context: Application context.
+            client: Hedera client.
+            mirrornode_service: Mirror node service.
+
+        Returns:
+            MintFungibleTokenParametersNormalised: Normalized parameters.
+        """
+        parsed_params: MintFungibleTokenParameters = cast(
+            MintFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, MintFungibleTokenParameters
+            ),
+        )
+
+        token_info = await mirrornode_service.get_token_info(parsed_params.token_id)
+
+        if not token_info.get("decimals"):
+            raise ValueError("Unable to retrieve token decimals from mirror node")
+
+        decimals = int(token_info.get("decimals"))
+
+        base_amount = to_base_unit(parsed_params.amount, decimals)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return MintFungibleTokenParametersNormalised(
+            token_id=TokenId.from_string(parsed_params.token_id),
+            amount=int(base_amount),
             scheduling_params=scheduling_params,
         )
