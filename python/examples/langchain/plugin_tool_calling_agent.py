@@ -66,7 +66,9 @@ GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
 DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
-
+DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "DELETE_HBAR_ALLOWANCE_TOOL"
+]
 
 async def bootstrap():
     # Initialize LLM
@@ -101,6 +103,7 @@ async def bootstrap():
             GET_TRANSACTION_RECORD_QUERY_TOOL,
             GET_TOKEN_INFO_QUERY_TOOL,
             DISSOCIATE_TOKEN_TOOL,
+            DELETE_HBAR_ALLOWANCE_TOOL
         ],
         plugins=[
             core_consensus_plugin,
