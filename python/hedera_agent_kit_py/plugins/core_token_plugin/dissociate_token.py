@@ -100,7 +100,6 @@ async def dissociate_token(
             )
         )
 
-        # Assuming HederaBuilder.dissociate_token exists
         tx: TokenDissociateTransaction = HederaBuilder.dissociate_token(
             normalised_params
         )
