@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from pprint import pprint
-
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
