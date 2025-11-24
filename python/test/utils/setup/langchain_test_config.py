@@ -61,7 +61,7 @@ GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
 DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
-
+CREATE_NON_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names["CREATE_NON_FUNGIBLE_TOKEN_TOOL"]
 
 @dataclass
 class LangchainTestOptions:
@@ -115,6 +115,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         MINT_FUNGIBLE_TOKEN_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
         DISSOCIATE_TOKEN_TOOL,
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL
     ],
     plugins=[
         core_account_plugin,
