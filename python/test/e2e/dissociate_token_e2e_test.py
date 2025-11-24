@@ -135,7 +135,9 @@ async def associate_token_to_account(
     wrapper: HederaOperationsWrapper, account_id: AccountId, token_ids: List[TokenId]
 ):
     """Helper to manually associate tokens before testing dissociation."""
-    await wrapper.associate_token({"accountId": str(account_id), "tokenId": str(token_ids[0])})
+    await wrapper.associate_token(
+        {"accountId": str(account_id), "tokenId": str(token_ids[0])}
+    )
 
 
 # ============================================================================
@@ -162,9 +164,7 @@ async def test_dissociate_single_token(setup_accounts):
     )
 
     # 2. Setup: Associate manually first
-    await associate_token_to_account(
-        executor_wrapper, executor_account_id, [token_id]
-    )
+    await associate_token_to_account(executor_wrapper, executor_account_id, [token_id])
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify association exists before dissociation
