@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union, Annotated
 
-from hiero_sdk_python import AccountId, PublicKey, Duration, Timestamp, TopicId
-from hiero_sdk_python.hapi.services import basic_types_pb2
+from hiero_sdk_python import AccountId, PublicKey, TopicId
 from pydantic import Field
 
 from hedera_agent_kit_py.shared.parameter_schemas import (
