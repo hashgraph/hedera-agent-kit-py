@@ -27,12 +27,14 @@ class CreateFungibleTokenParameters(OptionalScheduledTransactionParams):
     ] = 0
     supply_type: Annotated[
         int,
-        Field(description="Supply type of the token. 0 for infinite, 1 for finite."),
+        Field(
+            description="Supply type of the token encoded by int value. Pass 0 for infinite and 1 for finite. Default is 1."
+        ),
     ] = 1
     max_supply: Annotated[
         Optional[int], Field(description="The maximum supply of the token.")
-    ] = None
-    decimals: Annotated[int, Field(description="The number of decimals.")] = 0
+    ] = 1000000
+    decimals: Annotated[Optional[int], Field(description="The number of decimals.")] = 0
     treasury_account_id: Annotated[
         Optional[str], Field(description="The treasury account of the token.")
     ] = None
@@ -156,6 +158,7 @@ class DissociateTokenParameters(OptionalScheduledTransactionParams):
 class DissociateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     token_ids: List[TokenId]
     account_id: AccountId
+    transaction_memo: Optional[str] = None
 
 
 class UpdateTokenParameters(OptionalScheduledTransactionParams):
@@ -248,3 +251,9 @@ class DeleteTokenParameters(OptionalScheduledTransactionParams):
 
 class DeleteTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     token_id: TokenId
+
+
+class GetTokenInfoParameters(BaseModelWithArbitraryTypes):
+    token_id: Annotated[
+        Optional[str], Field(description="The token ID to query (e.g., 0.0.12345).")
+    ] = None

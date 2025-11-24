@@ -25,7 +25,14 @@ class TransferHbarParameters(
 ):
     transfers: Annotated[
         List[TransferHbarEntry],
-        Field(min_length=1, description="Array of HBAR transfers (in display units)"),
+        Field(
+            min_length=1,
+            description=(
+                "An array of HBAR transfers. Each transfer object in the array must "
+                "specify an 'account_id' and an 'amount'. "
+                "Example: [{'account_id': '0.0.123', 'amount': 10.5}]"
+            ),
+        ),
     ]
     source_account_id: Annotated[
         Optional[str],
@@ -67,7 +74,7 @@ class CreateAccountParameters(OptionalScheduledTransactionParams):
 
 class CreateAccountParametersNormalised(OptionalScheduledTransactionParamsNormalised):
     memo: Optional[str] = None
-    initial_balance: Union[Hbar, int] = 0
+    initial_balance: Union[Hbar] = Hbar(0)
     key: Optional[PublicKey] = None
     max_automatic_token_associations: Optional[int] = None
 
@@ -109,6 +116,10 @@ class UpdateAccountParametersNormalised(OptionalScheduledTransactionParamsNormal
 
 class AccountQueryParameters(BaseModelWithArbitraryTypes):
     account_id: str = Field(description="The account ID to query.")
+
+
+class AccountQueryParametersNormalised(BaseModelWithArbitraryTypes):
+    account_id: str
 
 
 class AccountBalanceQueryParameters(BaseModelWithArbitraryTypes):
@@ -197,18 +208,18 @@ class TransferHbarWithAllowanceParameters(TransferHbarParameters):
     """Same as TransferHbarParameters — used when allowance applies."""
 
 
-class DeleteHbarAllowanceParameters(BaseModelWithArbitraryTypes):
-    owner_account_id: Optional[str] = None
-    spender_account_id: str
-    transaction_memo: Optional[str] = None
-
-
 class TransferHbarWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
     hbar_approved_transfers: dict["AccountId", int] = Field(
         description="Owner account ID and HBAR amount approved for transfer (tinybars)"
     )
+    transaction_memo: Optional[str] = None
+
+
+class DeleteHbarAllowanceParameters(BaseModelWithArbitraryTypes):
+    owner_account_id: Optional[str] = None
+    spender_account_id: str
     transaction_memo: Optional[str] = None
 
 

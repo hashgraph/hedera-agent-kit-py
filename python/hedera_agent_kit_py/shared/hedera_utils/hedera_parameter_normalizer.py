@@ -1,12 +1,26 @@
+from datetime import datetime
 from decimal import Decimal
+from pprint import pprint
 from typing import Optional, Union, cast, Any, Type
 
-from hiero_sdk_python import AccountId, PublicKey, Timestamp, Client, Hbar
+from hiero_sdk_python.contract.contract_id import ContractId
+from hiero_sdk_python import (
+    AccountId,
+    PublicKey,
+    Timestamp,
+    Client,
+    Hbar,
+    TopicId,
+    TokenId,
+    SupplyType,
+)
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
+from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from pydantic import BaseModel, ValidationError
+from web3 import Web3
 
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
+from hedera_agent_kit_py.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
@@ -22,9 +36,39 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateAccountParametersNormalised,
     CreateTopicParameters,
     CreateTopicParametersNormalised,
+    SubmitTopicMessageParameters,
+    SubmitTopicMessageParametersNormalised,
+    DeleteTopicParameters,
+    DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    AssociateTokenParameters,
+    AssociateTokenParametersNormalised,
+    GetTopicInfoParameters,
+    ExchangeRateQueryParameters,
+    ContractExecuteTransactionParametersNormalised,
+    CreateERC20Parameters,
+    TransactionRecordQueryParameters,
+    TransactionRecordQueryParametersNormalised,
+    CreateFungibleTokenParametersNormalised,
+    CreateFungibleTokenParameters,
+    UpdateTopicParameters,
+    UpdateTopicParametersNormalised,
+    MintFungibleTokenParameters,
+    MintFungibleTokenParametersNormalised,
 )
+
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    AccountQueryParametersNormalised,
+    TransferHbarWithAllowanceParametersNormalised,
+    TransferHbarWithAllowanceParameters,
+)
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    GetTokenInfoParameters,
+    DissociateTokenParameters,
+    DissociateTokenParametersNormalised,
+)
+
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
 
 
@@ -323,12 +367,22 @@ class HederaParameterNormaliser:
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
 
+    @classmethod
+    def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
+        """Parse and validate account query parameters"""
+        parsed_params: AccountQueryParametersNormalised = cast(
+            AccountQueryParametersNormalised,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountQueryParametersNormalised
+            ),
+        )
+        return parsed_params
+
     @staticmethod
     async def normalise_create_topic_params(
         params: CreateTopicParameters,
         context: Context,
         client: Client,
-        mirror_node,
     ) -> CreateTopicParametersNormalised:
         """Normalise 'create topic' parameters into a format compatible with the Python SDK.
 
@@ -342,7 +396,6 @@ class HederaParameterNormaliser:
             params: Raw topic creation parameters provided by the user.
             context: Application context (contains environment configuration).
             client: Hedera Client instance used for resolving account and operator info.
-            mirror_node: Mirror node client (not used in this simplified implementation).
 
         Returns:
             CreateTopicParametersNormalised: A validated, SDK-ready parameter object
@@ -366,21 +419,136 @@ class HederaParameterNormaliser:
         if not default_account_id:
             raise ValueError("Could not determine default account ID")
 
+        account_public_key: PublicKey = await AccountResolver.get_default_public_key(
+            context, client
+        )
+
         # Build normalized parameter object
         normalised = CreateTopicParametersNormalised(
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
+            admin_key=account_public_key,
         )
 
         # Optionally resolve submit key if requested
         if parsed_params.is_submit_key:
-            submit_key: PublicKey = await AccountResolver.get_default_public_key(
-                context, client
-            )
-            normalised.submit_key = submit_key
+            normalised.submit_key = account_public_key
 
         return normalised
+
+    @staticmethod
+    async def normalise_create_erc20_params(
+        params: CreateERC20Parameters,
+        factory_address: str,
+        ERC20_FACTORY_ABI: list[str],
+        factory_contract_function_name: str,
+        context: Context,
+        client: Client,
+    ) -> ContractExecuteTransactionParametersNormalised:
+        """Normalise ERC20 creation parameters for BaseERC20Factory contract deployment.
+
+        This method mirrors the TypeScript `normaliseCreateERC20Params` logic and prepares
+        the encoded contract function call along with optional scheduling information.
+
+        Args:
+            params: Raw ERC20 creation parameters.
+            factory_address: The address/ID of the ERC20 factory contract.
+            ERC20_FACTORY_ABI: ABI of the BaseERC20Factory contract.
+            factory_contract_function_name: Function to invoke (e.g., 'deployToken').
+            context: Application context.
+            client: Active Hedera client instance.
+
+        Returns:
+            ContractExecuteTransactionParametersNormalised: Normalised parameters ready for execution.
+        """
+        # Validate and parse parameters
+        parsed_params: CreateERC20Parameters = cast(
+            CreateERC20Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateERC20Parameters
+            ),
+        )
+
+        w3 = Web3()
+        contract = w3.eth.contract(abi=ERC20_FACTORY_ABI)
+        encoded_data = contract.encode_abi(
+            abi_element_identifier=factory_contract_function_name,
+            args=[
+                parsed_params.token_name,
+                parsed_params.token_symbol,
+                parsed_params.decimals,
+                parsed_params.initial_supply,
+            ],
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=ContractId.from_string(factory_address),
+            function_parameters=function_parameters,
+            gas=3_000_000,  # TODO: make configurable
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_get_topic_info(
+        params: GetTopicInfoParameters,
+    ):
+        """
+        Normalizes the input parameters for the 'get_topic_info' operation to ensure
+        they adhere to the expected schema format. This function parses the input
+        parameters utilizing a schema and type casts the result to the appropriate
+        data type.
+
+        :param params: The parameters for the 'get_topic_info' operation. These
+            parameters should be of type 'GetTopicInfoParameters'.
+        :type params: GetTopicInfoParameters
+
+        :return: Parsed and normalized parameters after being verified against
+            the schema.
+        :rtype: GetTopicInfoParameters
+        """
+        parsed_params: GetTopicInfoParameters = cast(
+            GetTopicInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTopicInfoParameters
+            ),
+        )
+
+        return parsed_params
+
+    @staticmethod
+    def normalise_get_exchange_rate(
+        params: ExchangeRateQueryParameters,
+    ) -> ExchangeRateQueryParameters:
+        """
+        Normalises and parses the given exchange rate query parameters using a predefined
+        schema. This method ensures that the input parameters adhere to the required structure
+        and format specified by the schema.
+
+        :param params: The exchange rate query parameters to be normalised. The parameter
+            must conform to the type `ExchangeRateQueryParameters`.
+        :type params: ExchangeRateQueryParameters
+
+        :return: A parsed and normalised instance of `ExchangeRateQueryParameters`.
+        :rtype: ExchangeRateQueryParameters
+        """
+        parsed_params: ExchangeRateQueryParameters = cast(
+            ExchangeRateQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ExchangeRateQueryParameters
+            ),
+        )
+
+        return parsed_params
 
     @staticmethod
     def normalise_delete_account(
@@ -499,5 +667,551 @@ class HederaParameterNormaliser:
 
         return UpdateAccountParametersNormalised(
             account_params=account_params,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_associate_token(
+        params: AssociateTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> AssociateTokenParametersNormalised:
+        """Normalise token association parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw token association parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            AssociateTokenParametersNormalised: Normalised token association parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If token IDs are invalid or account ID cannot be determined.
+        """
+        from hiero_sdk_python import TokenId
+
+        parsed_params: AssociateTokenParameters = cast(
+            AssociateTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AssociateTokenParameters
+            ),
+        )
+
+        # Resolve account ID (default to operator if not provided)
+        account_id = AccountId.from_string(
+            AccountResolver.resolve_account(parsed_params.account_id, context, client)
+        )
+
+        # Parse token IDs
+        token_ids = [
+            TokenId.from_string(token_id) for token_id in parsed_params.token_ids
+        ]
+
+        return AssociateTokenParametersNormalised(
+            account_id=account_id,
+            token_ids=token_ids,
+        )
+
+    @staticmethod
+    async def normalise_submit_topic_message(
+        params: SubmitTopicMessageParameters,
+        context: Context,
+        client: Client,
+    ) -> SubmitTopicMessageParametersNormalised:
+        """Normalize submit topic message parameters.
+
+        This function:
+          - Validates and parses the raw parameters using the SubmitTopicMessageParameters schema.
+          - Converts the topic_id string to basic_types_pb2.TopicID.
+          - Normalizes optional scheduling parameters when is_scheduled is True.
+
+        Args:
+            params: Raw topic message submission parameters provided by the user.
+            context: Application context (contains environment configuration).
+            client: Hedera Client instance used for resolving scheduling parameters.
+
+        Returns:
+            SubmitTopicMessageParametersNormalised: A validated, SDK-ready parameter object
+            with topic_id converted to basic_types_pb2.TopicID and scheduling params normalized.
+
+        Raises:
+            ValueError: If parameter validation fails.
+        """
+
+        # Validate and parse parameters
+        parsed_params: SubmitTopicMessageParameters = cast(
+            SubmitTopicMessageParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, SubmitTopicMessageParameters
+            ),
+        )
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return SubmitTopicMessageParametersNormalised(
+            topic_id=TopicId.from_string(parsed_params.topic_id),
+            message=parsed_params.message,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_delete_topic(
+        params: DeleteTopicParameters,
+    ) -> DeleteTopicParametersNormalised:
+        """Normalise delete topic parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw delete topic parameters.
+
+        Returns:
+            DeleteTopicParametersNormalised: Normalised delete topic parameters
+            ready to be used in Hedera transactions.
+
+        Raises:
+            ValueError: If validation fails.
+        """
+
+        # First, validate against the basic schema
+        parsed_params: DeleteTopicParameters = cast(
+            DeleteTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteTopicParameters
+            ),
+        )
+
+        if not AccountResolver.is_hedera_address(parsed_params.topic_id):
+            raise ValueError("Topic ID must be a Hedera address")
+
+        parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
+
+    @staticmethod
+    async def normalise_create_fungible_token_params(
+        params: CreateFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
+    ) -> CreateFungibleTokenParametersNormalised:
+        """Normalize parameters for creating a fungible token."""
+
+        # Parse + validate against schema
+        parsed_params: CreateFungibleTokenParameters = cast(
+            CreateFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateFungibleTokenParameters
+            ),
+        )
+
+        # Treasury resolution
+        default_account_id = (
+            str(client.operator_account_id) if client.operator_account_id else None
+        )
+
+        treasury_account_id = parsed_params.treasury_account_id or default_account_id
+
+        if not treasury_account_id:
+            raise ValueError("Must include treasury account ID")
+
+        # Resolve decimals + supply units
+        decimals = parsed_params.decimals or 0
+        initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
+
+        if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
+            raise ValueError(f"Cannot set max supply and INFINITE supply type")
+
+        # Resolve Supply Type
+        if parsed_params.supply_type is None:
+            supply_type = SupplyType.FINITE  # SPEC DEFAULT
+        else:
+            if parsed_params.supply_type in (0, SupplyType.INFINITE, "infinite"):
+                supply_type = SupplyType.INFINITE
+            elif parsed_params.supply_type in (1, SupplyType.FINITE, "finite"):
+                supply_type = SupplyType.FINITE
+            else:
+                raise ValueError("Invalid supply_type; must be finite or infinite.")
+
+        max_supply = None
+
+        if supply_type == SupplyType.FINITE:
+            # default 1 million tokens (in whole units)
+            raw_max_supply = parsed_params.max_supply or 1_000_000
+            max_supply = int(raw_max_supply * (10**decimals))
+
+            # Hedera requires NON-ZERO initial supply for finite tokens
+            if initial_supply == 0:
+                initial_supply = 1 * (10**decimals)
+
+        # Validation
+        if max_supply is not None and initial_supply > max_supply:
+            raise ValueError(
+                f"Initial supply ({initial_supply}) cannot exceed max supply ({max_supply})"
+            )
+
+        if parsed_params.is_supply_key is None:
+            # default: true when supply finite OR max_supply provided
+            is_supply_key = supply_type == SupplyType.FINITE
+        else:
+            is_supply_key = parsed_params.is_supply_key
+
+        supply_key: Optional[PublicKey] = None
+
+        if is_supply_key:
+            public_key = None
+            try:
+                account_info = await mirrornode.get_account(treasury_account_id)
+                if account_info.get("account_public_key"):
+                    public_key = account_info["account_public_key"]
+            except Exception:
+                pass
+
+            if not public_key and client.operator_private_key.public_key():
+                public_key = client.operator_private_key.public_key().to_string_der()
+
+            if public_key:
+                supply_key = PublicKey.from_string(public_key)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        # Construct TokenParams
+        token_params = TokenParams(
+            token_name=parsed_params.token_name,
+            token_symbol=parsed_params.token_symbol,
+            decimals=decimals,
+            initial_supply=initial_supply,
+            treasury_account_id=AccountId.from_string(treasury_account_id),
+            supply_type=supply_type,
+            max_supply=max_supply,
+            auto_renew_account_id=AccountId.from_string(default_account_id),
+        )
+
+        token_keys = TokenKeys(supply_key=supply_key) if supply_key else None
+
+        return CreateFungibleTokenParametersNormalised(
+            token_params=token_params,
+            keys=token_keys,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_get_transaction_record_params(
+        params: TransactionRecordQueryParameters,
+    ) -> TransactionRecordQueryParametersNormalised:
+        """Normalize transaction record query parameters.
+
+        This method validates the input parameters and converts transaction IDs
+        from SDK-style format (e.g., "0.0.4177806@1755169980.051721264")
+        to mirror-node style format (e.g., "0.0.4177806-1755169980-051721264").
+
+        Args:
+            params: Raw transaction record query parameters.
+
+        Returns:
+            TransactionRecordQueryParametersNormalised: Normalized parameters
+            with transaction ID in mirror-node format.
+
+        Raises:
+            ValueError: If transaction_id is missing or in an invalid format.
+        """
+        import re
+
+        parsed_params: TransactionRecordQueryParameters = cast(
+            TransactionRecordQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransactionRecordQueryParameters
+            ),
+        )
+
+        if not parsed_params.transaction_id:
+            raise ValueError("transactionId is required")
+
+        # Regex patterns for different transaction ID formats
+        mirror_node_style_regex = re.compile(r"^\d+\.\d+\.\d+-\d+-\d+$")
+        sdk_style_regex = re.compile(r"^(\d+\.\d+\.\d+)@(\d+)\.(\d+)$")
+
+        transaction_id: str
+
+        # Check if already in mirror-node style
+        if mirror_node_style_regex.match(parsed_params.transaction_id):
+            transaction_id = parsed_params.transaction_id
+        else:
+            # Try to match SDK-style format
+            match = sdk_style_regex.match(parsed_params.transaction_id)
+            if not match:
+                raise ValueError(
+                    f"Invalid transactionId format: {parsed_params.transaction_id}"
+                )
+
+            # Convert from SDK style to mirror-node style
+            account_id, seconds, nanos = match.groups()
+            transaction_id = f"{account_id}-{seconds}-{nanos}"
+
+        return TransactionRecordQueryParametersNormalised(
+            transaction_id=transaction_id,
+            nonce=parsed_params.nonce,
+        )
+
+    @staticmethod
+    async def normalise_transfer_hbar_with_allowance(
+        params: TransferHbarWithAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> TransferHbarWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring HBAR with allowance.
+
+        Args:
+            params: The raw input parameters.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferHbarWithAllowanceParameters = cast(
+            TransferHbarWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferHbarWithAllowanceParameters
+            ),
+        )
+
+        hbar_approved_transfers: dict[AccountId, int] = {}
+        total_tinybars = 0
+
+        if not parsed_params.source_account_id:
+            raise ValueError("source_account_id is required for allowance transfers")
+
+        owner_id = AccountId.from_string(parsed_params.source_account_id)
+
+        # Process recipients
+        for transfer in parsed_params.transfers:
+            amount_hbar = Hbar(transfer.amount)
+            amount_tiny = amount_hbar.to_tinybars()
+
+            if amount_tiny <= 0:
+                raise ValueError(f"Invalid transfer amount: {transfer.amount}")
+
+            total_tinybars += amount_tiny
+
+            recipient_id = AccountId.from_string(transfer.account_id)
+
+            current_val = hbar_approved_transfers.get(recipient_id, 0)
+            hbar_approved_transfers[recipient_id] = current_val + amount_tiny
+
+        # Add the owner deduction (negative amount)
+        current_owner_val = hbar_approved_transfers.get(owner_id, 0)
+        hbar_approved_transfers[owner_id] = current_owner_val - total_tinybars
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return TransferHbarWithAllowanceParametersNormalised(
+            hbar_approved_transfers=hbar_approved_transfers,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_update_topic(
+        params: UpdateTopicParameters,
+        context: Context,
+        client: Client,
+    ) -> UpdateTopicParametersNormalised:
+        """Normalize parameters for updating a topic.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+
+        Returns:
+            The normalized parameters are ready for transaction building.
+        """
+        parsed_params: UpdateTopicParameters = cast(
+            UpdateTopicParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, UpdateTopicParameters
+            ),
+        )
+        topic_id = TopicId.from_string(parsed_params.topic_id)
+
+        # Determine the default user public key (operator key)
+        user_public_key = None
+        if client.operator_private_key:
+            user_public_key = client.operator_private_key.public_key()
+
+        # Resolve Keys
+        admin_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.admin_key, user_public_key
+        )
+        submit_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.submit_key, user_public_key
+        )
+
+        # Resolve Auto Renew Account
+        auto_renew_account = None
+        if parsed_params.auto_renew_account_id:
+            auto_renew_account = AccountId.from_string(
+                parsed_params.auto_renew_account_id
+            )
+
+        # Resolve Expiration Time
+        expiration_time = None
+        if parsed_params.expiration_time:
+            if isinstance(parsed_params.expiration_time, datetime):
+                expiration_time = parsed_params.expiration_time
+            else:
+                expiration_time = datetime.fromisoformat(
+                    str(parsed_params.expiration_time).replace("Z", "+00:00")
+                )
+
+        return UpdateTopicParametersNormalised(
+            topic_id=topic_id,
+            memo=parsed_params.topic_memo,
+            admin_key=admin_key,
+            submit_key=submit_key,
+            auto_renew_account=auto_renew_account,
+            auto_renew_period=parsed_params.auto_renew_period,
+            expiration_time=expiration_time,
+        )
+
+    @staticmethod
+    def normalise_get_token_info(
+        params: GetTokenInfoParameters,
+    ) -> GetTokenInfoParameters:
+        """Normalize parameters for getting token info.
+
+        Args:
+            params: The raw input parameters.
+
+        Returns:
+            The validated parameters.
+
+        Raises:
+            ValueError: If token_id is missing.
+        """
+        parsed_params: GetTokenInfoParameters = cast(
+            GetTokenInfoParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, GetTokenInfoParameters
+            ),
+        )
+        if not parsed_params.token_id:
+            raise ValueError("Token ID is required to fetch token info.")
+        return parsed_params
+
+    @staticmethod
+    async def normalise_dissociate_token_params(
+        params: DissociateTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> DissociateTokenParametersNormalised:
+        """Normalize parameters for dissociating tokens.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+
+        Returns:
+            The normalized parameters are ready for transaction building.
+        """
+        parsed_params: DissociateTokenParameters = cast(
+            DissociateTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DissociateTokenParameters
+            ),
+        )
+
+        # Resolve Account ID (default to operator if not provided)
+        account_id_str = parsed_params.account_id
+        if not account_id_str and client.operator_account_id:
+            account_id_str = str(client.operator_account_id)
+
+        if not account_id_str:
+            raise ValueError("Account ID is required for token dissociation.")
+
+        account_id = AccountId.from_string(account_id_str)
+
+        # Resolve Token IDs
+        token_ids = [TokenId.from_string(t_id) for t_id in parsed_params.token_ids]
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return DissociateTokenParametersNormalised(
+            token_ids=token_ids,
+            account_id=account_id,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_mint_fungible_token_params(
+        params: MintFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
+    ) -> MintFungibleTokenParametersNormalised:
+        """Normalize mint fungible token parameters.
+
+        Args:
+            params: Raw mint parameters.
+            context: Application context.
+            client: Hedera client.
+            mirrornode_service: Mirror node service.
+
+        Returns:
+            MintFungibleTokenParametersNormalised: Normalized parameters.
+        """
+        parsed_params: MintFungibleTokenParameters = cast(
+            MintFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, MintFungibleTokenParameters
+            ),
+        )
+
+        token_info = await mirrornode_service.get_token_info(parsed_params.token_id)
+
+        if not token_info.get("decimals"):
+            raise ValueError("Unable to retrieve token decimals from mirror node")
+
+        decimals = int(token_info.get("decimals"))
+
+        base_amount = to_base_unit(parsed_params.amount, decimals)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return MintFungibleTokenParametersNormalised(
+            token_id=TokenId.from_string(parsed_params.token_id),
+            amount=int(base_amount),
             scheduling_params=scheduling_params,
         )

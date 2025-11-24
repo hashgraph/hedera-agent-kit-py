@@ -98,6 +98,7 @@ Important:
 - **isScheduled** (boolean, optional, default false):  
   If true, the transaction will be created as a scheduled transaction.  
   If false or omitted, all other scheduling parameters will be ignored.
+  *Always set to true when user asks for scheduling a transaction.*
 
 - **adminKey** (boolean|string, optional, default false):  
   Admin key that can delete or modify the scheduled transaction before execution.  

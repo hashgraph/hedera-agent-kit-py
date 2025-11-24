@@ -303,7 +303,7 @@ class HederaBuilder:
     @staticmethod
     def dissociate_token(
         params: DissociateTokenParametersNormalised,
-    ) -> TokenDissociateTransaction:
+    ):
         """Build a TokenDissociateTransaction.
 
         Args:
@@ -312,7 +312,16 @@ class HederaBuilder:
         Returns:
             TokenDissociateTransaction: Transaction ready for submission.
         """
-        return TokenDissociateTransaction(**vars(params))
+        tx = TokenDissociateTransaction(
+            account_id=params.account_id, token_ids=params.token_ids
+        )
+
+        if getattr(params, "transaction_memo", None):
+            tx.set_transaction_memo(params.transaction_memo)
+
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def create_account(params: CreateAccountParametersNormalised) -> Transaction:
@@ -427,25 +436,27 @@ class HederaBuilder:
         Returns:
             TokenAssociateTransaction: Transaction ready for submission.
         """
-        return TokenAssociateTransaction(**vars(params))
+        return TokenAssociateTransaction(
+            account_id=params.account_id, token_ids=params.token_ids
+        )
 
     @staticmethod
     def _build_account_allowance_approve_tx(
         params,
     ) -> AccountAllowanceApproveTransaction:
-        """Helper to build an AccountAllowanceApproveTransaction with optional memo.
+        """Helper to build an AccountAllowanceApproveTransaction with optional memo."""
 
-        Args:
-            params: Normalised allowance approval parameters.
-
-        Returns:
-            AccountAllowanceApproveTransaction: Transaction ready for submission.
-        """
-        tx: AccountAllowanceApproveTransaction = AccountAllowanceApproveTransaction(
-            **vars(params)
+        tx = AccountAllowanceApproveTransaction(
+            hbar_allowances=getattr(params, "hbar_allowances", None),
+            token_allowances=getattr(params, "token_allowances", None),
+            nft_allowances=getattr(params, "nft_allowances", None),
         )
-        if getattr(params, "transaction_memo", None):
-            tx.set_transaction_memo(params.transaction_memo)
+
+        # Check for memo (getattr handles the missing check here too)
+        memo = getattr(params, "transaction_memo", None)
+        if memo:
+            tx.set_transaction_memo(memo)
+
         return tx
 
     @staticmethod
@@ -503,6 +514,7 @@ class HederaBuilder:
         tx: TopicCreateTransaction = TopicCreateTransaction(
             memo=params.memo,
             submit_key=params.submit_key,
+            admin_key=params.admin_key,
         )
         if getattr(params, "transaction_memo", None):
             tx.set_transaction_memo(params.transaction_memo)
