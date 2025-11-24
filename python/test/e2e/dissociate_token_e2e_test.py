@@ -1,31 +1,31 @@
 """
-End-to-end tests for dissociate token tool using the HederaOperationsWrapper approach.
+End-to-end tests for dissociate token tool.
+
+This module provides full testing from user-simulated input, through the LLM,
+tools up to on-chain execution.
 """
 
-from typing import cast, List
-
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId, TokenId
-from hiero_sdk_python.account.account_balance import AccountBalance
+from typing import Any
+from hiero_sdk_python import (
+    Hbar,
+    PrivateKey,
+    TokenId,
+)
 from hiero_sdk_python.tokens.token_create_transaction import (
     TokenParams,
     TokenKeys,
     SupplyType,
 )
+from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_token_plugin import DissociateTokenTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
-    ExecutedTransactionToolResponse,
-    ToolResponse,
-)
+from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit_py.shared.parameter_schemas import (
-    DissociateTokenParameters,
     CreateFungibleTokenParametersNormalised,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
+from test.utils import create_langchain_test_setup
 from test.utils.setup import (
     get_operator_client_for_tests,
     get_custom_client,
@@ -33,53 +33,55 @@ from test.utils.setup import (
 )
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
-
 # ============================================================================
 # FIXTURES
 # ============================================================================
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
+async def setup_environment():
     operator_client = get_operator_client_for_tests()
     operator_wrapper = HederaOperationsWrapper(operator_client)
 
-    # Executor account (the one dissociating tokens)
+    # 1. Executor Account (The Agent) - Needs HBAR to pay for dissociation
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(40)
+            key=executor_key.public_key(), initial_balance=Hbar(50)
         )
     )
     executor_account_id = executor_resp.account_id
     executor_client = get_custom_client(executor_account_id, executor_key)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    # Token creator / treasury account
-    token_executor_key = PrivateKey.generate_ed25519()
-    token_executor_resp = await operator_wrapper.create_account(
+    # 2. Token Creator Account (Treasury) - Mints the tokens we will test with
+    creator_key = PrivateKey.generate_ed25519()
+    creator_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=token_executor_key.public_key(), initial_balance=Hbar(40)
+            key=creator_key.public_key(), initial_balance=Hbar(50)
         )
     )
-    token_executor_account_id = token_executor_resp.account_id
-    token_executor_client = get_custom_client(
-        token_executor_account_id, token_executor_key
-    )
-    token_executor_wrapper = HederaOperationsWrapper(token_executor_client)
+    creator_account_id = creator_resp.account_id
+    creator_client = get_custom_client(creator_account_id, creator_key)
+    creator_wrapper = HederaOperationsWrapper(creator_client)
 
-    context = Context(mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id))
+    # 3. LangChain Setup
+    lc_setup = await create_langchain_test_setup(custom_client=executor_client)
+    langchain_config = RunnableConfig(
+        configurable={"thread_id": "dissociate_token_e2e"}
+    )
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
+    # Base Token Params
     FT_PARAMS = TokenParams(
         token_name="DissocToken",
         token_symbol="DISS",
-        initial_supply=1,
         decimals=0,
-        max_supply=1000,
+        initial_supply=1000,
+        max_supply=5000,
         supply_type=SupplyType.FINITE,
-        treasury_account_id=token_executor_account_id,
+        treasury_account_id=creator_account_id,
     )
 
     yield {
@@ -88,25 +90,27 @@ async def setup_accounts():
         "executor_wrapper": executor_wrapper,
         "executor_account_id": executor_account_id,
         "executor_key": executor_key,
-        "token_executor_client": token_executor_client,
-        "token_executor_wrapper": token_executor_wrapper,
-        "token_executor_account_id": token_executor_account_id,
-        "context": context,
+        "creator_client": creator_client,
+        "creator_wrapper": creator_wrapper,
+        "creator_account_id": creator_account_id,
+        "agent_executor": lc_setup.agent,
+        "response_parser": lc_setup.response_parser,
+        "langchain_config": langchain_config,
         "FT_PARAMS": FT_PARAMS,
     }
 
     # Teardown
+    lc_setup.cleanup()
+
     await return_hbars_and_delete_account(
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
 
     await return_hbars_and_delete_account(
-        token_executor_wrapper,
-        token_executor_account_id,
-        operator_client.operator_account_id,
+        creator_wrapper, creator_account_id, operator_client.operator_account_id
     )
-    token_executor_client.close()
+    creator_client.close()
 
     operator_client.close()
 
@@ -117,191 +121,214 @@ async def setup_accounts():
 
 
 async def create_test_token(
-    executor_wrapper: HederaOperationsWrapper,
-    executor_client,
+    creator_wrapper: HederaOperationsWrapper,
+    creator_client,
     ft_params: TokenParams,
-):
-    """Creates a token using the wrapper."""
-    treasury_pubkey = executor_client.operator_private_key.public_key()
+) -> TokenId:
+    """Helper to create a token using the Creator account."""
+    treasury_pubkey = creator_client.operator_private_key.public_key()
     keys = TokenKeys(supply_key=treasury_pubkey, admin_key=treasury_pubkey)
     create_params = CreateFungibleTokenParametersNormalised(
         token_params=ft_params, keys=keys
     )
-    resp = await executor_wrapper.create_fungible_token(create_params)
+    resp = await creator_wrapper.create_fungible_token(create_params)
     return resp.token_id
 
+async def check_token_is_associated(
+    wrapper: HederaOperationsWrapper, account_id: str, token_id_str: str
+) -> bool:
+    """Checks if a specific token ID is present in the account's balances."""
+    balances = wrapper.get_account_balances(account_id)
+    if balances.token_balances:
+        # Check if the token ID string exists in the token_balances dictionary keys
+        for t_id in balances.token_balances.keys():
+            if str(t_id) == token_id_str:
+                return True
+    return False
 
-async def associate_token_to_account(
-    wrapper: HederaOperationsWrapper, account_id: AccountId, token_ids: List[TokenId]
+
+async def execute_agent_request(
+    agent_executor, input_text: str, config: RunnableConfig
 ):
-    """Helper to manually associate tokens before testing dissociation."""
-    await wrapper.associate_token(
-        {"accountId": str(account_id), "tokenId": str(token_ids[0])}
+    """Execute a request via the agent and return the response."""
+    return await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
+
+
+def extract_tool_result(
+    agent_result: dict[str, Any], response_parser: ResponseParserService
+) -> Any:
+    """Helper to extract tool data from response."""
+    tool_calls = response_parser.parse_new_tool_messages(agent_result)
+    if not tool_calls:
+        return None
+    return tool_calls[0]
 
 
 # ============================================================================
-# TESTS
+# TEST CASES
 # ============================================================================
 
 
 @pytest.mark.asyncio
-async def test_dissociate_single_token(setup_accounts):
-    executor_client = setup_accounts["executor_client"]
-    executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
-    executor_account_id = setup_accounts["executor_account_id"]
-    executor_key = setup_accounts["executor_key"]
-    token_executor_client = setup_accounts["token_executor_client"]
-    token_executor_wrapper: HederaOperationsWrapper = setup_accounts[
-        "token_executor_wrapper"
-    ]
-    context = setup_accounts["context"]
-    ft_params: TokenParams = setup_accounts["FT_PARAMS"]
+async def test_dissociate_single_token(setup_environment):
+    executor_client = setup_environment["executor_client"]
+    executor_wrapper = setup_environment["executor_wrapper"]
+    executor_account_id = setup_environment["executor_account_id"]
+    executor_key = setup_environment["executor_key"]
+    creator_client = setup_environment["creator_client"]
+    creator_wrapper = setup_environment["creator_wrapper"]
 
-    # 1. Create token
-    token_id = await create_test_token(
-        token_executor_wrapper, token_executor_client, ft_params
-    )
+    agent_executor = setup_environment["agent_executor"]
+    response_parser = setup_environment["response_parser"]
+    config = setup_environment["langchain_config"]
+    ft_params: TokenParams = setup_environment["FT_PARAMS"]
 
-    # 2. Setup: Associate manually first
-    await associate_token_to_account(executor_wrapper, executor_account_id, [token_id])
-    await wait(MIRROR_NODE_WAITING_TIME)
-
-    # Verify association exists before dissociation
-    balances_pre: AccountBalance = executor_wrapper.get_account_balances(
-        str(executor_account_id)
-    )
-    assert balances_pre.token_balances.get(token_id) is not None
-
-    # 3. Execute Tool
-    tool = DissociateTokenTool(context)
-    params = DissociateTokenParameters(token_ids=[str(token_id)])
-
-    result: ToolResponse = await tool.execute(executor_client, context, params)
-    exec_result = cast(ExecutedTransactionToolResponse, result)
+    # 1. Setup: Create Token
+    token_id = await create_test_token(creator_wrapper, creator_client, ft_params)
+    token_id_str = str(token_id)
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    # 4. Verify Dissociation
-    balances_post: AccountBalance = executor_wrapper.get_account_balances(
-        str(executor_account_id)
-    )
-    is_associated = balances_post.token_balances.get(token_id) is not None
+    # 2. Setup: Associate Token manually
+    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id)})
+    await wait(MIRROR_NODE_WAITING_TIME)
 
-    assert result is not None
-    assert exec_result.raw.status == "SUCCESS"
-    assert "successfully dissociated" in result.human_message
-    assert is_associated is False
+    # Verify association before test
+    is_associated = await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), token_id_str
+    )
+    assert is_associated, "Setup failed: Token was not associated"
+
+    # 3. Agent Execution
+    input_text = f"Dissociate {token_id_str} from my account"
+    result = await execute_agent_request(agent_executor, input_text, config)
+    tool_call = extract_tool_result(result, response_parser)
+
+    # 4. Verify Response
+    assert tool_call is not None
+    human_message = tool_call.parsedData.get("humanMessage", "")
+    raw_data = tool_call.parsedData.get("raw", {})
+
+    assert "successfully dissociated" in human_message
+    assert raw_data.get("status") == "SUCCESS"
+
+    # 5. Verify On-Chain (Dissociation)
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    is_still_associated = await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), token_id_str
+    )
+    assert not is_still_associated, "Token should be dissociated but is still found"
 
 
 @pytest.mark.asyncio
-async def test_dissociate_multiple_tokens(setup_accounts):
-    executor_client = setup_accounts["executor_client"]
-    executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
-    executor_account_id = setup_accounts["executor_account_id"]
-    token_executor_client = setup_accounts["token_executor_client"]
-    token_executor_wrapper: HederaOperationsWrapper = setup_accounts[
-        "token_executor_wrapper"
-    ]
-    token_executor_account_id = setup_accounts["token_executor_account_id"]
-    context = setup_accounts["context"]
-    ft_params: TokenParams = setup_accounts["FT_PARAMS"]
+async def test_dissociate_multiple_tokens(setup_environment):
+    executor_client = setup_environment["executor_client"]
+    executor_wrapper = setup_environment["executor_wrapper"]
+    executor_account_id = setup_environment["executor_account_id"]
+    executor_key = setup_environment["executor_key"]
+    creator_client = setup_environment["creator_client"]
+    creator_wrapper = setup_environment["creator_wrapper"]
 
-    # 1. Create two tokens
-    token_id_1 = await create_test_token(
-        token_executor_wrapper, token_executor_client, ft_params
-    )
+    agent_executor = setup_environment["agent_executor"]
+    response_parser = setup_environment["response_parser"]
+    config = setup_environment["langchain_config"]
+    ft_params: TokenParams = setup_environment["FT_PARAMS"]
 
-    ft_params2 = TokenParams(
-        token_name="Dissoc2",
-        token_symbol="DS2",
-        initial_supply=1,
-        decimals=0,
-        max_supply=500,
-        supply_type=SupplyType.FINITE,
-        treasury_account_id=token_executor_account_id,
-    )
-    token_id_2 = await create_test_token(
-        token_executor_wrapper, token_executor_client, ft_params2
-    )
+    # 1. Setup: Create 2 Tokens
+    # We modify params slightly for distinct tokens, though mostly relevant for logging
+    params_1 = ft_params # clone not strictly necessary if we don't change mutable fields
+    params_2 = ft_params
 
-    # 2. Setup: Associate both
-    await associate_token_to_account(
-        executor_wrapper, executor_account_id, [token_id_2]
-    )
-    await associate_token_to_account(
-        executor_wrapper, executor_account_id, [token_id_1]
-    )
-    await wait(MIRROR_NODE_WAITING_TIME)
+    token_id_1 = await create_test_token(creator_wrapper, creator_client, params_1)
+    token_id_2 = await create_test_token(creator_wrapper, creator_client, params_2)
 
-    # 3. Execute Tool
-    tool = DissociateTokenTool(context)
-    params = DissociateTokenParameters(token_ids=[str(token_id_1), str(token_id_2)])
 
-    result: ToolResponse = await tool.execute(executor_client, context, params)
-    exec_result = cast(ExecutedTransactionToolResponse, result)
+    t1_str = str(token_id_1)
+    t2_str = str(token_id_2)
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    # 4. Verify Dissociation
-    balances: AccountBalance = executor_wrapper.get_account_balances(
-        str(executor_account_id)
-    )
-    has_token_1 = balances.token_balances.get(token_id_1) is not None
-    has_token_2 = balances.token_balances.get(token_id_2) is not None
+    # 2. Setup: Associate Both
+    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id_1)})
+    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id_2)})
 
-    assert result is not None
-    assert exec_result.raw.status == "SUCCESS"
-    assert has_token_1 is False
-    assert has_token_2 is False
+    await wait(MIRROR_NODE_WAITING_TIME)
 
+    # Verify association
+    assert await check_token_is_associated(executor_wrapper, str(executor_account_id), t1_str)
+    assert await check_token_is_associated(executor_wrapper, str(executor_account_id), t2_str)
 
-@pytest.mark.asyncio
-async def test_fail_dissociate_not_associated_token(setup_accounts):
-    executor_client = setup_accounts["executor_client"]
-    token_executor_client = setup_accounts["token_executor_client"]
-    token_executor_wrapper: HederaOperationsWrapper = setup_accounts[
-        "token_executor_wrapper"
-    ]
-    context = setup_accounts["context"]
-    ft_params: TokenParams = setup_accounts["FT_PARAMS"]
+    # 3. Agent Execution
+    input_text = f"Dissociate tokens {t1_str} and {t2_str} from my account"
+    result = await execute_agent_request(agent_executor, input_text, config)
+    tool_call = extract_tool_result(result, response_parser)
 
-    # 1. Create token but DO NOT associate
-    token_id = await create_test_token(
-        token_executor_wrapper, token_executor_client, ft_params
-    )
+    # 4. Verify Response
+    assert tool_call is not None
+    human_message = tool_call.parsedData.get("humanMessage", "")
+    assert "successfully dissociated" in human_message
 
-    # 2. Execute Tool (Should Fail)
-    tool = DissociateTokenTool(context)
-    params = DissociateTokenParameters(token_ids=[str(token_id)])
+    # 5. Verify On-Chain
+    await wait(MIRROR_NODE_WAITING_TIME)
 
-    try:
-        result: ToolResponse = await tool.execute(executor_client, context, params)
-        exec_result = cast(ExecutedTransactionToolResponse, result)
-
-        assert "Failed to dissociate" in result.human_message
-        assert (
-            "TOKEN_NOT_ASSOCIATED_TO_ACCOUNT" in str(exec_result.raw.error)
-            or "failed" in str(exec_result.raw.error).lower()
-        )
-    except Exception as e:
-        # If the tool raises directly instead of returning a ToolResponse
-        assert "TOKEN_NOT_ASSOCIATED_TO_ACCOUNT" in str(e)
+    assert not await check_token_is_associated(executor_wrapper, str(executor_account_id), t1_str)
+    assert not await check_token_is_associated(executor_wrapper, str(executor_account_id), t2_str)
 
 
 @pytest.mark.asyncio
-async def test_fail_dissociate_non_existent_token(setup_accounts):
-    executor_client = setup_accounts["executor_client"]
-    context = setup_accounts["context"]
+async def test_fail_dissociate_not_associated_token(setup_environment):
+    executor_wrapper = setup_environment["executor_wrapper"]
+    executor_account_id = setup_environment["executor_account_id"]
+    creator_client = setup_environment["creator_client"]
+    creator_wrapper = setup_environment["creator_wrapper"]
+
+    agent_executor = setup_environment["agent_executor"]
+    response_parser = setup_environment["response_parser"]
+    config = setup_environment["langchain_config"]
+    ft_params: TokenParams = setup_environment["FT_PARAMS"]
+
+    # 1. Create token BUT DO NOT ASSOCIATE
+    token_id = await create_test_token(creator_wrapper, creator_client, ft_params)
+    token_id_str = str(token_id)
+
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    # Verify NOT associated
+    is_associated = await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), token_id_str
+    )
+    assert not is_associated
+
+    # 2. Agent Execution
+    input_text = f"Dissociate {token_id_str} from my account"
+    result = await execute_agent_request(agent_executor, input_text, config)
+    tool_call = extract_tool_result(result, response_parser)
+
+    # 3. Verify Failure
+    assert tool_call is not None
+    human_message = tool_call.parsedData.get("humanMessage", "")
+    raw_error = tool_call.parsedData.get("raw", {}).get("error", "")
+
+    assert "Failed to dissociate" in human_message
+    assert "TOKEN_NOT_ASSOCIATED_TO_ACCOUNT" in raw_error or "failed" in raw_error.lower()
+
+
+@pytest.mark.asyncio
+async def test_fail_dissociate_non_existent_token(setup_environment):
+    agent_executor = setup_environment["agent_executor"]
+    response_parser = setup_environment["response_parser"]
+    config = setup_environment["langchain_config"]
 
     fake_token_id = "0.0.999999999"
 
-    tool = DissociateTokenTool(context)
-    params = DissociateTokenParameters(token_ids=[fake_token_id])
+    input_text = f"Dissociate token {fake_token_id} from my account"
+    result = await execute_agent_request(agent_executor, input_text, config)
+    tool_call = extract_tool_result(result, response_parser)
 
-    try:
-        result: ToolResponse = await tool.execute(executor_client, context, params)
-        assert "Failed to dissociate" in result.human_message
-    except Exception as e:
-        # Fallback if tool raises
-        assert "INVALID_TOKEN_ID" in str(e) or "failed" in str(e).lower()
+    assert tool_call is not None
+    human_message = tool_call.parsedData.get("humanMessage", "")
+
+    assert "Failed to dissociate" in human_message
