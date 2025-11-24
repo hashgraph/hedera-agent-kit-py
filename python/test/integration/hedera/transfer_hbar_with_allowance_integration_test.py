@@ -3,7 +3,9 @@ from typing import cast
 import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar, AccountId
 
-from hedera_agent_kit_py.plugins.core_account_plugin import TransferHbarWithAllowanceTool
+from hedera_agent_kit_py.plugins.core_account_plugin import (
+    TransferHbarWithAllowanceTool,
+)
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.models import (
@@ -96,6 +98,7 @@ async def setup_accounts():
     receiver_client.close()
     operator_client.close()
 
+
 @pytest.mark.asyncio
 async def test_transfer_hbar_without_allowance_should_fail(setup_accounts):
     owner_account_id: AccountId = setup_accounts["owner_account_id"]
@@ -108,9 +111,7 @@ async def test_transfer_hbar_without_allowance_should_fail(setup_accounts):
     tool = TransferHbarWithAllowanceTool(context)
     params = TransferHbarWithAllowanceParameters(
         source_account_id=str(owner_account_id),
-        transfers=[
-            TransferHbarEntry(account_id=str(receiver_account_id), amount=1.0)
-        ],
+        transfers=[TransferHbarEntry(account_id=str(receiver_account_id), amount=1.0)],
     )
 
     result: ToolResponse = await tool.execute(spender_client, context, params)
@@ -120,6 +121,7 @@ async def test_transfer_hbar_without_allowance_should_fail(setup_accounts):
         "SPENDER_DOES_NOT_HAVE_ALLOWANCE" in result.human_message
         or "AMOUNT_EXCEEDS_ALLOWANCE" in result.human_message
     )
+
 
 @pytest.mark.asyncio
 async def test_transfer_hbar_with_allowance_success(setup_accounts):
