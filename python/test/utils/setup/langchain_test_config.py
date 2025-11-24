@@ -19,8 +19,8 @@ from hedera_agent_kit_py.plugins import (
     core_transaction_query_plugin_tool_names,
     core_token_query_plugin_tool_names,
     core_token_query_plugin,
-    core_token_plugin_tool_names,
     core_token_plugin,
+    core_token_plugin_tool_names,
 )
 
 
@@ -59,6 +59,7 @@ UPDATE_TOPIC_TOOL = core_consensus_plugin_tool_names["UPDATE_TOPIC_TOOL"]
 GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
+DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
 
 
 @dataclass
@@ -111,6 +112,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
         UPDATE_TOPIC_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
+        DISSOCIATE_TOKEN_TOOL,
     ],
     plugins=[
         core_account_plugin,

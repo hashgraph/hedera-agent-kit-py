@@ -29,8 +29,8 @@ from hedera_agent_kit_py.plugins import (
     core_transaction_query_plugin_tool_names,
     core_token_query_plugin_tool_names,
     core_token_query_plugin,
-    core_token_plugin_tool_names,
     core_token_plugin,
+    core_token_plugin_tool_names,
 )
 
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
@@ -65,6 +65,7 @@ GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
 GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
+DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
 
 
 async def bootstrap():
@@ -99,6 +100,7 @@ async def bootstrap():
             CREATE_FUNGIBLE_TOKEN_TOOL,
             GET_TRANSACTION_RECORD_QUERY_TOOL,
             GET_TOKEN_INFO_QUERY_TOOL,
+            DISSOCIATE_TOKEN_TOOL,
         ],
         plugins=[
             core_consensus_plugin,
