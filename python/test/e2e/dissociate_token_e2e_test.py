@@ -134,6 +134,7 @@ async def create_test_token(
     resp = await creator_wrapper.create_fungible_token(create_params)
     return resp.token_id
 
+
 async def check_token_is_associated(
     wrapper: HederaOperationsWrapper, account_id: str, token_id_str: str
 ) -> bool:
@@ -192,7 +193,9 @@ async def test_dissociate_single_token(setup_environment):
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 2. Setup: Associate Token manually
-    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id)})
+    await executor_wrapper.associate_token(
+        {"accountId": str(executor_account_id), "tokenId": str(token_id)}
+    )
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify association before test
@@ -239,12 +242,13 @@ async def test_dissociate_multiple_tokens(setup_environment):
 
     # 1. Setup: Create 2 Tokens
     # We modify params slightly for distinct tokens, though mostly relevant for logging
-    params_1 = ft_params # clone not strictly necessary if we don't change mutable fields
+    params_1 = (
+        ft_params  # clone not strictly necessary if we don't change mutable fields
+    )
     params_2 = ft_params
 
     token_id_1 = await create_test_token(creator_wrapper, creator_client, params_1)
     token_id_2 = await create_test_token(creator_wrapper, creator_client, params_2)
-
 
     t1_str = str(token_id_1)
     t2_str = str(token_id_2)
@@ -252,14 +256,22 @@ async def test_dissociate_multiple_tokens(setup_environment):
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 2. Setup: Associate Both
-    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id_1)})
-    await executor_wrapper.associate_token({"accountId": str(executor_account_id), "tokenId": str(token_id_2)})
+    await executor_wrapper.associate_token(
+        {"accountId": str(executor_account_id), "tokenId": str(token_id_1)}
+    )
+    await executor_wrapper.associate_token(
+        {"accountId": str(executor_account_id), "tokenId": str(token_id_2)}
+    )
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # Verify association
-    assert await check_token_is_associated(executor_wrapper, str(executor_account_id), t1_str)
-    assert await check_token_is_associated(executor_wrapper, str(executor_account_id), t2_str)
+    assert await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), t1_str
+    )
+    assert await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), t2_str
+    )
 
     # 3. Agent Execution
     input_text = f"Dissociate tokens {t1_str} and {t2_str} from my account"
@@ -274,8 +286,12 @@ async def test_dissociate_multiple_tokens(setup_environment):
     # 5. Verify On-Chain
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    assert not await check_token_is_associated(executor_wrapper, str(executor_account_id), t1_str)
-    assert not await check_token_is_associated(executor_wrapper, str(executor_account_id), t2_str)
+    assert not await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), t1_str
+    )
+    assert not await check_token_is_associated(
+        executor_wrapper, str(executor_account_id), t2_str
+    )
 
 
 @pytest.mark.asyncio
@@ -313,7 +329,9 @@ async def test_fail_dissociate_not_associated_token(setup_environment):
     raw_error = tool_call.parsedData.get("raw", {}).get("error", "")
 
     assert "Failed to dissociate" in human_message
-    assert "TOKEN_NOT_ASSOCIATED_TO_ACCOUNT" in raw_error or "failed" in raw_error.lower()
+    assert (
+        "TOKEN_NOT_ASSOCIATED_TO_ACCOUNT" in raw_error or "failed" in raw_error.lower()
+    )
 
 
 @pytest.mark.asyncio

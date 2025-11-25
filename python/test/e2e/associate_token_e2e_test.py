@@ -62,9 +62,7 @@ async def setup_environment():
         )
     )
     creator_account_id = creator_resp.account_id
-    creator_client = get_custom_client(
-        creator_account_id, creator_key
-    )
+    creator_client = get_custom_client(creator_account_id, creator_key)
     creator_wrapper = HederaOperationsWrapper(creator_client)
 
     # Context for the tool
