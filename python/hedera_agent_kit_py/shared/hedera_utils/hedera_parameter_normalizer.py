@@ -12,7 +12,9 @@ from hiero_sdk_python import (
     Hbar,
     TopicId,
     TokenId,
-    SupplyType, TokenType,
+    SupplyType,
+    HbarAllowance,
+    TokenType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
@@ -62,11 +64,15 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
     TransferHbarWithAllowanceParametersNormalised,
     TransferHbarWithAllowanceParameters,
+    DeleteHbarAllowanceParameters,
+    ApproveHbarAllowanceParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
     DissociateTokenParameters,
-    DissociateTokenParametersNormalised, CreateNonFungibleTokenParameters, CreateNonFungibleTokenParametersNormalised,
+    DissociateTokenParametersNormalised,
+    CreateNonFungibleTokenParameters,
+    CreateNonFungibleTokenParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -1303,4 +1309,50 @@ class HederaParameterNormaliser:
             token_params=token_params,
             keys=token_keys,
             scheduling_params=scheduling_params,
+        )
+    @staticmethod
+    async def normalise_delete_hbar_allowance(
+        params: DeleteHbarAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> ApproveHbarAllowanceParametersNormalised:
+        """Normalize parameters for deleting an HBAR allowance.
+
+        This function sets the allowance `amount` to **0**, which is the Hedera
+        convention for revoking an existing allowance.
+
+        Args:
+            params: Raw delete parameters.
+            context: Application context.
+            client: Hedera client.
+
+        Returns:
+            ApproveHbarAllowanceParametersNormalised: Normalized parameters with amount=0.
+        """
+        parsed_params: DeleteHbarAllowanceParameters = cast(
+            DeleteHbarAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteHbarAllowanceParameters
+            ),
+        )
+
+        owner_id = parsed_params.owner_account_id
+        if not owner_id:
+            owner_id = AccountResolver.get_default_account(context, client)
+
+        if not owner_id:
+            raise ValueError("Owner account ID is required for deleting allowance.")
+
+        spender_id = parsed_params.spender_account_id
+
+        # Create HbarAllowance with amount 0
+        allowance = HbarAllowance(
+            owner_account_id=AccountId.from_string(owner_id),
+            spender_account_id=AccountId.from_string(spender_id),
+            amount=0,
+        )
+
+        return ApproveHbarAllowanceParametersNormalised(
+            hbar_allowances=[allowance],
+            transaction_memo=parsed_params.transaction_memo,
         )
