@@ -70,6 +70,7 @@ DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
 
+
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
@@ -103,7 +104,7 @@ async def bootstrap():
             GET_TRANSACTION_RECORD_QUERY_TOOL,
             GET_TOKEN_INFO_QUERY_TOOL,
             DISSOCIATE_TOKEN_TOOL,
-            DELETE_HBAR_ALLOWANCE_TOOL
+            DELETE_HBAR_ALLOWANCE_TOOL,
         ],
         plugins=[
             core_consensus_plugin,

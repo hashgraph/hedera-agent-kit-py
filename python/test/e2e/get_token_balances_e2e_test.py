@@ -15,7 +15,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import TransferFungibleTokenParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    TransferFungibleTokenParametersNormalised,
+)
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
@@ -85,10 +87,14 @@ async def setup_environment():
     # 5. Transfer Tokens to Executor (so they have a balance to query)
     await operator_wrapper.transfer_fungible(
         TransferFungibleTokenParametersNormalised(
-            ft_transfers={token_id: {executor_account_id: 25, operator_client.operator_account_id: -25}},
+            ft_transfers={
+                token_id: {
+                    executor_account_id: 25,
+                    operator_client.operator_account_id: -25,
+                }
+            },
         )
     )
-
 
     await wait(MIRROR_NODE_WAITING_TIME)
 

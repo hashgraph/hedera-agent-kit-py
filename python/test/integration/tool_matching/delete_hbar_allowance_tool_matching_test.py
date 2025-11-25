@@ -42,9 +42,7 @@ async def toolkit(test_setup):
 
 
 @pytest.mark.asyncio
-async def test_match_delete_hbar_allowance_explicit(
-        agent, toolkit, monkeypatch
-):
+async def test_match_delete_hbar_allowance_explicit(agent, toolkit, monkeypatch):
     """Test matching delete HBAR allowance with explicit owner and spender."""
     input_text = "Delete HBAR allowance from 0.0.1001 to 0.0.2002"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -66,9 +64,7 @@ async def test_match_delete_hbar_allowance_explicit(
 
 
 @pytest.mark.asyncio
-async def test_match_delete_hbar_allowance_with_memo(
-        agent, toolkit, monkeypatch
-):
+async def test_match_delete_hbar_allowance_with_memo(agent, toolkit, monkeypatch):
     """Test matching delete HBAR allowance with memo included."""
     input_text = 'Revoke HBAR allowance to 0.0.3333 with memo "cleanup"'
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -117,21 +113,21 @@ async def test_match_implicit_owner(agent, toolkit, monkeypatch):
     "input_text, expected",
     [
         (
-                "Revoke allowance for HBAR spending given to 0.0.5555",
-                {"spender_account_id": "0.0.5555"},
+            "Revoke allowance for HBAR spending given to 0.0.5555",
+            {"spender_account_id": "0.0.5555"},
         ),
         (
-                'Delete HBAR allowance for account 0.0.6666 with memo "expired"',
-                {"spender_account_id": "0.0.6666", "transaction_memo": "expired"},
+            'Delete HBAR allowance for account 0.0.6666 with memo "expired"',
+            {"spender_account_id": "0.0.6666", "transaction_memo": "expired"},
         ),
         (
-                "Remove HBAR allowance from account 0.0.7777 given to spender 0.0.8888",
-                {"owner_account_id": "0.0.7777", "spender_account_id": "0.0.8888"},
+            "Remove HBAR allowance from account 0.0.7777 given to spender 0.0.8888",
+            {"owner_account_id": "0.0.7777", "spender_account_id": "0.0.8888"},
         ),
     ],
 )
 async def test_handle_various_natural_language_variations(
-        agent, toolkit, monkeypatch, input_text, expected
+    agent, toolkit, monkeypatch, input_text, expected
 ):
     """Test various natural language expressions for deleting HBAR allowance."""
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}

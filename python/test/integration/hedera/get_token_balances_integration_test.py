@@ -19,7 +19,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import TransferFungibleTokenParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    TransferFungibleTokenParametersNormalised,
+)
 from test import HederaOperationsWrapper
 from test.utils import wait
 from test.utils.setup import (
@@ -74,7 +76,12 @@ async def setup_environment():
     # Transfer tokens to executor
     await operator_wrapper.transfer_fungible(
         TransferFungibleTokenParametersNormalised(
-            ft_transfers={token_id: {executor_account_id: 50, operator_client.operator_account_id: -50}},
+            ft_transfers={
+                token_id: {
+                    executor_account_id: 50,
+                    operator_client.operator_account_id: -50,
+                }
+            },
         )
     )
 
