@@ -42,7 +42,7 @@ __all__ = [
     "AssociateTokenTool",
     "DissociateTokenTool",
     "MintFungibleTokenTool",
-    "CreateNonFungibleTokenTool"
+    "CreateNonFungibleTokenTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
 ]
