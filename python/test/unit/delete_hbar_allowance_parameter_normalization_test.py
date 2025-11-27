@@ -66,7 +66,9 @@ class TestDeleteHbarAllowanceParameterNormalization:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="neither context.account_id nor operator account"):
+        with pytest.raises(
+            ValueError, match="neither context.account_id nor operator account"
+        ):
             await HederaParameterNormaliser.normalise_delete_hbar_allowance(
                 params, context, client
             )
