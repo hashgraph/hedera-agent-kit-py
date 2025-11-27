@@ -77,7 +77,7 @@ async def test_normalise_create_non_fungible_token_defaults(
     assert tp.max_supply == 100
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
     assert str(tp.auto_renew_account_id) == TEST_OPERATOR_ID
-    
+
     # Keys should be set (supply key is needed for finite supply)
     assert result.keys is not None
     assert result.keys.supply_key.to_string_der() == TEST_PUBLIC_KEY.to_string_der()
@@ -85,9 +85,7 @@ async def test_normalise_create_non_fungible_token_defaults(
 
 
 @pytest.mark.asyncio
-async def test_normalise_explicit_values(
-    mock_context, mock_client, mock_mirrornode
-):
+async def test_normalise_explicit_values(mock_context, mock_client, mock_mirrornode):
     """Should use provided explicit values."""
     params = CreateNonFungibleTokenParameters(
         token_name="My NFT",
@@ -175,8 +173,10 @@ async def test_process_scheduling_params(mock_context, mock_client, mock_mirrorn
             scheduling_params=scheduling_input,
         )
 
-        result = await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
-            params, mock_context, mock_client, mock_mirrornode
+        result = (
+            await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
+                params, mock_context, mock_client, mock_mirrornode
+            )
         )
 
         mock_sched_norm.assert_called_once_with(

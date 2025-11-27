@@ -122,9 +122,7 @@ async def create_non_fungible_token(
         )
 
         # Build transaction
-        tx = HederaBuilder.create_non_fungible_token(
-            normalised_params
-        )
+        tx = HederaBuilder.create_non_fungible_token(normalised_params)
 
         # Execute transaction and post-process result
         return await handle_transaction(tx, client, context, post_process)

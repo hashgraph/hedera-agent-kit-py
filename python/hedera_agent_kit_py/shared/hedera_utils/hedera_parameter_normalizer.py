@@ -1224,10 +1224,10 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_create_non_fungible_token_params(
-            params: CreateNonFungibleTokenParameters,
-            context: Context,
-            client: Client,
-            mirrornode: IHederaMirrornodeService,
+        params: CreateNonFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
     ) -> CreateNonFungibleTokenParametersNormalised:
         """Normalize parameters for creating a non-fungible token (NFT).
 
@@ -1281,7 +1281,6 @@ class HederaParameterNormaliser:
         supply_type = SupplyType.FINITE
         token_type = TokenType.NON_FUNGIBLE_UNIQUE
 
-
         # Construct TokenParams
         token_params = TokenParams(
             token_name=parsed_params.token_name,
@@ -1310,6 +1309,7 @@ class HederaParameterNormaliser:
             keys=token_keys,
             scheduling_params=scheduling_params,
         )
+
     @staticmethod
     async def normalise_delete_hbar_allowance(
         params: DeleteHbarAllowanceParameters,

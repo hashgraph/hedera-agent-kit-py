@@ -4,7 +4,9 @@ from typing import cast
 import pytest
 from hiero_sdk_python import SupplyType, TokenType
 
-from hedera_agent_kit_py.plugins.core_token_plugin.create_non_fungible_token import CreateNonFungibleTokenTool
+from hedera_agent_kit_py.plugins.core_token_plugin.create_non_fungible_token import (
+    CreateNonFungibleTokenTool,
+)
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.models import (
@@ -39,9 +41,7 @@ async def setup_client():
 async def test_create_nft_with_minimal_params(setup_client):
     client, hedera_operations_wrapper, context = setup_client
 
-    params = CreateNonFungibleTokenParameters(
-        token_name="TestNFT", token_symbol="TNFT"
-    )
+    params = CreateNonFungibleTokenParameters(token_name="TestNFT", token_symbol="TNFT")
 
     tool = CreateNonFungibleTokenTool(context)
     result: ToolResponse = await tool.execute(client, context, params)
