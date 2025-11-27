@@ -64,6 +64,9 @@ DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
+AIRDROP_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
+    "AIRDROP_FUNGIBLE_TOKEN_TOOL"
+]
 
 
 @dataclass
@@ -119,6 +122,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         GET_TOKEN_INFO_QUERY_TOOL,
         DISSOCIATE_TOKEN_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
+        AIRDROP_FUNGIBLE_TOKEN_TOOL,
     ],
     plugins=[
         core_account_plugin,

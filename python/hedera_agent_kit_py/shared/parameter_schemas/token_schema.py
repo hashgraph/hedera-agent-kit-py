@@ -59,10 +59,16 @@ class AirdropFungibleTokenParameters(OptionalScheduledTransactionParams):
     recipients: Annotated[
         List[AirdropRecipient], Field(min_length=1, description="Array of recipients.")
     ]
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo.")
+    ] = None
 
 
-class AirdropFungibleTokenParametersNormalised(BaseModelWithArbitraryTypes):
+class AirdropFungibleTokenParametersNormalised(    OptionalScheduledTransactionParamsNormalised):
     token_transfers: List[TokenTransfer]
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo.")
+    ] = None
 
 
 class MintFungibleTokenParameters(OptionalScheduledTransactionParams):
