@@ -67,6 +67,9 @@ GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
+APPROVE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "APPROVE_HBAR_ALLOWANCE_TOOL"
+]
 
 
 @dataclass
@@ -123,6 +126,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         DISSOCIATE_TOKEN_TOOL,
         GET_PENDING_AIRDROP_QUERY_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
+        APPROVE_HBAR_ALLOWANCE_TOOL,
     ],
     plugins=[
         core_account_plugin,
