@@ -38,3 +38,4 @@ pids/
 # Temporary folders
 tmp/
 temp/
+*.pyc
