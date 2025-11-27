@@ -61,7 +61,7 @@ This tool creates a non-fungible token (NFT) on Hedera.
 Parameters:
 - token_name (str, required): Name of the token
 - token_symbol (str, required): Symbol of the token
-- max_supply (int, optional): Maximum NFT supply. Defaults to 100 if not provided
+- max_supply (int, optional): Maximum NFT supply. If not specified, the supply is infinite.
 - {treasury_account_desc}
 {scheduled_params_desc}
 

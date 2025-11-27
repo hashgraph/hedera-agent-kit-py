@@ -197,8 +197,10 @@ class CreateNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     token_name: Annotated[str, Field(description="The name of the token")]
     token_symbol: Annotated[str, Field(description="The symbol of the token")]
     max_supply: Optional[
-        Annotated[int, Field(description="Maximum supply of NFTs")]
-    ] = 100
+        Annotated[
+            int, Field(description="Maximum supply of NFTs. If not set, infinite.")
+        ]
+    ] = None
     treasury_account_id: Annotated[
         Optional[str], Field(description="Treasury account ID")
     ] = None

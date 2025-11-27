@@ -39,6 +39,7 @@ async def setup_client():
 
 @pytest.mark.asyncio
 async def test_create_nft_with_minimal_params(setup_client):
+    """Test creating NFT with minimal params defaults to Infinite supply."""
     client, hedera_operations_wrapper, context = setup_client
 
     params = CreateNonFungibleTokenParameters(token_name="TestNFT", token_symbol="TNFT")
@@ -58,8 +59,33 @@ async def test_create_nft_with_minimal_params(setup_client):
     assert token_info.name == params.token_name
     assert token_info.symbol == params.token_symbol
     assert token_info.token_type == TokenType.NON_FUNGIBLE_UNIQUE
-    assert token_info.supply_type == SupplyType.FINITE
-    assert token_info.max_supply == 100  # Default
+
+    # Updated expectation: Default is now INFINITE when max_supply is missing
+    assert token_info.supply_type == SupplyType.INFINITE
+
+
+@pytest.mark.asyncio
+async def test_create_nft_explicit_infinite_supply(setup_client):
+    """Test explicitly creating an NFT with infinite supply (implicit via no max_supply)."""
+    client, hedera_operations_wrapper, context = setup_client
+
+    params = CreateNonFungibleTokenParameters(
+        token_name="InfiniteNFT",
+        token_symbol="INFT",
+        max_supply=None,  # Explicitly None to verify Infinite behavior
+    )
+
+    tool = CreateNonFungibleTokenTool(context)
+    result: ToolResponse = await tool.execute(client, context, params)
+    exec_result = cast(ExecutedTransactionToolResponse, result)
+
+    assert result.error is None
+    token_id_str = str(exec_result.raw.token_id)
+
+    token_info = hedera_operations_wrapper.get_token_info(token_id_str)
+
+    assert token_info.name == "InfiniteNFT"
+    assert token_info.supply_type == SupplyType.INFINITE
 
 
 @pytest.mark.asyncio
@@ -82,6 +108,7 @@ async def test_create_nft_with_max_supply(setup_client):
     token_info = hedera_operations_wrapper.get_token_info(token_id_str)
 
     assert token_info.name == params.token_name
+    assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 500
 
 

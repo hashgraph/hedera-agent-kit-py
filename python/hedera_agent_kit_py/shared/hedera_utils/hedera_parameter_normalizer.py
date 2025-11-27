@@ -1256,30 +1256,40 @@ class HederaParameterNormaliser:
         if not treasury_account_id:
             raise ValueError("Must include treasury account ID")
 
-        # Supply Key Resolution (Mandatory for NFT)
-        public_key_str: Optional[str] = None
+        # Resolve Supply Type and Max Supply based solely on max_supply presence
+        if parsed_params.max_supply is not None:
+            supply_type = SupplyType.FINITE
+            max_supply = int(parsed_params.max_supply)
+        else:
+            supply_type = SupplyType.INFINITE
+            max_supply = 0  # Python SDK uses 0 to denote infinite supply
 
-        # 1. Try fetching from the mirror node
+        # Supply Key Resolution (MANDATORY for NFTs)
+        supply_key: Optional[PublicKey] = None
+        public_key_str = None
+
+        # 1. Try to fetch public key from the Treasury Account
         try:
             account_info = await mirrornode.get_account(treasury_account_id)
-            if account_info["account_public_key"]:
+            if account_info.get("account_public_key"):
                 public_key_str = account_info["account_public_key"]
         except Exception:
             pass
 
-        # 2. Fallback to a local operator key
-        if not public_key_str and client.operator_private_key.public_key():
-            public_key_str = client.operator_private_key.public_key().to_string_der()
+        # 2. Fallback to Operator Key if Treasury lookup failed
+        if not public_key_str and client.operator_private_key:
+            public_key_obj = client.operator_private_key.public_key()
+            if public_key_obj:
+                public_key_str = public_key_obj.to_string_der()
 
-        if not public_key_str:
-            raise ValueError("Could not determine public key for supply key")
-
-        supply_key = PublicKey.from_string(public_key_str)
-
-        # Supply Settings
-        max_supply = parsed_params.max_supply or 100
-        supply_type = SupplyType.FINITE
-        token_type = TokenType.NON_FUNGIBLE_UNIQUE
+        # 3. Construct Key or Raise Error
+        if public_key_str:
+            supply_key = PublicKey.from_string(public_key_str)
+        else:
+            # Explicitly raise an error as Supply Key is mandatory
+            raise ValueError(
+                "Could not resolve a Supply Key (required for NFTs). Ensure Treasury has a public key or Operator is configured."
+            )
 
         # Construct TokenParams
         token_params = TokenParams(
@@ -1290,7 +1300,7 @@ class HederaParameterNormaliser:
             treasury_account_id=AccountId.from_string(treasury_account_id),
             supply_type=supply_type,
             max_supply=max_supply,
-            token_type=token_type,
+            token_type=TokenType.NON_FUNGIBLE_UNIQUE,
             auto_renew_account_id=AccountId.from_string(default_account_id),
         )
 

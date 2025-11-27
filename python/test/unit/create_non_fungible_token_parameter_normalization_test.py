@@ -55,10 +55,11 @@ def mock_mirrornode():
 async def test_normalise_create_non_fungible_token_defaults(
     mock_context, mock_client, mock_mirrornode
 ):
-    """Should use correct defaults for minimal input."""
+    """Should use correct defaults: Infinite supply if max_supply is missing."""
     params = CreateNonFungibleTokenParameters(
         token_name="NFT Token",
         token_symbol="NFT",
+        # No max_supply provided
     )
 
     result = await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
@@ -73,24 +74,29 @@ async def test_normalise_create_non_fungible_token_defaults(
     assert tp.token_name == "NFT Token"
     assert tp.token_symbol == "NFT"
     assert tp.token_type == TokenType.NON_FUNGIBLE_UNIQUE
-    assert tp.supply_type == SupplyType.FINITE
-    assert tp.max_supply == 100
+
+    # Defaults to Infinite when max_supply is not set
+    assert tp.supply_type == SupplyType.INFINITE
+    assert tp.max_supply is None
+
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
     assert str(tp.auto_renew_account_id) == TEST_OPERATOR_ID
 
-    # Keys should be set (supply key is needed for finite supply)
+    # Keys should be set (supply key is needed for NFTs)
     assert result.keys is not None
     assert result.keys.supply_key.to_string_der() == TEST_PUBLIC_KEY.to_string_der()
     assert result.scheduling_params is None
 
 
 @pytest.mark.asyncio
-async def test_normalise_explicit_values(mock_context, mock_client, mock_mirrornode):
-    """Should use provided explicit values."""
+async def test_normalise_explicit_finite_values(
+    mock_context, mock_client, mock_mirrornode
+):
+    """Should set supply_type to FINITE if max_supply is provided."""
     params = CreateNonFungibleTokenParameters(
         token_name="My NFT",
         token_symbol="MNFT",
-        max_supply=500,
+        max_supply=500,  # Presence of this implies Finite
         treasury_account_id=TEST_OPERATOR_ID,
     )
 
@@ -101,6 +107,7 @@ async def test_normalise_explicit_values(mock_context, mock_client, mock_mirrorn
     tp = result.token_params
     assert tp.token_name == "My NFT"
     assert tp.token_symbol == "MNFT"
+    assert tp.supply_type == SupplyType.FINITE
     assert tp.max_supply == 500
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
 

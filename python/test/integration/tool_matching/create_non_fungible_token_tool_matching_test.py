@@ -3,7 +3,6 @@ This module tests whether the LLM correctly extracts parameters and matches
 the correct tool when given various natural language inputs.
 """
 
-from pprint import pprint
 from unittest.mock import AsyncMock
 
 import pytest
@@ -57,8 +56,6 @@ async def test_match_create_nft_minimal(agent_executor, toolkit, monkeypatch):
         {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
 
-    pprint(resp)
-
     mock_run.assert_awaited_once()
     args, kwargs = mock_run.call_args
     payload = args[1]
@@ -90,6 +87,32 @@ async def test_match_create_nft_full_spec(agent_executor, toolkit, monkeypatch):
     assert payload.get("token_name") == "ArtToken"
     assert payload.get("token_symbol") == "ART"
     assert payload.get("max_supply") == 500
+
+
+@pytest.mark.asyncio
+async def test_match_create_nft_infinite_supply(agent_executor, toolkit, monkeypatch):
+    """Test tool matching when user explicitly requests unlimited/infinite supply."""
+    input_text = (
+        "Create a new NFT called 'InfiniteArt' with symbol 'INF' and unlimited supply"
+    )
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(return_value=MOCKED_RESPONSE)
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]}, config=config
+    )
+
+    mock_run.assert_awaited_once()
+    args, kwargs = mock_run.call_args
+    payload = args[1]
+    assert args[0] == CREATE_NON_FUNGIBLE_TOKEN_TOOL
+    assert payload.get("token_name") == "InfiniteArt"
+    assert payload.get("token_symbol") == "INF"
+    # Ensure max_supply is NOT set (None) when unlimited is requested
+    assert payload.get("max_supply") is None
 
 
 @pytest.mark.asyncio
