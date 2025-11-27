@@ -6,7 +6,9 @@ from hedera_agent_kit_py.plugins.core_token_plugin import AirdropFungibleTokenTo
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.models import ToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     AirdropFungibleTokenParameters,
     AirdropRecipient,
@@ -20,6 +22,7 @@ from test.utils.setup import (
 )
 from test.utils import wait
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
+
 
 @pytest.fixture(scope="module")
 async def setup_airdrop():
@@ -38,9 +41,7 @@ async def setup_airdrop():
     executor_client = get_custom_client(executor_account_id, executor_key)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    context = Context(
-        mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id)
-    )
+    context = Context(mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id))
 
     # ----- Deploy fungible token -----
     token_params = TokenParams(
@@ -86,14 +87,14 @@ async def setup_airdrop():
     executor_client.close()
     operator_client.close()
 
+
 async def create_recipient_account(wrapper: HederaOperationsWrapper):
     key = PrivateKey.generate_ed25519()
     resp = await wrapper.create_account(
-        CreateAccountParametersNormalised(
-            key=key.public_key(), initial_balance=Hbar(0)
-        )
+        CreateAccountParametersNormalised(key=key.public_key(), initial_balance=Hbar(0))
     )
     return resp.account_id
+
 
 @pytest.mark.asyncio
 async def test_airdrop_single_recipient(setup_airdrop):

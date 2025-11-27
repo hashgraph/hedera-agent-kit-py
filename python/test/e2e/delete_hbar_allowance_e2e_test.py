@@ -56,7 +56,7 @@ def operator_wrapper(operator_client):
 
 @pytest.fixture
 async def executor_account(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
     """Create a temporary executor account for tests (the agent/owner).
 
@@ -90,7 +90,7 @@ async def executor_account(
 
 @pytest.fixture
 async def spender_account(
-        executor_account, operator_client
+    executor_account, operator_client
 ) -> AsyncGenerator[tuple, None]:
     """Create a separate spender account.
 
@@ -157,9 +157,9 @@ async def response_parser(langchain_test_setup):
 
 
 async def approve_allowance(
-        owner_wrapper: HederaOperationsWrapper,
-        spender_id: AccountId,
-        amount_hbar: float,
+    owner_wrapper: HederaOperationsWrapper,
+    spender_id: AccountId,
+    amount_hbar: float,
 ):
     """Helper to approve HBAR allowance from Owner to Spender."""
     amount_tinybar = int(Hbar(amount_hbar).to_tinybars())
@@ -177,7 +177,7 @@ async def approve_allowance(
 
 
 async def execute_agent_request(
-        agent_executor, input_text: str, config: RunnableConfig
+    agent_executor, input_text: str, config: RunnableConfig
 ):
     """Execute a request via the agent and return the response."""
     return await agent_executor.ainvoke(
@@ -186,7 +186,7 @@ async def execute_agent_request(
 
 
 def extract_tool_result(
-        agent_result: dict[str, Any], response_parser: ResponseParserService
+    agent_result: dict[str, Any], response_parser: ResponseParserService
 ) -> Any:
     """Helper to extract tool data from response."""
     tool_calls = response_parser.parse_new_tool_messages(agent_result)
@@ -202,11 +202,11 @@ def extract_tool_result(
 
 @pytest.mark.asyncio
 async def test_delete_existing_allowance(
-        agent_executor,
-        executor_account,
-        spender_account,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_account,
+    spender_account,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test deleting an existing allowance via natural language."""
     # 1. Setup
@@ -229,11 +229,11 @@ async def test_delete_existing_allowance(
 
 @pytest.mark.asyncio
 async def test_delete_non_existent_allowance(
-        agent_executor,
-        executor_account,
-        spender_account,
-        langchain_config: RunnableConfig,
-        response_parser: ResponseParserService,
+    agent_executor,
+    executor_account,
+    spender_account,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
 ):
     """Test deleting a non-existent allowance (should succeed gracefully)."""
     # 1. Setup (No prior allowance granted)

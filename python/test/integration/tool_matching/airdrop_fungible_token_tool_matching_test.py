@@ -64,17 +64,13 @@ async def test_match_airdrop_minimal(agent_executor, toolkit, monkeypatch):
     assert len(payload["recipients"]) == 1
 
     recipient = payload["recipients"][0]
-    assert recipient.account_id== "0.0.2002"
+    assert recipient.account_id == "0.0.2002"
     assert recipient.amount == 10
 
 
 @pytest.mark.asyncio
-async def test_match_airdrop_multiple_recipients(
-    agent_executor, toolkit, monkeypatch
-):
-    input_text = (
-        "Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 0.0.3333"
-    )
+async def test_match_airdrop_multiple_recipients(agent_executor, toolkit, monkeypatch):
+    input_text = "Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 0.0.3333"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     # Mock Hedera API
@@ -107,7 +103,7 @@ async def test_match_airdrop_multiple_recipients(
     r1 = next((r for r in recipients if r.account_id == "0.0.2222"), None)
     r2 = next((r for r in recipients if r.account_id == "0.0.3333"), None)
 
-    assert r1 is not None and r1.amount== 5
+    assert r1 is not None and r1.amount == 5
     assert r2 is not None and r2.amount == 5
 
 

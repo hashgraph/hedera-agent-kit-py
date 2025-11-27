@@ -64,7 +64,9 @@ class AirdropFungibleTokenParameters(OptionalScheduledTransactionParams):
     ] = None
 
 
-class AirdropFungibleTokenParametersNormalised(    OptionalScheduledTransactionParamsNormalised):
+class AirdropFungibleTokenParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
     token_transfers: List[TokenTransfer]
     transaction_memo: Annotated[
         Optional[str], Field(description="Optional transaction memo.")

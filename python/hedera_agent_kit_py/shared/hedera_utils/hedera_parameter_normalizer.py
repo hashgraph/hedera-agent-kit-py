@@ -833,10 +833,14 @@ class HederaParameterNormaliser:
             parsed_params.source_account_id, context, client
         )
 
-        token_info: TokenInfo = await mirrornode_service.get_token_info(parsed_params.token_id)
+        token_info: TokenInfo = await mirrornode_service.get_token_info(
+            parsed_params.token_id
+        )
         token_decimals = int(token_info.get("decimals", -1))
         if token_decimals < 0:
-            raise ValueError(f"Unable to retrieve token decimals for token ID {parsed_params.token_id}")
+            raise ValueError(
+                f"Unable to retrieve token decimals for token ID {parsed_params.token_id}"
+            )
 
         token_transfers: List[TokenTransfer] = []
         total_amount = 0

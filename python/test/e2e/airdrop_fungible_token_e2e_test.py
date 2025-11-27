@@ -16,7 +16,9 @@ from hiero_sdk_python.tokens.token_create_transaction import (
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas import (
+    CreateAccountParametersNormalised,
+)
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateFungibleTokenParametersNormalised,
 )
@@ -42,7 +44,9 @@ async def setup_environment():
     # Executor account (Agent performing airdrops)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
-        CreateAccountParametersNormalised(key=executor_key.public_key(), initial_balance=Hbar(50))
+        CreateAccountParametersNormalised(
+            key=executor_key.public_key(), initial_balance=Hbar(50)
+        )
     )
     executor_account_id = executor_resp.account_id
     executor_client = get_custom_client(executor_account_id, executor_key)
@@ -97,24 +101,32 @@ async def create_airdrop_token(
 ):
     treasury_pubkey = executor_client.operator_private_key.public_key()
     keys = TokenKeys(supply_key=treasury_pubkey, admin_key=treasury_pubkey)
-    create_params = CreateFungibleTokenParametersNormalised(token_params=ft_params, keys=keys)
+    create_params = CreateFungibleTokenParametersNormalised(
+        token_params=ft_params, keys=keys
+    )
     resp = await executor_wrapper.create_fungible_token(create_params)
     return resp.token_id
 
 
 async def create_recipient_account(wrapper: HederaOperationsWrapper) -> str:
     key = PrivateKey.generate_ed25519()
-    resp = await wrapper.create_account(CreateAccountParametersNormalised(key=key.public_key(), initial_balance=Hbar(0)))
+    resp = await wrapper.create_account(
+        CreateAccountParametersNormalised(key=key.public_key(), initial_balance=Hbar(0))
+    )
     return str(resp.account_id)
 
 
-async def execute_agent_request(agent_executor, input_text: str, config: RunnableConfig):
+async def execute_agent_request(
+    agent_executor, input_text: str, config: RunnableConfig
+):
     return await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
 
 
-def extract_tool_result(agent_result: dict[str, Any], response_parser: ResponseParserService) -> Any:
+def extract_tool_result(
+    agent_result: dict[str, Any], response_parser: ResponseParserService
+) -> Any:
     tool_calls = response_parser.parse_new_tool_messages(agent_result)
     return tool_calls[0] if tool_calls else None
 
