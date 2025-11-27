@@ -265,3 +265,10 @@ class GetTokenInfoParameters(BaseModelWithArbitraryTypes):
     token_id: Annotated[
         Optional[str], Field(description="The token ID to query (e.g., 0.0.12345).")
     ] = None
+
+
+class PendingAirdropQueryParameters(BaseModelWithArbitraryTypes):
+    account_id: Annotated[
+        Optional[str],
+        Field(description="The account ID to query for pending airdrops."),
+    ] = None
