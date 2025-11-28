@@ -89,7 +89,7 @@ class MintNonFungibleTokenParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
     token_id: TokenId
-    metadata: Optional[List[bytes]] = None
+    metadata: list[bytes] | None = Field(default=None)
 
 
 class TransferNonFungibleTokenWithAllowanceParameters(
