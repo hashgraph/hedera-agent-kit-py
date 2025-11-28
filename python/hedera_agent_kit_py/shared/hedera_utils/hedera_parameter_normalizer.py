@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-from pprint import pprint
 from typing import Optional, Union, cast, Any, Type
 
 from hiero_sdk_python.contract.contract_id import ContractId
+from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python import (
     AccountId,
     PublicKey,
@@ -66,6 +66,9 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     TransferHbarWithAllowanceParameters,
     DeleteHbarAllowanceParameters,
     ApproveHbarAllowanceParametersNormalised,
+    ApproveHbarAllowanceParameters,
+    ScheduleDeleteTransactionParameters,
+    ScheduleDeleteTransactionParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
@@ -188,6 +191,29 @@ class HederaParameterNormaliser:
             hbar_transfers=hbar_transfers,
             scheduling_params=scheduling_params,
             transaction_memo=getattr(parsed_params, "transaction_memo", None),
+        )
+
+    @staticmethod
+    def normalise_schedule_delete_transaction(
+        params: ScheduleDeleteTransactionParameters,
+    ) -> ScheduleDeleteTransactionParametersNormalised:
+        """Normalise schedule delete transaction parameters.
+
+        Args:
+            params: Raw schedule delete parameters.
+
+        Returns:
+            ScheduleDeleteTransactionParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ScheduleDeleteTransactionParameters = cast(
+            ScheduleDeleteTransactionParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ScheduleDeleteTransactionParameters
+            ),
+        )
+
+        return ScheduleDeleteTransactionParametersNormalised(
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 
     @staticmethod

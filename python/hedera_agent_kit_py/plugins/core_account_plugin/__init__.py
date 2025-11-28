@@ -10,6 +10,7 @@ from .delete_hbar_allowance import (
     DeleteHbarAllowanceTool,
     DELETE_HBAR_ALLOWANCE_TOOL,
 )
+from .schedule_delete import ScheduleDeleteTool, SCHEDULE_DELETE_TOOL
 from .update_account import UpdateAccountTool, UPDATE_ACCOUNT_TOOL
 
 core_account_plugin = Plugin(
@@ -23,6 +24,7 @@ core_account_plugin = Plugin(
         UpdateAccountTool(context),
         TransferHbarWithAllowanceTool(context),
         DeleteHbarAllowanceTool(context),
+        ScheduleDeleteTool(context),
     ],
 )
 
@@ -33,6 +35,7 @@ core_account_plugin_tool_names = {
     "DELETE_ACCOUNT_TOOL": DELETE_ACCOUNT_TOOL,
     "TRANSFER_HBAR_WITH_ALLOWANCE_TOOL": TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
     "DELETE_HBAR_ALLOWANCE_TOOL": DELETE_HBAR_ALLOWANCE_TOOL,
+    "SCHEDULE_DELETE_TOOL": SCHEDULE_DELETE_TOOL,
 }
 
 __all__ = [
@@ -44,4 +47,5 @@ __all__ = [
     "UpdateAccountTool",
     "TransferHbarWithAllowanceTool",
     "DeleteHbarAllowanceTool",
+    "ScheduleDeleteTool",
 ]
