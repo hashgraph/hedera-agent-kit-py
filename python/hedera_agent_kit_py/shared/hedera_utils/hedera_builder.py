@@ -52,8 +52,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     ContractExecuteTransactionParametersNormalised,
     SignScheduleTransactionParameters,
-    ScheduleDeleteTransactionParameters,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import ScheduleDeleteTransactionParametersNormalised
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
 )
@@ -412,7 +412,7 @@ class HederaBuilder:
 
     @staticmethod
     def delete_schedule_transaction(
-        params: ScheduleDeleteTransactionParameters,
+        params: ScheduleDeleteTransactionParametersNormalised,
     ) -> ScheduleDeleteTransaction:
         """Build a ScheduleDeleteTransaction.
 
@@ -422,7 +422,7 @@ class HederaBuilder:
         Returns:
             ScheduleDeleteTransaction: Transaction ready for submission.
         """
-        return ScheduleDeleteTransaction(**vars(params))
+        return ScheduleDeleteTransaction(params.schedule_id)
 
     @staticmethod
     def associate_token(
