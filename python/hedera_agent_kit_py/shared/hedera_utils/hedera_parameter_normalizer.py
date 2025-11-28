@@ -44,6 +44,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    AccountTokenBalancesQueryParameters,
+    AccountTokenBalancesQueryParametersNormalised,
     AssociateTokenParameters,
     AssociateTokenParametersNormalised,
     GetTopicInfoParameters,
@@ -372,6 +374,34 @@ class HederaParameterNormaliser:
             resolved_account_id = parsed_params.account_id
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @staticmethod
+    def normalise_account_token_balances_params(
+        params: AccountTokenBalancesQueryParameters,
+        context: Context,
+        client: Client,
+    ) -> AccountTokenBalancesQueryParametersNormalised:
+        """Normalise account token balances query parameters.
+
+        If an account_id is provided, it is used directly.
+        Otherwise, the default account from AccountResolver is used.
+        """
+        parsed_params: AccountTokenBalancesQueryParameters = cast(
+            AccountTokenBalancesQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountTokenBalancesQueryParameters
+            ),
+        )
+
+        if parsed_params.account_id is None:
+            resolved_account_id = AccountResolver.get_default_account(context, client)
+        else:
+            resolved_account_id = parsed_params.account_id
+
+        return AccountTokenBalancesQueryParametersNormalised(
+            account_id=resolved_account_id,
+            token_id=parsed_params.token_id,
+        )
 
     @classmethod
     def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
