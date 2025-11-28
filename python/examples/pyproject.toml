@@ -2,12 +2,13 @@
 name = "hedera-agent-kit-examples"
 version = "3.0.0"
 description = "Example applications using hedera-agent-kit-py"
-packages = [{ include = "examples" }]
+package-mode = false  # <--- ADD THIS LINE
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
 hedera-agent-kit-py = { path = "..", develop = true } # reference local version of a package
 poetry-core = "^2.2.1"
+hiero-sdk-python = "0.1.9"
 
 [build-system]
 requires = ["poetry-core"]

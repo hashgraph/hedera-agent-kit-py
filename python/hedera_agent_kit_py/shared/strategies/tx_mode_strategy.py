@@ -156,12 +156,13 @@ class ReturnBytesStrategy(TxModeStrategy):
         if not context.account_id:
             raise ValueError("Context account_id is required for RETURN_BYTES mode")
         tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
-        # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
-        # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
+        tx.node_account_id = [AccountId.from_string("0.0.3"), AccountId.from_string("0.0.4"), AccountId.from_string("0.0.5")]
+        tx.set_transaction_id(tx_id).freeze()
+
         return ReturnBytesToolResponse(
-            bytes_data=b"bytes",
-            human_message=f"Transaction bytes: <HERE PASS SOME BYTES>",
-        )  # temporary placeholder
+            bytes_data=tx.to_bytes(),
+            human_message=f"Transaction bytes: {str(tx.to_bytes())}",
+        )
 
 
 def get_strategy_from_context(context: Context) -> TxModeStrategy:
