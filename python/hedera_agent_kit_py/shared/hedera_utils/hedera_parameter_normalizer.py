@@ -1414,6 +1414,7 @@ class HederaParameterNormaliser:
             hbar_allowances=[allowance],
             transaction_memo=parsed_params.transaction_memo,
         )
+
     @staticmethod
     async def normalise_approve_token_allowance(
         params: ApproveTokenAllowanceParameters,

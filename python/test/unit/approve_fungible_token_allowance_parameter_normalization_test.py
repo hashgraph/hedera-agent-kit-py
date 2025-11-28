@@ -55,9 +55,7 @@ class TestApproveFungibleTokenAllowanceParameterNormalization:
         params = ApproveTokenAllowanceParameters(
             owner_account_id="0.0.1111",
             spender_account_id="0.0.2222",
-            token_approvals=[
-                TokenApproval(token_id="0.0.9999", amount=100)
-            ],
+            token_approvals=[TokenApproval(token_id="0.0.9999", amount=100)],
             transaction_memo="approve FT allowance",
         )
 
@@ -160,12 +158,12 @@ class TestApproveFungibleTokenAllowanceParameterNormalization:
 
     @pytest.mark.asyncio
     async def test_explicitly_passed_none_owner_account_id_defaults_correctly(
-            self,
-            mock_context,
-            mock_client,
-            mock_mirrornode,
-            mock_account_resolver,
-            operator_id,
+        self,
+        mock_context,
+        mock_client,
+        mock_mirrornode,
+        mock_account_resolver,
+        operator_id,
     ):
         # Explicitly passing None to owner_account_id
         params = ApproveTokenAllowanceParameters(

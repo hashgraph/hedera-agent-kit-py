@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pprint import pprint
+
 from hiero_sdk_python import Client, AccountAllowanceApproveTransaction
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -48,6 +50,8 @@ Parameters:
   - amount (number): Amount of tokens to approve (must be a positive integer)
 - transaction_memo (string, optional): Optional memo for the transaction
 {usage_instructions}
+
+Note: Make sure token_approvals filed was passed - it is mandatory
 """
 
 
@@ -61,6 +65,7 @@ async def approve_fungible_token_allowance(
     params: ApproveTokenAllowanceParameters,
 ) -> ToolResponse:
     try:
+        pprint(params)
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )

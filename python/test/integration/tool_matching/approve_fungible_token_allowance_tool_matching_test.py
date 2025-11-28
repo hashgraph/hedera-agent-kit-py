@@ -99,11 +99,11 @@ async def test_match_approve_token_allowance_with_owner_and_memo(
 
 
 @pytest.mark.asyncio
-async def test_match_multiple_token_allowances(
-    agent_executor, toolkit, monkeypatch
-):
+async def test_match_multiple_token_allowances(agent_executor, toolkit, monkeypatch):
     """Test matching multiple token allowances."""
-    input_text = "Approve 10 tokens of 0.0.1 and 20 tokens of 0.0.2 for spender 0.0.4444"
+    input_text = (
+        "Approve 10 tokens of 0.0.1 and 20 tokens of 0.0.2 for spender 0.0.4444"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -136,9 +136,13 @@ async def test_tool_available(toolkit):
     """Test that approve fungible token allowance tool is available in the toolkit."""
     tools = toolkit.get_tools()
     allowance_tool = next(
-        (tool for tool in tools if tool.name == APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL), None
+        (tool for tool in tools if tool.name == APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL),
+        None,
     )
 
     assert allowance_tool is not None
     assert allowance_tool.name == APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL
-    assert "approves allowances for one or more fungible tokens" in allowance_tool.description
+    assert (
+        "approves allowances for one or more fungible tokens"
+        in allowance_tool.description
+    )

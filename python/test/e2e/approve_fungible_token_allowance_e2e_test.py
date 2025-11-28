@@ -14,7 +14,8 @@ from hiero_sdk_python import (
     AccountId,
     Client,
     TransferTransaction,
-    SupplyType, TokenId,
+    SupplyType,
+    TokenId,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
@@ -142,7 +143,7 @@ async def test_token(executor_account):
     ft_params = TokenParams(
         token_name="E2EAllowToken",
         token_symbol="E2EALW",
-        initial_supply=1000,
+        initial_supply=50000,
         decimals=2,
         max_supply=100000,
         supply_type=SupplyType.FINITE,
@@ -220,7 +221,7 @@ def validate_tool_use(
 
     # Check if raw status exists and is SUCCESS
     if tool_call.parsedData.get("error"):
-         raise ValueError(
+        raise ValueError(
             f"Tool execution failed with error: {tool_call.parsedData['error']}"
         )
 
@@ -242,11 +243,13 @@ async def spend_token_via_allowance(
     Helper to execute a TransferTransaction using the approved token allowance.
     This simulates the Spender taking action.
     """
+    print(
+        f"spending {amount} tokens from {owner_id} to {spender_id}. The token id is {token_id}."
+    )
     tx = (
         TransferTransaction()
         .add_approved_token_transfer(TokenId.from_string(token_id), owner_id, -amount)
         .add_token_transfer(TokenId.from_string(token_id), spender_id, amount)
-        .set_transaction_id(spender_client.generate_transaction_id()) # Explicitly set ID
     )
 
     # Execute and wait for a receipt to ensure it passed
@@ -278,9 +281,7 @@ async def test_should_approve_token_allowance_and_allow_spender_to_use_it(
     memo = "E2E token allow memo"
 
     # 1. Agent approves allowance
-    input_text = (
-        f'Approve allowance of {allowance_amount} tokens for token {token_id_str} to {spender_id} with memo "{memo}"'
-    )
+    input_text = f'Approve allowance of {allowance_amount} tokens for token {token_id_str} to {spender_id} with memo "{memo}"'
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
 
     pprint(result)
