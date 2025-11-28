@@ -67,6 +67,9 @@ CREATE_NON_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
 GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_PENDING_AIRDROP_QUERY_TOOL"
 ]
+MINT_NON_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
+    "MINT_NON_FUNGIBLE_TOKEN_TOOL"
+]
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
@@ -126,6 +129,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         DISSOCIATE_TOKEN_TOOL,
         GET_PENDING_AIRDROP_QUERY_TOOL,
         CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+        MINT_NON_FUNGIBLE_TOKEN_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
     ],
     plugins=[
