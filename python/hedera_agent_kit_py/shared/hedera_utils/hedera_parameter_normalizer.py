@@ -14,6 +14,7 @@ from hiero_sdk_python import (
     TokenId,
     SupplyType,
     HbarAllowance,
+    TokenType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
@@ -70,6 +71,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
     DissociateTokenParameters,
     DissociateTokenParametersNormalised,
+    CreateNonFungibleTokenParameters,
+    CreateNonFungibleTokenParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -1216,6 +1219,104 @@ class HederaParameterNormaliser:
         return MintFungibleTokenParametersNormalised(
             token_id=TokenId.from_string(parsed_params.token_id),
             amount=int(base_amount),
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_create_non_fungible_token_params(
+        params: CreateNonFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
+    ) -> CreateNonFungibleTokenParametersNormalised:
+        """Normalize parameters for creating a non-fungible token (NFT).
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+            mirrornode: The Mirrornode service instance.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: CreateNonFungibleTokenParameters = cast(
+            CreateNonFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateNonFungibleTokenParameters
+            ),
+        )
+
+        # Treasury Resolution
+        default_account_id = (
+            str(client.operator_account_id) if client.operator_account_id else None
+        )
+        treasury_account_id = parsed_params.treasury_account_id or default_account_id
+
+        if not treasury_account_id:
+            raise ValueError("Must include treasury account ID")
+
+        # Resolve Supply Type and Max Supply based solely on max_supply presence
+        if parsed_params.max_supply is not None:
+            supply_type = SupplyType.FINITE
+            max_supply = int(parsed_params.max_supply)
+        else:
+            supply_type = SupplyType.INFINITE
+            max_supply = 0  # Python SDK uses 0 to denote infinite supply
+
+        # Supply Key Resolution (MANDATORY for NFTs)
+        supply_key: Optional[PublicKey] = None
+        public_key_str = None
+
+        # 1. Try to fetch public key from the Treasury Account
+        try:
+            account_info = await mirrornode.get_account(treasury_account_id)
+            if account_info.get("account_public_key"):
+                public_key_str = account_info["account_public_key"]
+        except Exception:
+            pass
+
+        # 2. Fallback to Operator Key if Treasury lookup failed
+        if not public_key_str and client.operator_private_key:
+            public_key_obj = client.operator_private_key.public_key()
+            if public_key_obj:
+                public_key_str = public_key_obj.to_string_der()
+
+        # 3. Construct Key or Raise Error
+        if public_key_str:
+            supply_key = PublicKey.from_string(public_key_str)
+        else:
+            # Explicitly raise an error as Supply Key is mandatory
+            raise ValueError(
+                "Could not resolve a Supply Key (required for NFTs). Ensure Treasury has a public key or Operator is configured."
+            )
+
+        # Construct TokenParams
+        token_params = TokenParams(
+            token_name=parsed_params.token_name,
+            token_symbol=parsed_params.token_symbol,
+            decimals=0,  # NFTs have 0 decimals
+            initial_supply=0,  # NFTs start with 0 supply
+            treasury_account_id=AccountId.from_string(treasury_account_id),
+            supply_type=supply_type,
+            max_supply=max_supply,
+            token_type=TokenType.NON_FUNGIBLE_UNIQUE,
+            auto_renew_account_id=AccountId.from_string(default_account_id),
+        )
+
+        token_keys = TokenKeys(supply_key=supply_key)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return CreateNonFungibleTokenParametersNormalised(
+            token_params=token_params,
+            keys=token_keys,
             scheduling_params=scheduling_params,
         )
 

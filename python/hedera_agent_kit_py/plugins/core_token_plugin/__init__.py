@@ -6,6 +6,10 @@ from .associate_token import (
     AssociateTokenTool,
     ASSOCIATE_TOKEN_TOOL,
 )
+from .create_non_fungible_token import (
+    CreateNonFungibleTokenTool,
+    CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+)
 
 from .mint_fungible_token import MintFungibleTokenTool, MINT_FUNGIBLE_TOKEN_TOOL
 
@@ -24,6 +28,7 @@ core_token_plugin = Plugin(
         AssociateTokenTool(context),
         MintFungibleTokenTool(context),
         DissociateTokenTool(context),
+        CreateNonFungibleTokenTool(context),
     ],
 )
 
@@ -32,6 +37,7 @@ core_token_plugin_tool_names = {
     "ASSOCIATE_TOKEN_TOOL": ASSOCIATE_TOKEN_TOOL,
     "MINT_FUNGIBLE_TOKEN_TOOL": MINT_FUNGIBLE_TOKEN_TOOL,
     "DISSOCIATE_TOKEN_TOOL": DISSOCIATE_TOKEN_TOOL,
+    "CREATE_NON_FUNGIBLE_TOKEN_TOOL": CREATE_NON_FUNGIBLE_TOKEN_TOOL,
 }
 
 __all__ = [
@@ -39,6 +45,7 @@ __all__ = [
     "AssociateTokenTool",
     "DissociateTokenTool",
     "MintFungibleTokenTool",
+    "CreateNonFungibleTokenTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
 ]
