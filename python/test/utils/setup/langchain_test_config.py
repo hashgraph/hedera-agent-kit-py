@@ -73,6 +73,9 @@ DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
 APPROVE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "APPROVE_HBAR_ALLOWANCE_TOOL"
 ]
+APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL"
+]
 
 
 @dataclass
@@ -131,6 +134,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_NON_FUNGIBLE_TOKEN_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
         APPROVE_HBAR_ALLOWANCE_TOOL,
+        APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
     ],
     plugins=[
         core_account_plugin,
