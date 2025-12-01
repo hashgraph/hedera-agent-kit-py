@@ -64,7 +64,7 @@ async def test_match_simple_transfer(agent_executor, toolkit, monkeypatch):
     assert payload.get("source_account_id") == "0.0.1002"
     assert payload.get("token_id") == "0.0.33333"
 
-    assert any(t.account_id  == "0.0.2002" and int(t.amount) == 100 for t in transfers)
+    assert any(t.account_id == "0.0.2002" and int(t.amount) == 100 for t in transfers)
 
 
 @pytest.mark.asyncio
@@ -91,7 +91,7 @@ async def test_match_multiple_recipients(agent_executor, toolkit, monkeypatch):
     assert payload.get("token_id") == "0.0.33333"
 
     assert any(t.account_id == "0.0.2002" and int(t.amount) == 50 for t in transfers)
-    assert any(t.account_id  == "0.0.3003" and int(t.amount) == 75 for t in transfers)
+    assert any(t.account_id == "0.0.3003" and int(t.amount) == 75 for t in transfers)
 
 
 @pytest.mark.asyncio

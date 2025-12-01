@@ -114,15 +114,19 @@ class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     nft_approved_transfer: Dict[TokenId, List[Tuple[AccountId, AccountId, int, bool]]]
     transaction_memo: Optional[str] = None
 
+
 class TokenTransferEntry(BaseModelWithArbitraryTypes):
     account_id: Annotated[
-        str,
-        Field(description="The recipient's account ID (e.g., '0.0.12345').")
+        str, Field(description="The recipient's account ID (e.g., '0.0.12345').")
     ]
     amount: Annotated[
         Union[int, float],
-        Field(gt=0, description="The amount of tokens to transfer. Must be greater than 0.")
+        Field(
+            gt=0,
+            description="The amount of tokens to transfer. Must be greater than 0.",
+        ),
     ]
+
 
 class TransferFungibleTokenWithAllowanceParameters(OptionalScheduledTransactionParams):
     token_id: Annotated[str, Field(description="Token ID to transfer.")]
@@ -130,7 +134,8 @@ class TransferFungibleTokenWithAllowanceParameters(OptionalScheduledTransactionP
         str, Field(description="Account ID of the token owner.")
     ]
     transfers: Annotated[
-        List[TokenTransferEntry], Field(min_length=1, description="Array of recipient transfers.")
+        List[TokenTransferEntry],
+        Field(min_length=1, description="Array of recipient transfers."),
     ]
     transaction_memo: Annotated[
         Optional[str], Field(description="Optional transaction memo.")

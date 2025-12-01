@@ -112,9 +112,7 @@ async def transfer_fungible_token_with_allowance(
             )
         )
 
-        tx = HederaBuilder.transfer_fungible_token_with_allowance(
-            normalised_params
-        )
+        tx = HederaBuilder.transfer_fungible_token_with_allowance(normalised_params)
 
         return await handle_transaction(tx, client, context, post_process)
 

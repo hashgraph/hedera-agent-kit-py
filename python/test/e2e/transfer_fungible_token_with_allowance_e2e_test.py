@@ -8,6 +8,7 @@ This module tests the full lifecycle of a token allowance transfer:
 
 
 """
+
 from typing import AsyncGenerator, Any, Dict
 
 import pytest
@@ -67,7 +68,7 @@ def operator_wrapper(operator_client):
 
 @pytest.fixture
 async def allowance_test_setup(
-        operator_wrapper, operator_client
+    operator_wrapper, operator_client
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Sets up the complete environment for allowance tests.
 
@@ -190,9 +191,7 @@ async def allowance_test_setup(
 
     # cleanup accounts in reverse order of creation/dependency
     if spender_id:
-        await return_hbars_and_delete_account(
-            spender_wrapper, spender_id, executor_id
-        )
+        await return_hbars_and_delete_account(spender_wrapper, spender_id, executor_id)
     spender_client.close()
 
     if receiver_id:
@@ -220,7 +219,7 @@ def langchain_config():
 
 
 async def execute_agent_request(
-        agent_executor, input_text: str, config: RunnableConfig
+    agent_executor, input_text: str, config: RunnableConfig
 ):
     """Execute a request via the agent and return the response."""
     return await agent_executor.ainvoke(
@@ -229,14 +228,17 @@ async def execute_agent_request(
 
 
 def validate_success_response(
-        result: dict, response_parser: ResponseParserService
+    result: dict, response_parser: ResponseParserService
 ) -> Any:
     """Parses tool messages and validates success status."""
     parsed_response = response_parser.parse_new_tool_messages(result)
     assert parsed_response, "No tool calls found in response"
 
     tool_data = parsed_response[0].parsedData
-    assert "Fungible tokens successfully transferred with allowance" in tool_data["humanMessage"]
+    assert (
+        "Fungible tokens successfully transferred with allowance"
+        in tool_data["humanMessage"]
+    )
     assert tool_data["raw"]["status"] == "SUCCESS"
 
     return tool_data
@@ -249,7 +251,7 @@ def validate_success_response(
 
 @pytest.mark.asyncio
 async def test_agent_transfer_to_self_with_allowance(
-        allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
+    allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
 ):
     """Test using allowance to transfer tokens to self (spender)."""
     agent = allowance_test_setup["agent"]
@@ -280,7 +282,7 @@ async def test_agent_transfer_to_self_with_allowance(
 
 @pytest.mark.asyncio
 async def test_agent_transfer_to_multiple_recipients(
-        allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
+    allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
 ):
     """Test using allowance to transfer to multiple recipients."""
     agent = allowance_test_setup["agent"]
@@ -319,7 +321,7 @@ async def test_agent_transfer_to_multiple_recipients(
 
 @pytest.mark.asyncio
 async def test_agent_schedule_transfer_with_allowance(
-        allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
+    allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
 ):
     """Test scheduling an allowance transfer."""
     agent = allowance_test_setup["agent"]
@@ -339,11 +341,14 @@ async def test_agent_schedule_transfer_with_allowance(
     parsed_response = response_parser.parse_new_tool_messages(result)
 
     tool_data = parsed_response[0].parsedData
-    assert "Scheduled allowance transfer created successfully" in tool_data["humanMessage"]
+    assert (
+        "Scheduled allowance transfer created successfully" in tool_data["humanMessage"]
+    )
+
 
 @pytest.mark.asyncio
 async def test_agent_fail_exceed_allowance(
-        allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
+    allowance_test_setup: Dict[str, Any], langchain_config: RunnableConfig
 ):
     """Test that attempting to transfer more than the allowance fails gracefully."""
     agent = allowance_test_setup["agent"]
@@ -363,5 +368,7 @@ async def test_agent_fail_exceed_allowance(
     parsed_response = response_parser.parse_new_tool_messages(result)
 
     tool_data = parsed_response[0].parsedData
-    assert "Failed to transfer fungible token with allowance" in tool_data["humanMessage"]
+    assert (
+        "Failed to transfer fungible token with allowance" in tool_data["humanMessage"]
+    )
     assert "AMOUNT_EXCEEDS_ALLOWANCE" in tool_data["humanMessage"]

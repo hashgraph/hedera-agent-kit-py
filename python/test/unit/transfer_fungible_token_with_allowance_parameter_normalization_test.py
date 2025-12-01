@@ -40,7 +40,7 @@ def mock_mirrornode():
 @pytest.mark.asyncio
 class TestTransferFungibleTokenWithAllowanceNormalization:
     async def test_normalise_single_transfer(
-            self, mock_context, mock_client, mock_mirrornode
+        self, mock_context, mock_client, mock_mirrornode
     ):
         params = TransferFungibleTokenWithAllowanceParameters(
             token_id="0.0.9999",
@@ -63,17 +63,17 @@ class TestTransferFungibleTokenWithAllowanceNormalization:
 
         # Recipient credit
         recipient_id = AccountId.from_string("0.0.2002")
-        assert transfers[recipient_id] == 100 * 10 ** 2
+        assert transfers[recipient_id] == 100 * 10**2
 
         # Owner debit
         owner_id = AccountId.from_string("0.0.1001")
-        assert transfers[owner_id] == -(100 * 10 ** 2)
+        assert transfers[owner_id] == -(100 * 10**2)
 
         assert result.transaction_memo == "Test memo"
         assert result.scheduling_params is None
 
     async def test_normalise_multiple_transfers(
-            self, mock_context, mock_client, mock_mirrornode
+        self, mock_context, mock_client, mock_mirrornode
     ):
         params = TransferFungibleTokenWithAllowanceParameters(
             token_id="0.0.9999",
@@ -91,13 +91,13 @@ class TestTransferFungibleTokenWithAllowanceNormalization:
         token_id = TokenId.from_string("0.0.9999")
         transfers = result.ft_approved_transfer[token_id]
 
-        assert transfers[AccountId.from_string("0.0.2002")] == 50 * 10 ** 2
-        assert transfers[AccountId.from_string("0.0.3003")] == 75 * 10 ** 2
-        assert transfers[AccountId.from_string("0.0.1001")] == -(125 * 10 ** 2)
+        assert transfers[AccountId.from_string("0.0.2002")] == 50 * 10**2
+        assert transfers[AccountId.from_string("0.0.3003")] == 75 * 10**2
+        assert transfers[AccountId.from_string("0.0.1001")] == -(125 * 10**2)
 
     @patch.object(AccountResolver, "get_default_public_key")
     async def test_scheduling_params(
-            self, mock_resolver, mock_context, mock_client, mock_mirrornode
+        self, mock_resolver, mock_context, mock_client, mock_mirrornode
     ):
         # Mocking the account resolver call that happens inside normalise_scheduled_transaction_params
         mock_resolver.return_value = mock_client.operator_public_key
@@ -106,7 +106,9 @@ class TestTransferFungibleTokenWithAllowanceNormalization:
             token_id="0.0.9999",
             source_account_id="0.0.1001",
             transfers=[TokenTransferEntry(account_id="0.0.2002", amount=50)],
-            scheduling_params=SchedulingParams(is_scheduled=True, wait_for_expiry=False),
+            scheduling_params=SchedulingParams(
+                is_scheduled=True, wait_for_expiry=False
+            ),
         )
 
         result = await HederaParameterNormaliser.normalise_transfer_fungible_token_with_allowance(
@@ -116,14 +118,14 @@ class TestTransferFungibleTokenWithAllowanceNormalization:
         assert result.scheduling_params is not None
         assert result.scheduling_params.wait_for_expiry is False
 
-    async def test_invalid_amount(
-            self, mock_context, mock_client, mock_mirrornode
-    ):
+    async def test_invalid_amount(self, mock_context, mock_client, mock_mirrornode):
 
         params = TransferFungibleTokenWithAllowanceParameters.model_construct(
             token_id="0.0.9999",
             source_account_id="0.0.1001",
-            transfers=[TokenTransferEntry.model_construct(account_id="0.0.2002", amount=-50)],
+            transfers=[
+                TokenTransferEntry.model_construct(account_id="0.0.2002", amount=-50)
+            ],
         )
 
         with pytest.raises(ValueError, match="Invalid transfer amount"):

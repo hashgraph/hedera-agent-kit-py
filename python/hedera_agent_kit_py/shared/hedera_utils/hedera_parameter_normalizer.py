@@ -74,7 +74,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     DissociateTokenParameters,
     DissociateTokenParametersNormalised,
     CreateNonFungibleTokenParameters,
-    CreateNonFungibleTokenParametersNormalised, TransferFungibleTokenWithAllowanceParameters,
+    CreateNonFungibleTokenParametersNormalised,
+    TransferFungibleTokenWithAllowanceParameters,
     TransferFungibleTokenWithAllowanceParametersNormalised,
 )
 
@@ -1400,10 +1401,10 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_fungible_token_with_allowance(
-            params: TransferFungibleTokenWithAllowanceParameters,
-            context: Context,
-            client: Client,
-            mirrornode: IHederaMirrornodeService,
+        params: TransferFungibleTokenWithAllowanceParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
     ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
         """Normalize parameters for transferring fungible tokens with allowance.
 

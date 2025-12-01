@@ -96,7 +96,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         receiver_client = get_custom_client(receiver_account_id, receiver_key)
         receiver_wrapper = HederaOperationsWrapper(receiver_client)
 
-        context = Context(mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id))
+        context = Context(
+            mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id)
+        )
 
         await wait(MIRROR_NODE_WAITING_TIME)
 
@@ -283,7 +285,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         result = await tool.execute(spender_client, context, params)
         exec_result = cast(ExecutedTransactionToolResponse, result)
 
-        assert "Scheduled allowance transfer created successfully" in result.human_message
+        assert (
+            "Scheduled allowance transfer created successfully" in result.human_message
+        )
         assert exec_result.raw.status == "SUCCESS"
 
     async def test_fail_exceed_allowance(self, setup_accounts):
@@ -298,7 +302,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         params = TransferFungibleTokenWithAllowanceParameters(
             token_id=str(token_id),
             source_account_id=str(executor_account_id),
-            transfers=[TokenTransferEntry(account_id=str(spender_account_id), amount=300)],
+            transfers=[
+                TokenTransferEntry(account_id=str(spender_account_id), amount=300)
+            ],
         )
 
         result = await tool.execute(spender_client, context, params)
