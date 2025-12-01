@@ -1,5 +1,5 @@
 # Environment variables
-.env
+python/.env
 *.env
 .env.local
 .env.development.local
@@ -38,3 +38,4 @@ pids/
 # Temporary folders
 tmp/
 temp/
+*.pyc
