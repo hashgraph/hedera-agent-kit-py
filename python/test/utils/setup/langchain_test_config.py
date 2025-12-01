@@ -21,9 +21,9 @@ from hedera_agent_kit_py.plugins import (
     core_token_plugin_tool_names,
     core_transaction_query_plugin,
     core_transaction_query_plugin_tool_names,
+    core_evm_query_plugin_tool_names,
+    core_evm_query_plugin
 )
-
-
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
@@ -59,6 +59,9 @@ UPDATE_TOPIC_TOOL = core_consensus_plugin_tool_names["UPDATE_TOPIC_TOOL"]
 MINT_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names["MINT_FUNGIBLE_TOKEN_TOOL"]
 GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
+]
+GET_CONTRACT_INFO_QUERY_TOOL = core_evm_query_plugin_tool_names[
+    "GET_CONTRACT_INFO_QUERY_TOOL"
 ]
 DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
 CREATE_NON_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
@@ -131,6 +134,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
         CREATE_NON_FUNGIBLE_TOKEN_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
+        GET_CONTRACT_INFO_QUERY_TOOL
     ],
     plugins=[
         core_account_plugin,
@@ -142,6 +146,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         core_transaction_query_plugin,
         core_token_plugin,
         core_token_query_plugin,
+        core_evm_query_plugin
     ],
     agent_mode=AgentMode.AUTONOMOUS,
 )
