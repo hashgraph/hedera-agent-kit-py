@@ -53,7 +53,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     ContractExecuteTransactionParametersNormalised,
     SignScheduleTransactionParameters,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import ScheduleDeleteTransactionParametersNormalised
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    ScheduleDeleteTransactionParametersNormalised,
+)
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
 )

@@ -84,7 +84,9 @@ async def setup_accounts():
     recipient_cleanup_wrapper = HederaOperationsWrapper(recipient_client)
 
     await return_hbars_and_delete_account(
-        recipient_cleanup_wrapper, recipient_account_id, operator_client.operator_account_id
+        recipient_cleanup_wrapper,
+        recipient_account_id,
+        operator_client.operator_account_id,
     )
 
     recipient_client.close()
@@ -93,10 +95,10 @@ async def setup_accounts():
 
 
 async def create_deletable_scheduled_transaction(
-        wrapper: HederaOperationsWrapper,
-        client: Client,
-        payer_id: AccountId,
-        recipient_id: AccountId,
+    wrapper: HederaOperationsWrapper,
+    client: Client,
+    payer_id: AccountId,
+    recipient_id: AccountId,
 ) -> str:
     """
     Creates a scheduled transaction where the 'client' operator is the admin,
@@ -135,7 +137,7 @@ async def create_deletable_scheduled_transaction(
 
 @pytest.mark.asyncio
 async def test_successfully_deletes_scheduled_transaction_before_execution(
-        setup_accounts,
+    setup_accounts,
 ):
     executor_client: Client = setup_accounts["executor_client"]
     executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]

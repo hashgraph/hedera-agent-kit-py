@@ -106,19 +106,23 @@ def langchain_config():
 @pytest.fixture
 def context(executor_account):
     """Context is now based on the Executor."""
-    executor_id, _, _, _ = executor_account# ============================================================================
+    executor_id, _, _, _ = (
+        executor_account  # ============================================================================
+    )
+
+
 # TEST CASES
 # ============================================================================
 
 
 @pytest.mark.asyncio
 async def test_deletes_a_scheduled_transaction_by_admin(
-        agent_executor,
-        operator_client,
-        executor_account,
-        context,
-        langchain_config,
-        response_parser,
+    agent_executor,
+    operator_client,
+    executor_account,
+    context,
+    langchain_config,
+    response_parser,
 ):
     """
     E2E Test:
@@ -134,7 +138,7 @@ async def test_deletes_a_scheduled_transaction_by_admin(
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
-        recipient_id=operator_client.operator_account_id
+        recipient_id=operator_client.operator_account_id,
     )
 
     # 2. Act: Ask agent (Executor) to delete it
@@ -162,9 +166,9 @@ async def test_deletes_a_scheduled_transaction_by_admin(
 
 
 async def create_deletable_scheduled_transaction(
-        wrapper: HederaOperationsWrapper,
-        client: Client,
-        recipient_id: AccountId,
+    wrapper: HederaOperationsWrapper,
+    client: Client,
+    recipient_id: AccountId,
 ) -> str:
     """
     Creates a scheduled transaction using the Wrapper.
@@ -205,7 +209,7 @@ async def create_deletable_scheduled_transaction(
 
 
 def extract_tool_human_message(
-        agent_result, response_parser: ResponseParserService, tool_name: str
+    agent_result, response_parser: ResponseParserService, tool_name: str
 ) -> str:
     parsed_tool_calls = response_parser.parse_new_tool_messages(agent_result)
 
@@ -228,11 +232,11 @@ def extract_tool_human_message(
 
 @pytest.mark.asyncio
 async def test_deletes_a_scheduled_transaction_by_admin(
-        agent_executor,
-        operator_client,
-        executor_account,
-        langchain_config,
-        response_parser,
+    agent_executor,
+    operator_client,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     """
     Standard Case: Direct command to delete.
@@ -243,7 +247,7 @@ async def test_deletes_a_scheduled_transaction_by_admin(
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
-        recipient_id=operator_client.operator_account_id
+        recipient_id=operator_client.operator_account_id,
     )
 
     # 2. Act: Direct command
@@ -262,11 +266,11 @@ async def test_deletes_a_scheduled_transaction_by_admin(
 
 @pytest.mark.asyncio
 async def test_deletes_schedule_with_natural_language_cancel_request(
-        agent_executor,
-        operator_client,
-        executor_account,
-        langchain_config,
-        response_parser,
+    agent_executor,
+    operator_client,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     """
     Variation 1: Using "cancel" and polite natural language.
@@ -276,7 +280,7 @@ async def test_deletes_schedule_with_natural_language_cancel_request(
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
-        recipient_id=operator_client.operator_account_id
+        recipient_id=operator_client.operator_account_id,
     )
 
     # Act: Using "cancel" instead of "delete"
@@ -294,11 +298,11 @@ async def test_deletes_schedule_with_natural_language_cancel_request(
 
 @pytest.mark.asyncio
 async def test_deletes_schedule_with_remove_command(
-        agent_executor,
-        operator_client,
-        executor_account,
-        langchain_config,
-        response_parser,
+    agent_executor,
+    operator_client,
+    executor_account,
+    langchain_config,
+    response_parser,
 ):
     """
     Variation 2: Using "remove" and implying urgency.
@@ -308,7 +312,7 @@ async def test_deletes_schedule_with_remove_command(
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
-        recipient_id=operator_client.operator_account_id
+        recipient_id=operator_client.operator_account_id,
     )
 
     # Act: Using "remove"
@@ -326,9 +330,9 @@ async def test_deletes_schedule_with_remove_command(
 
 @pytest.mark.asyncio
 async def test_fails_gracefully_with_non_existent_schedule_id(
-        agent_executor,
-        langchain_config,
-        response_parser,
+    agent_executor,
+    langchain_config,
+    response_parser,
 ):
     """
     Negative Case: Attempting to delete a schedule that does not exist.
