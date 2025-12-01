@@ -3,6 +3,10 @@ from typing import Optional, List, Union, Annotated, Dict, Tuple
 from hiero_sdk_python import AccountId, PublicKey, TokenId, TokenNftAllowance
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
+from hiero_sdk_python.tokens.token_update_transaction import (
+    TokenUpdateKeys,
+    TokenUpdateParams,
+)
 from pydantic import Field
 
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -174,30 +178,42 @@ class UpdateTokenParameters(OptionalScheduledTransactionParams):
     token_name: Annotated[Optional[str], Field(description="New token name")] = None
     token_symbol: Annotated[Optional[str], Field(description="New token symbol")] = None
     token_memo: Annotated[Optional[str], Field(description="New token memo")] = None
-    metadata: Annotated[Optional[bytes], Field(description="New token metadata")] = None
+    metadata: Annotated[Optional[str], Field(description="New token metadata")] = None
     treasury_account_id: Annotated[
         Optional[str], Field(description="New treasury account ID")
     ] = None
     auto_renew_account_id: Annotated[
         Optional[str], Field(description="Auto renew account ID")
     ] = None
-    admin_key: Annotated[Optional[PublicKey], Field(description="Admin key")] = None
-    supply_key: Annotated[Optional[PublicKey], Field(description="Supply key")] = None
-    wipe_key: Annotated[Optional[PublicKey], Field(description="Wipe key")] = None
-    freeze_key: Annotated[Optional[PublicKey], Field(description="Freeze key")] = None
-    kyc_key: Annotated[Optional[PublicKey], Field(description="KYC key")] = None
-    fee_schedule_key: Annotated[
-        Optional[PublicKey], Field(description="Fee schedule key")
+    admin_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Admin key")
     ] = None
-    pause_key: Annotated[Optional[PublicKey], Field(description="Pause key")] = None
-    metadata_key: Annotated[Optional[PublicKey], Field(description="Metadata key")] = (
-        None
-    )
+    supply_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Supply key")
+    ] = None
+    wipe_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Wipe key")
+    ] = None
+    freeze_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Freeze key")
+    ] = None
+    kyc_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="KYC key")
+    ] = None
+    fee_schedule_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Fee schedule key")
+    ] = None
+    pause_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Pause key")
+    ] = None
+    metadata_key: Annotated[
+        Optional[Union[PublicKey, bool, str]], Field(description="Metadata key")
+    ] = None
 
 
 class UpdateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalised):
-    token_keys: Optional[TokenKeys] = None
-    token_params: Optional[TokenParams] = None
+    token_keys: Optional[TokenUpdateKeys] = None
+    token_params: Optional[TokenUpdateParams] = None
     token_id: TokenId
 
 
