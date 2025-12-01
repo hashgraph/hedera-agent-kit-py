@@ -32,6 +32,7 @@ core_account_plugin = Plugin(
         TransferHbarWithAllowanceTool(context),
         DeleteHbarAllowanceTool(context),
         ApproveHbarAllowanceTool(context),
+        ApproveHbarAllowanceTool(context),
         ApproveFungibleTokenAllowanceTool(context),
     ],
 )
