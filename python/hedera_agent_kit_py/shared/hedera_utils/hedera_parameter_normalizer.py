@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from pprint import pprint
-from typing import Optional, Union, cast, Any, Type
+from typing import Optional, Union, cast, Any, Type, List
 
 from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python import (
@@ -18,6 +18,7 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
+from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from pydantic import BaseModel, ValidationError
 from web3 import Web3
 
@@ -26,6 +27,7 @@ from hedera_agent_kit_py.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import TokenInfo
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
@@ -60,6 +62,10 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     MintFungibleTokenParameters,
     MintFungibleTokenParametersNormalised,
+)
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    AirdropFungibleTokenParameters,
+    AirdropFungibleTokenParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
@@ -832,6 +838,96 @@ class HederaParameterNormaliser:
         parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
 
         return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
+
+    @staticmethod
+    async def normalise_airdrop_fungible_token_params(
+        params: AirdropFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
+    ) -> AirdropFungibleTokenParametersNormalised:
+        """Normalise airdrop fungible token parameters.
+
+        Args:
+            params: Raw airdrop parameters.
+            context: Application context.
+            client: Hedera Client.
+            mirrornode_service: Mirror node service.
+
+        Returns:
+            AirdropFungibleTokenParametersNormalised: Normalised parameters.
+        """
+        parsed_params: AirdropFungibleTokenParameters = cast(
+            AirdropFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AirdropFungibleTokenParameters
+            ),
+        )
+
+        source_account_id = AccountResolver.resolve_account(
+            parsed_params.source_account_id, context, client
+        )
+
+        token_info: TokenInfo = await mirrornode_service.get_token_info(
+            parsed_params.token_id
+        )
+        token_decimals = int(token_info.get("decimals", -1))
+        if token_decimals < 0:
+            raise ValueError(
+                f"Unable to retrieve token decimals for token ID {parsed_params.token_id}"
+            )
+
+        token_transfers: List[TokenTransfer] = []
+        total_amount = 0
+
+        for recipient in parsed_params.recipients:
+            # NEVER convert to float — destroys precision
+            amount_raw = Decimal(str(recipient.amount))
+
+            if amount_raw <= 0:
+                raise ValueError(f"Invalid recipient amount: {recipient.amount}")
+
+            # Convert correctly using integer-safe math
+            amount = to_base_unit(amount_raw, token_decimals)
+            amount_int = int(amount)
+
+            if amount_int == 0:
+                raise ValueError(
+                    f"Amount too small after scaling (raw={recipient.amount}, decimals={token_decimals})"
+                )
+
+            total_amount += amount_int
+
+            token_transfers.append(
+                TokenTransfer(
+                    token_id=TokenId.from_string(parsed_params.token_id),
+                    account_id=AccountId.from_string(recipient.account_id),
+                    amount=amount_int,
+                )
+            )
+
+        # Sender negative total
+        token_transfers.append(
+            TokenTransfer(
+                token_id=TokenId.from_string(parsed_params.token_id),
+                account_id=AccountId.from_string(source_account_id),
+                amount=-total_amount,
+            )
+        )
+
+        # Handle optional scheduling
+        scheduling_params = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return AirdropFungibleTokenParametersNormalised(
+            token_transfers=token_transfers,
+            scheduling_params=scheduling_params,
+            transaction_memo=parsed_params.transaction_memo,
+        )
 
     @staticmethod
     async def normalise_create_fungible_token_params(
