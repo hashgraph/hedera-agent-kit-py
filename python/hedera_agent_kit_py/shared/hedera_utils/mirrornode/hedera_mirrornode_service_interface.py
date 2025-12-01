@@ -53,13 +53,14 @@ class IHederaMirrornodeService(ABC):
 
     @abstractmethod
     async def get_account_token_balances(
-        self, account_id: str
+        self, account_id: str, token_id: Optional[str] = None
     ) -> TokenBalancesResponse:
         """
-        Retrieve token balances for a given account.
+        Retrieve token balances for a given account. If token ID is not provided, retrieves all token balances.
 
         Args:
             account_id (str): The Hedera account ID.
+            token_id: (Optional[str]): The token ID. If provided, retrieves the balance for that specific token.
 
         Returns:
             TokenBalancesResponse: Dictionary containing the token balances for the account.
