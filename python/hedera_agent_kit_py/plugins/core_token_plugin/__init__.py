@@ -17,6 +17,10 @@ from hedera_agent_kit_py.plugins.core_token_plugin.dissociate_token import (
     DissociateTokenTool,
     DISSOCIATE_TOKEN_TOOL,
 )
+from hedera_agent_kit_py.plugins.core_token_plugin.transfer_fungible_token_with_allowance import (
+    TransferFungibleTokenWithAllowanceTool,
+    TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+)
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 core_token_plugin = Plugin(
@@ -29,6 +33,7 @@ core_token_plugin = Plugin(
         MintFungibleTokenTool(context),
         DissociateTokenTool(context),
         CreateNonFungibleTokenTool(context),
+        TransferFungibleTokenWithAllowanceTool(context),
     ],
 )
 
@@ -38,6 +43,7 @@ core_token_plugin_tool_names = {
     "MINT_FUNGIBLE_TOKEN_TOOL": MINT_FUNGIBLE_TOKEN_TOOL,
     "DISSOCIATE_TOKEN_TOOL": DISSOCIATE_TOKEN_TOOL,
     "CREATE_NON_FUNGIBLE_TOKEN_TOOL": CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+    "TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL": TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 }
 
 __all__ = [
@@ -46,6 +52,7 @@ __all__ = [
     "DissociateTokenTool",
     "MintFungibleTokenTool",
     "CreateNonFungibleTokenTool",
+    "TransferFungibleTokenWithAllowanceTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
 ]
