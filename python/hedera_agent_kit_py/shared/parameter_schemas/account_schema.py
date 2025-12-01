@@ -153,6 +153,12 @@ class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
+    schedule_id: str = Field(
+        description="The ID of the scheduled transaction to delete."
+    )
+
+
+class ScheduleDeleteTransactionParametersNormalised(BaseModelWithArbitraryTypes):
     schedule_id: ScheduleId = Field(
         description="The ID of the scheduled transaction to delete."
     )
