@@ -17,6 +17,7 @@ from hiero_sdk_python import (
     TokenType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
+from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from pydantic import BaseModel, ValidationError
@@ -225,7 +226,7 @@ class HederaParameterNormaliser:
         )
 
         return ScheduleDeleteTransactionParametersNormalised(
-            schedule_id=parsed_params.schedule_id
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 
     @staticmethod
