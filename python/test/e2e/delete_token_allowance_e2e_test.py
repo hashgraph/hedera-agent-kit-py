@@ -21,7 +21,8 @@ from hiero_sdk_python import (
     AccountId,
     Client,
     TokenId,
-    TokenAllowance, SupplyType,
+    TokenAllowance,
+    SupplyType,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
@@ -267,9 +268,7 @@ async def test_should_delete_existing_token_allowance(
     token_id = fungible_token
 
     # Grant allowance first
-    await approve_token_allowance(
-        executor_wrapper, owner_id, spender_id, token_id, 10
-    )
+    await approve_token_allowance(executor_wrapper, owner_id, spender_id, token_id, 10)
 
     # 2. Execute Deletion via Agent
     input_text = (
@@ -283,7 +282,8 @@ async def test_should_delete_existing_token_allowance(
     # 3. Validate Response
     assert tool_call is not None
     assert (
-        "Token allowance(s) deleted successfully" in tool_call.parsedData["humanMessage"]
+        "Token allowance(s) deleted successfully"
+        in tool_call.parsedData["humanMessage"]
     )
     assert tool_call.parsedData["raw"]["status"] == "SUCCESS"
 
@@ -316,6 +316,7 @@ async def test_handle_deleting_non_existent_token_allowance(
     # Setting allowance to 0 for an account with no allowance is a valid transaction
     assert tool_call is not None
     assert (
-        "Token allowance(s) deleted successfully" in tool_call.parsedData["humanMessage"]
+        "Token allowance(s) deleted successfully"
+        in tool_call.parsedData["humanMessage"]
     )
     assert tool_call.parsedData["raw"]["status"] == "SUCCESS"

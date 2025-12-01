@@ -103,7 +103,6 @@ async def delete_token_allowance(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )
 
-
         # Normalize parameters
         normalised_params: ApproveTokenAllowanceParametersNormalised = (
             await HederaParameterNormaliser.normalise_delete_token_allowance(
@@ -112,9 +111,7 @@ async def delete_token_allowance(
         )
 
         # Build transaction
-        tx = HederaBuilder.approve_token_allowance(
-            normalised_params
-        )
+        tx = HederaBuilder.approve_token_allowance(normalised_params)
 
         # Execute transaction and post-process result
         result = await handle_transaction(tx, client, context)

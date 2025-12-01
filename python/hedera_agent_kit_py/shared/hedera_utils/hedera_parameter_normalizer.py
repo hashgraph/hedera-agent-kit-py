@@ -74,7 +74,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     TransferHbarWithAllowanceParameters,
     DeleteHbarAllowanceParameters,
     ApproveHbarAllowanceParametersNormalised,
-    DeleteTokenAllowanceParameters, TokenApproval,
+    DeleteTokenAllowanceParameters,
+    TokenApproval,
     ApproveTokenAllowanceParameters,
     ApproveTokenAllowanceParametersNormalised,
     ScheduleDeleteTransactionParameters,
@@ -1650,7 +1651,8 @@ class HederaParameterNormaliser:
         # Build approve params with amount = 0 (Hedera convention for revoke)
         # We need to construct the Pydantic model for ApproveTokenAllowanceParameters
         token_approvals = [
-            TokenApproval(token_id=token_id, amount=0) for token_id in parsed_params.token_ids
+            TokenApproval(token_id=token_id, amount=0)
+            for token_id in parsed_params.token_ids
         ]
 
         approve_params = ApproveTokenAllowanceParameters(

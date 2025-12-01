@@ -71,7 +71,9 @@ async def test_match_delete_token_allowance_explicit(agent, toolkit, monkeypatch
 @pytest.mark.asyncio
 async def test_match_delete_token_allowance_with_memo(agent, toolkit, monkeypatch):
     """Test matching delete Token allowance with memo included."""
-    input_text = 'Delete allowance for account 0.0.4444 for token 0.12345 with memo "cleanup"'
+    input_text = (
+        'Delete allowance for account 0.0.4444 for token 0.12345 with memo "cleanup"'
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -122,17 +124,21 @@ async def test_match_implicit_owner(agent, toolkit, monkeypatch):
     "input_text, expected",
     [
         (
-                "Revoke allowance for token 0.0.1111 given to 0.0.2222",
-                {"spender_account_id": "0.0.2222", "token_id": "0.0.1111"},
+            "Revoke allowance for token 0.0.1111 given to 0.0.2222",
+            {"spender_account_id": "0.0.2222", "token_id": "0.0.1111"},
         ),
         (
-                'Delete allowance for token 0.0.3333 spender 0.0.4444 with memo "expired"',
-                {"spender_account_id": "0.0.4444", "token_id": "0.0.3333", "transaction_memo": "expired"},
+            'Delete allowance for token 0.0.3333 spender 0.0.4444 with memo "expired"',
+            {
+                "spender_account_id": "0.0.4444",
+                "token_id": "0.0.3333",
+                "transaction_memo": "expired",
+            },
         ),
     ],
 )
 async def test_handle_various_natural_language_variations(
-        agent, toolkit, monkeypatch, input_text, expected
+    agent, toolkit, monkeypatch, input_text, expected
 ):
     """Test various natural language expressions for deleting Token allowance."""
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
