@@ -31,8 +31,9 @@ from hedera_agent_kit_py.plugins import (
     core_token_query_plugin,
     core_token_plugin,
     core_token_plugin_tool_names,
+    core_evm_query_plugin_tool_names,
+    core_evm_query_plugin
 )
-
 from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -73,6 +74,8 @@ GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
+GET_CONTRACT_INFO_QUERY_TOOL = core_evm_query_plugin_tool_names["GET_CONTRACT_INFO_QUERY_TOOL"]
+
 
 
 async def bootstrap():
@@ -110,6 +113,7 @@ async def bootstrap():
             DISSOCIATE_TOKEN_TOOL,
             GET_PENDING_AIRDROP_QUERY_TOOL,
             DELETE_HBAR_ALLOWANCE_TOOL,
+            GET_CONTRACT_INFO_QUERY_TOOL
         ],
         plugins=[
             core_consensus_plugin,
@@ -121,6 +125,7 @@ async def bootstrap():
             core_token_plugin,
             core_transaction_query_plugin,
             core_token_query_plugin,
+            core_evm_query_plugin
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )

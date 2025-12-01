@@ -77,4 +77,4 @@ class EvmContractCallParametersNormalised(OptionalScheduledTransactionParamsNorm
 
 
 class ContractInfoQueryParameters(BaseModelWithArbitraryTypes):
-    contract_id: Annotated[str, Field(description="The token ID to query.")]
+    contract_id: Annotated[str, Field(description="The id of the ERC721 contract.")]
