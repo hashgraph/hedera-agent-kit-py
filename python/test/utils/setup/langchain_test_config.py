@@ -76,6 +76,7 @@ AIRDROP_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
 GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL"
 ]
+UPDATE_TOKEN_TOOL = core_token_plugin_tool_names["UPDATE_TOKEN_TOOL"]
 
 
 @dataclass
@@ -135,6 +136,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         CREATE_NON_FUNGIBLE_TOKEN_TOOL,
         DELETE_HBAR_ALLOWANCE_TOOL,
         AIRDROP_FUNGIBLE_TOKEN_TOOL,
+        UPDATE_TOKEN_TOOL,
     ],
     plugins=[
         core_account_plugin,
