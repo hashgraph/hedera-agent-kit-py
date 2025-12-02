@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-from pprint import pprint
 from typing import Optional, Union, cast, Any, Type, List
 
 from hiero_sdk_python.contract.contract_id import ContractId
+from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python import (
     AccountId,
     PublicKey,
@@ -74,6 +74,10 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     TransferHbarWithAllowanceParameters,
     DeleteHbarAllowanceParameters,
     ApproveHbarAllowanceParametersNormalised,
+    ApproveHbarAllowanceParameters,
+    ScheduleDeleteTransactionParameters,
+    ScheduleDeleteTransactionParametersNormalised,
+    ApproveHbarAllowanceParameters,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
@@ -198,6 +202,29 @@ class HederaParameterNormaliser:
             hbar_transfers=hbar_transfers,
             scheduling_params=scheduling_params,
             transaction_memo=getattr(parsed_params, "transaction_memo", None),
+        )
+
+    @staticmethod
+    def normalise_schedule_delete_transaction(
+        params: ScheduleDeleteTransactionParameters,
+    ) -> ScheduleDeleteTransactionParametersNormalised:
+        """Normalise schedule delete transaction parameters.
+
+        Args:
+            params: Raw schedule delete parameters.
+
+        Returns:
+            ScheduleDeleteTransactionParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ScheduleDeleteTransactionParameters = cast(
+            ScheduleDeleteTransactionParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ScheduleDeleteTransactionParameters
+            ),
+        )
+
+        return ScheduleDeleteTransactionParametersNormalised(
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 
     @staticmethod
@@ -838,6 +865,50 @@ class HederaParameterNormaliser:
         parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
 
         return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
+
+    @staticmethod
+    def normalise_approve_hbar_allowance(
+        params: ApproveHbarAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> ApproveHbarAllowanceParametersNormalised:
+        """Normalise approve HBAR allowance parameters.
+
+        Args:
+            params: Raw approve HBAR allowance parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            ApproveHbarAllowanceParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ApproveHbarAllowanceParameters = cast(
+            ApproveHbarAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ApproveHbarAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        spender_account_id = parsed_params.spender_account_id
+
+        amount = Hbar(parsed_params.amount)
+        if amount.to_tinybars() < 0:
+            raise ValueError(f"Invalid allowance amount: {parsed_params.amount}")
+
+        return ApproveHbarAllowanceParametersNormalised(
+            hbar_allowances=[
+                HbarAllowance(
+                    owner_account_id=AccountId.from_string(owner_account_id),
+                    spender_account_id=AccountId.from_string(spender_account_id),
+                    amount=amount.to_tinybars(),
+                )
+            ],
+            transaction_memo=parsed_params.transaction_memo,
+        )
 
     @staticmethod
     async def normalise_airdrop_fungible_token_params(
