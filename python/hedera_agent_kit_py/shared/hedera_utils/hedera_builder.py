@@ -345,7 +345,7 @@ class HederaBuilder:
             key=params.key,
             initial_balance=params.initial_balance,
             memo=params.memo,
-            # max_automatic_token_associations=params.max_automatic_token_associations, FIXME: add this back when SDK supports it
+            max_automatic_token_associations=params.max_automatic_token_associations,
         )
         return HederaBuilder.maybe_wrap_in_schedule(
             tx, getattr(params, "scheduling_params", None)
