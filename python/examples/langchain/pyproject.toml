@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "langchain-v1-hedera-agent-kit-examples"
+version = "3.0.0"
+description = "Example applications using hedera-agent-kit-py with langchain v1"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+hedera-agent-kit-py = { path = "../../", develop = true }
+langchain = "^1.0.2"
+langchain-openai = "^1.0.1"
+langchain-anthropic = "^1.0.0"
+langchain-groq = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
