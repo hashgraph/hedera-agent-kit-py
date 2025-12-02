@@ -77,7 +77,6 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParametersNormalised,
     ApproveTokenAllowanceParameters,
     ApproveTokenAllowanceParametersNormalised,
-    ApproveHbarAllowanceParameters,
     ScheduleDeleteTransactionParameters,
     ScheduleDeleteTransactionParametersNormalised,
     ApproveHbarAllowanceParameters,
@@ -87,6 +86,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     DissociateTokenParameters,
     DissociateTokenParametersNormalised,
     CreateNonFungibleTokenParameters,
+    MintNonFungibleTokenParametersNormalised,
+    MintNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised,
     TransferFungibleTokenWithAllowanceParameters,
     TransferFungibleTokenWithAllowanceParametersNormalised,
@@ -868,6 +869,45 @@ class HederaParameterNormaliser:
         parsed_topic_id = TopicId.from_string(parsed_params.topic_id)
 
         return DeleteTopicParametersNormalised(topic_id=parsed_topic_id)
+
+    @staticmethod
+    async def normalise_mint_non_fungible_token_params(
+        params: MintNonFungibleTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> MintNonFungibleTokenParametersNormalised:
+        """Normalise mint non-fungible token parameters.
+
+        Args:
+            params: Raw mint parameters.
+            context: Application context.
+            client: Hedera client.
+
+        Returns:
+            MintNonFungibleTokenParametersNormalised: Normalised parameters.
+        """
+        parsed_params: MintNonFungibleTokenParameters = cast(
+            MintNonFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, MintNonFungibleTokenParameters
+            ),
+        )
+
+        metadata = [uri.encode("utf-8") for uri in parsed_params.uris]
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return MintNonFungibleTokenParametersNormalised(
+            token_id=TokenId.from_string(parsed_params.token_id),
+            metadata=metadata,
+            scheduling_params=scheduling_params,
+        )
 
     @staticmethod
     def normalise_approve_hbar_allowance(
