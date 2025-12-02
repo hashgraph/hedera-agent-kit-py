@@ -15,6 +15,10 @@ from .approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
     APPROVE_HBAR_ALLOWANCE_TOOL,
 )
+from .approve_fungible_token_allowance import (
+    ApproveFungibleTokenAllowanceTool,
+    APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
+)
 from .update_account import UpdateAccountTool, UPDATE_ACCOUNT_TOOL
 
 core_account_plugin = Plugin(
@@ -30,6 +34,8 @@ core_account_plugin = Plugin(
         DeleteHbarAllowanceTool(context),
         ScheduleDeleteTool(context),
         ApproveHbarAllowanceTool(context),
+        ApproveHbarAllowanceTool(context),
+        ApproveFungibleTokenAllowanceTool(context),
     ],
 )
 
@@ -42,6 +48,7 @@ core_account_plugin_tool_names = {
     "DELETE_HBAR_ALLOWANCE_TOOL": DELETE_HBAR_ALLOWANCE_TOOL,
     "SCHEDULE_DELETE_TOOL": SCHEDULE_DELETE_TOOL,
     "APPROVE_HBAR_ALLOWANCE_TOOL": APPROVE_HBAR_ALLOWANCE_TOOL,
+    "APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL": APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
 }
 
 __all__ = [
@@ -55,4 +62,5 @@ __all__ = [
     "DeleteHbarAllowanceTool",
     "ScheduleDeleteTool",
     "ApproveHbarAllowanceTool",
+    "ApproveFungibleTokenAllowanceTool",
 ]

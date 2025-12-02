@@ -73,15 +73,18 @@ GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
+APPROVE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "APPROVE_HBAR_ALLOWANCE_TOOL"
+]
+APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL = core_account_plugin_tool_names[
+    "APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL"
+]
 SCHEDULE_DELETE_TOOL = core_account_plugin_tool_names["SCHEDULE_DELETE_TOOL"]
 AIRDROP_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names[
     "AIRDROP_FUNGIBLE_TOKEN_TOOL"
 ]
 GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = core_account_query_plugin_tool_names[
     "GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL"
-]
-APPROVE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
-    "APPROVE_HBAR_ALLOWANCE_TOOL"
 ]
 
 
@@ -144,6 +147,7 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
         TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
         SCHEDULE_DELETE_TOOL,
         APPROVE_HBAR_ALLOWANCE_TOOL,
+        APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
         AIRDROP_FUNGIBLE_TOKEN_TOOL,
     ],
     plugins=[
