@@ -74,11 +74,15 @@ async def test_processes_scheduling_params(mock_context, mock_client):
     ) as mock_sched_norm:
         scheduling_input = SchedulingParams(is_scheduled=True)
         params = MintNonFungibleTokenParameters(
-            token_id="0.0.9999", uris=["ipfs://scheduled"], scheduling_params=scheduling_input
+            token_id="0.0.9999",
+            uris=["ipfs://scheduled"],
+            scheduling_params=scheduling_input,
         )
 
-        result = await HederaParameterNormaliser.normalise_mint_non_fungible_token_params(
-            params, mock_context, mock_client
+        result = (
+            await HederaParameterNormaliser.normalise_mint_non_fungible_token_params(
+                params, mock_context, mock_client
+            )
         )
 
         assert result.scheduling_params == mock_sched_return

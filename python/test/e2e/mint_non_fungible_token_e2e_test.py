@@ -205,7 +205,9 @@ async def test_mint_multiple_nfts(setup_environment):
     uris = ["ipfs://meta2.json", "ipfs://meta3.json", "ipfs://meta4.json"]
 
     # 2. Execute
-    input_text = f"Mint {len(uris)} NFTs of token {token_id_str} with metadata {', '.join(uris)}"
+    input_text = (
+        f"Mint {len(uris)} NFTs of token {token_id_str} with metadata {', '.join(uris)}"
+    )
 
     result = await execute_agent_request(agent_executor, input_text, config)
     tool_call = extract_tool_result(result, response_parser)
