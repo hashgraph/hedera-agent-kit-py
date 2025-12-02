@@ -1719,15 +1719,15 @@ class HederaParameterNormaliser:
     ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
         """Normalize parameters for transferring fungible tokens with allowance.
 
-        Args:
-            params: The raw input parameters.
-            context: The runtime context.    ApproveTokenAllowanceParameters,
-    ApproveTokenAllowanceParametersNormalised,
-            client: The Hedera client.
-            mirrornode: The Mirrornode service.
+            Args:
+                params: The raw input parameters.
+                context: The runtime context.    ApproveTokenAllowanceParameters,
+        ApproveTokenAllowanceParametersNormalised,
+                client: The Hedera client.
+                mirrornode: The Mirrornode service.
 
-        Returns:
-            The normalized parameters ready for transaction building.
+            Returns:
+                The normalized parameters ready for transaction building.
         """
         parsed_params: TransferFungibleTokenWithAllowanceParameters = cast(
             TransferFungibleTokenWithAllowanceParameters,
@@ -1783,58 +1783,4 @@ class HederaParameterNormaliser:
             ft_approved_transfer=ft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
             scheduling_params=scheduling_params,
-        )
-
-    @staticmethod
-    async def normalise_approve_token_allowance(
-        params: ApproveTokenAllowanceParameters,
-        context: Context,
-        client: Client,
-        mirrornode_service: IHederaMirrornodeService,
-    ) -> ApproveTokenAllowanceParametersNormalised:
-        """Normalise approve token allowance parameters.
-
-        Args:
-            params: Raw approve token allowance parameters.
-            context: Application context.
-            client: Hedera Client.
-            mirrornode_service: Mirror node service.
-
-        Returns:
-            ApproveTokenAllowanceParametersNormalised: Normalised parameters.
-        """
-        parsed_params: ApproveTokenAllowanceParameters = cast(
-            ApproveTokenAllowanceParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, ApproveTokenAllowanceParameters
-            ),
-        )
-
-        owner_account_id = AccountResolver.resolve_account(
-            parsed_params.owner_account_id, context, client
-        )
-
-        spender_account_id = parsed_params.spender_account_id
-
-        token_allowances = []
-        for token_approval in parsed_params.token_approvals:
-            token_info = await mirrornode_service.get_token_info(
-                token_approval.token_id
-            )
-            decimals = int(token_info.get("decimals", 0))
-
-            base_amount = to_base_unit(token_approval.amount, decimals)
-
-            token_allowances.append(
-                TokenAllowance(
-                    token_id=TokenId.from_string(token_approval.token_id),
-                    owner_account_id=AccountId.from_string(owner_account_id),
-                    spender_account_id=AccountId.from_string(spender_account_id),
-                    amount=int(base_amount),
-                )
-            )
-
-        return ApproveTokenAllowanceParametersNormalised(
-            token_allowances=token_allowances,
-            transaction_memo=parsed_params.transaction_memo,
         )
