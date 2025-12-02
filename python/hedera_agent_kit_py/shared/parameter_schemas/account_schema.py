@@ -153,6 +153,12 @@ class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
+    schedule_id: str = Field(
+        description="The ID of the scheduled transaction to delete."
+    )
+
+
+class ScheduleDeleteTransactionParametersNormalised(BaseModelWithArbitraryTypes):
     schedule_id: ScheduleId = Field(
         description="The ID of the scheduled transaction to delete."
     )
@@ -194,7 +200,7 @@ class ApproveTokenAllowanceParameters(BaseModelWithArbitraryTypes):
     spender_account_id: str
     token_approvals: Annotated[
         List[TokenApproval],
-        Field(min_length=1, description="List of token allowances to approve"),
+        Field(min_length=1, description="Required list of token allowances to approve"),
     ]
     transaction_memo: Optional[str] = None
 

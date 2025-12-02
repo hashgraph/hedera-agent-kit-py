@@ -52,7 +52,9 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     ContractExecuteTransactionParametersNormalised,
     SignScheduleTransactionParameters,
-    ScheduleDeleteTransactionParameters,
+)
+from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+    ScheduleDeleteTransactionParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
@@ -239,7 +241,7 @@ class HederaBuilder:
     @staticmethod
     def airdrop_fungible_token(
         params: AirdropFungibleTokenParametersNormalised,
-    ) -> TokenAirdropTransaction:
+    ):
         """Build a TokenAirdropTransaction for fungible tokens.
 
         Args:
@@ -248,7 +250,13 @@ class HederaBuilder:
         Returns:
             TokenAirdropTransaction: Transaction ready for submission.
         """
-        return TokenAirdropTransaction(**vars(params))
+        token_transfers = params.token_transfers
+
+        tx = TokenAirdropTransaction(token_transfers=params.token_transfers)
+
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def update_token(params: UpdateTokenParametersNormalised) -> TokenUpdateTransaction:
@@ -412,7 +420,7 @@ class HederaBuilder:
 
     @staticmethod
     def delete_schedule_transaction(
-        params: ScheduleDeleteTransactionParameters,
+        params: ScheduleDeleteTransactionParametersNormalised,
     ) -> ScheduleDeleteTransaction:
         """Build a ScheduleDeleteTransaction.
 
@@ -422,7 +430,7 @@ class HederaBuilder:
         Returns:
             ScheduleDeleteTransaction: Transaction ready for submission.
         """
-        return ScheduleDeleteTransaction(**vars(params))
+        return ScheduleDeleteTransaction(params.schedule_id)
 
     @staticmethod
     def associate_token(

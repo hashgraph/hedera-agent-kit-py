@@ -21,6 +21,14 @@ from hedera_agent_kit_py.plugins.core_token_plugin.dissociate_token import (
     DissociateTokenTool,
     DISSOCIATE_TOKEN_TOOL,
 )
+from hedera_agent_kit_py.plugins.core_token_plugin.transfer_fungible_token_with_allowance import (
+    TransferFungibleTokenWithAllowanceTool,
+    TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+)
+from hedera_agent_kit_py.plugins.core_token_plugin.airdrop_fungible_token import (
+    AirdropFungibleTokenTool,
+    AIRDROP_FUNGIBLE_TOKEN_TOOL,
+)
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 core_token_plugin = Plugin(
@@ -32,8 +40,10 @@ core_token_plugin = Plugin(
         AssociateTokenTool(context),
         MintFungibleTokenTool(context),
         DissociateTokenTool(context),
+        AirdropFungibleTokenTool(context),
         CreateNonFungibleTokenTool(context),
         MintNonFungibleTokenTool(context),
+        TransferFungibleTokenWithAllowanceTool(context),
     ],
 )
 
@@ -43,6 +53,8 @@ core_token_plugin_tool_names = {
     "MINT_FUNGIBLE_TOKEN_TOOL": MINT_FUNGIBLE_TOKEN_TOOL,
     "DISSOCIATE_TOKEN_TOOL": DISSOCIATE_TOKEN_TOOL,
     "CREATE_NON_FUNGIBLE_TOKEN_TOOL": CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+    "TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL": TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+    "AIRDROP_FUNGIBLE_TOKEN_TOOL": AIRDROP_FUNGIBLE_TOKEN_TOOL,
     "MINT_NON_FUNGIBLE_TOKEN_TOOL": MINT_NON_FUNGIBLE_TOKEN_TOOL,
 }
 
@@ -51,8 +63,10 @@ __all__ = [
     "AssociateTokenTool",
     "DissociateTokenTool",
     "MintFungibleTokenTool",
+    "AirdropFungibleTokenTool",
     "CreateNonFungibleTokenTool",
     "MintNonFungibleTokenTool",
+    "TransferFungibleTokenWithAllowanceTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
 ]

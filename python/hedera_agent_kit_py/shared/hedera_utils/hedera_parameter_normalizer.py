@@ -1,8 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Union, cast, Any, Type
+from typing import Optional, Union, cast, Any, Type, List
 
 from hiero_sdk_python.contract.contract_id import ContractId
+from hiero_sdk_python.schedule.schedule_id import ScheduleId
 from hiero_sdk_python import (
     AccountId,
     PublicKey,
@@ -13,10 +14,12 @@ from hiero_sdk_python import (
     TokenId,
     SupplyType,
     HbarAllowance,
+    TokenAllowance,
     TokenType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
+from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from pydantic import BaseModel, ValidationError
 from web3 import Web3
 
@@ -25,6 +28,7 @@ from hedera_agent_kit_py.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import TokenInfo
 from hedera_agent_kit_py.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
@@ -43,6 +47,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteTopicParametersNormalised,
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
+    AccountTokenBalancesQueryParameters,
+    AccountTokenBalancesQueryParametersNormalised,
     AssociateTokenParameters,
     AssociateTokenParametersNormalised,
     GetTopicInfoParameters,
@@ -58,6 +64,10 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     MintFungibleTokenParameters,
     MintFungibleTokenParametersNormalised,
 )
+from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    AirdropFungibleTokenParameters,
+    AirdropFungibleTokenParametersNormalised,
+)
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
@@ -65,6 +75,12 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     TransferHbarWithAllowanceParameters,
     DeleteHbarAllowanceParameters,
     ApproveHbarAllowanceParametersNormalised,
+    ApproveTokenAllowanceParameters,
+    ApproveTokenAllowanceParametersNormalised,
+    ApproveHbarAllowanceParameters,
+    ScheduleDeleteTransactionParameters,
+    ScheduleDeleteTransactionParametersNormalised,
+    ApproveHbarAllowanceParameters,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
@@ -73,6 +89,9 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised, MintNonFungibleTokenParametersNormalised,
     MintNonFungibleTokenParameters,
+    CreateNonFungibleTokenParametersNormalised,
+    TransferFungibleTokenWithAllowanceParameters,
+    TransferFungibleTokenWithAllowanceParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -188,6 +207,29 @@ class HederaParameterNormaliser:
             hbar_transfers=hbar_transfers,
             scheduling_params=scheduling_params,
             transaction_memo=getattr(parsed_params, "transaction_memo", None),
+        )
+
+    @staticmethod
+    def normalise_schedule_delete_transaction(
+        params: ScheduleDeleteTransactionParameters,
+    ) -> ScheduleDeleteTransactionParametersNormalised:
+        """Normalise schedule delete transaction parameters.
+
+        Args:
+            params: Raw schedule delete parameters.
+
+        Returns:
+            ScheduleDeleteTransactionParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ScheduleDeleteTransactionParameters = cast(
+            ScheduleDeleteTransactionParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ScheduleDeleteTransactionParameters
+            ),
+        )
+
+        return ScheduleDeleteTransactionParametersNormalised(
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 
     @staticmethod
@@ -372,6 +414,34 @@ class HederaParameterNormaliser:
             resolved_account_id = parsed_params.account_id
 
         return AccountBalanceQueryParametersNormalised(account_id=resolved_account_id)
+
+    @staticmethod
+    def normalise_account_token_balances_params(
+        params: AccountTokenBalancesQueryParameters,
+        context: Context,
+        client: Client,
+    ) -> AccountTokenBalancesQueryParametersNormalised:
+        """Normalise account token balances query parameters.
+
+        If an account_id is provided, it is used directly.
+        Otherwise, the default account from AccountResolver is used.
+        """
+        parsed_params: AccountTokenBalancesQueryParameters = cast(
+            AccountTokenBalancesQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AccountTokenBalancesQueryParameters
+            ),
+        )
+
+        if parsed_params.account_id is None:
+            resolved_account_id = AccountResolver.get_default_account(context, client)
+        else:
+            resolved_account_id = parsed_params.account_id
+
+        return AccountTokenBalancesQueryParametersNormalised(
+            account_id=resolved_account_id,
+            token_id=parsed_params.token_id,
+        )
 
     @classmethod
     def normalise_get_account_query(cls, params) -> AccountQueryParametersNormalised:
@@ -838,6 +908,140 @@ class HederaParameterNormaliser:
             token_id=TokenId.from_string(parsed_params.token_id),
             metadata=metadata,
             scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_approve_hbar_allowance(
+        params: ApproveHbarAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> ApproveHbarAllowanceParametersNormalised:
+        """Normalise approve HBAR allowance parameters.
+
+        Args:
+            params: Raw approve HBAR allowance parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            ApproveHbarAllowanceParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ApproveHbarAllowanceParameters = cast(
+            ApproveHbarAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ApproveHbarAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        spender_account_id = parsed_params.spender_account_id
+
+        amount = Hbar(parsed_params.amount)
+        if amount.to_tinybars() < 0:
+            raise ValueError(f"Invalid allowance amount: {parsed_params.amount}")
+
+        return ApproveHbarAllowanceParametersNormalised(
+            hbar_allowances=[
+                HbarAllowance(
+                    owner_account_id=AccountId.from_string(owner_account_id),
+                    spender_account_id=AccountId.from_string(spender_account_id),
+                    amount=amount.to_tinybars(),
+                )
+            ],
+            transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    async def normalise_airdrop_fungible_token_params(
+        params: AirdropFungibleTokenParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
+    ) -> AirdropFungibleTokenParametersNormalised:
+        """Normalise airdrop fungible token parameters.
+
+        Args:
+            params: Raw airdrop parameters.
+            context: Application context.
+            client: Hedera Client.
+            mirrornode_service: Mirror node service.
+
+        Returns:
+            AirdropFungibleTokenParametersNormalised: Normalised parameters.
+        """
+        parsed_params: AirdropFungibleTokenParameters = cast(
+            AirdropFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, AirdropFungibleTokenParameters
+            ),
+        )
+
+        source_account_id = AccountResolver.resolve_account(
+            parsed_params.source_account_id, context, client
+        )
+
+        token_info: TokenInfo = await mirrornode_service.get_token_info(
+            parsed_params.token_id
+        )
+        token_decimals = int(token_info.get("decimals", -1))
+        if token_decimals < 0:
+            raise ValueError(
+                f"Unable to retrieve token decimals for token ID {parsed_params.token_id}"
+            )
+
+        token_transfers: List[TokenTransfer] = []
+        total_amount = 0
+
+        for recipient in parsed_params.recipients:
+            # NEVER convert to float — destroys precision
+            amount_raw = Decimal(str(recipient.amount))
+
+            if amount_raw <= 0:
+                raise ValueError(f"Invalid recipient amount: {recipient.amount}")
+
+            # Convert correctly using integer-safe math
+            amount = to_base_unit(amount_raw, token_decimals)
+            amount_int = int(amount)
+
+            if amount_int == 0:
+                raise ValueError(
+                    f"Amount too small after scaling (raw={recipient.amount}, decimals={token_decimals})"
+                )
+
+            total_amount += amount_int
+
+            token_transfers.append(
+                TokenTransfer(
+                    token_id=TokenId.from_string(parsed_params.token_id),
+                    account_id=AccountId.from_string(recipient.account_id),
+                    amount=amount_int,
+                )
+            )
+
+        # Sender negative total
+        token_transfers.append(
+            TokenTransfer(
+                token_id=TokenId.from_string(parsed_params.token_id),
+                account_id=AccountId.from_string(source_account_id),
+                amount=-total_amount,
+            )
+        )
+
+        # Handle optional scheduling
+        scheduling_params = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return AirdropFungibleTokenParametersNormalised(
+            token_transfers=token_transfers,
+            scheduling_params=scheduling_params,
+            transaction_memo=parsed_params.transaction_memo,
         )
 
     @staticmethod
@@ -1403,5 +1607,133 @@ class HederaParameterNormaliser:
 
         return ApproveHbarAllowanceParametersNormalised(
             hbar_allowances=[allowance],
+            transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    async def normalise_transfer_fungible_token_with_allowance(
+        params: TransferFungibleTokenWithAllowanceParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
+    ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring fungible tokens with allowance.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+            mirrornode: The Mirrornode service.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferFungibleTokenWithAllowanceParameters = cast(
+            TransferFungibleTokenWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferFungibleTokenWithAllowanceParameters
+            ),
+        )
+
+        # Get token info for decimals
+        token_info = await mirrornode.get_token_info(parsed_params.token_id)
+        if not token_info.get("decimals"):
+            raise ValueError("Could not determine token decimals from mirror node.")
+
+        token_decimals = int(token_info["decimals"])
+
+        ft_approved_transfer: dict[TokenId, dict[AccountId, int]] = {}
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Initialize the inner dictionary for this token
+        ft_approved_transfer[token_id] = {}
+
+        total_amount_base = 0
+
+        # Iterate over the Pydantic models (TokenTransferEntry)
+        for transfer in parsed_params.transfers:
+            amount_base = int(to_base_unit(transfer.amount, token_decimals))
+
+            if amount_base < 0:
+                raise ValueError(f"Invalid transfer amount: {transfer.amount}")
+
+            total_amount_base += amount_base
+
+            recipient_id = AccountId.from_string(transfer.account_id)
+
+            # Add to recipient (credit)
+            current_val = ft_approved_transfer[token_id].get(recipient_id, 0)
+            ft_approved_transfer[token_id][recipient_id] = current_val + amount_base
+
+        # Add owner deduction (debit)
+        owner_id = AccountId.from_string(parsed_params.source_account_id)
+        current_owner_val = ft_approved_transfer[token_id].get(owner_id, 0)
+        ft_approved_transfer[token_id][owner_id] = current_owner_val - total_amount_base
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return TransferFungibleTokenWithAllowanceParametersNormalised(
+            ft_approved_transfer=ft_approved_transfer,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_approve_token_allowance(
+        params: ApproveTokenAllowanceParameters,
+        context: Context,
+        client: Client,
+        mirrornode_service: IHederaMirrornodeService,
+    ) -> ApproveTokenAllowanceParametersNormalised:
+        """Normalise approve token allowance parameters.
+
+        Args:
+            params: Raw approve token allowance parameters.
+            context: Application context.
+            client: Hedera Client.
+            mirrornode_service: Mirror node service.
+
+        Returns:
+            ApproveTokenAllowanceParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ApproveTokenAllowanceParameters = cast(
+            ApproveTokenAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ApproveTokenAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        spender_account_id = parsed_params.spender_account_id
+
+        token_allowances = []
+        for token_approval in parsed_params.token_approvals:
+            token_info = await mirrornode_service.get_token_info(
+                token_approval.token_id
+            )
+            decimals = int(token_info.get("decimals", 0))
+
+            base_amount = to_base_unit(token_approval.amount, decimals)
+
+            token_allowances.append(
+                TokenAllowance(
+                    token_id=TokenId.from_string(token_approval.token_id),
+                    owner_account_id=AccountId.from_string(owner_account_id),
+                    spender_account_id=AccountId.from_string(spender_account_id),
+                    amount=int(base_amount),
+                )
+            )
+
+        return ApproveTokenAllowanceParametersNormalised(
+            token_allowances=token_allowances,
             transaction_memo=parsed_params.transaction_memo,
         )
