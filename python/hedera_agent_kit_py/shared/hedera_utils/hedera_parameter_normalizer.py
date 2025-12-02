@@ -88,6 +88,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     DissociateTokenParametersNormalised,
     CreateNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised,
+    TransferFungibleTokenWithAllowanceParameters,
+    TransferFungibleTokenWithAllowanceParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -1565,6 +1567,80 @@ class HederaParameterNormaliser:
         return ApproveHbarAllowanceParametersNormalised(
             hbar_allowances=[allowance],
             transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    async def normalise_transfer_fungible_token_with_allowance(
+        params: TransferFungibleTokenWithAllowanceParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
+    ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring fungible tokens with allowance.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+            client: The Hedera client.
+            mirrornode: The Mirrornode service.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferFungibleTokenWithAllowanceParameters = cast(
+            TransferFungibleTokenWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferFungibleTokenWithAllowanceParameters
+            ),
+        )
+
+        # Get token info for decimals
+        token_info = await mirrornode.get_token_info(parsed_params.token_id)
+        if not token_info.get("decimals"):
+            raise ValueError("Could not determine token decimals from mirror node.")
+
+        token_decimals = int(token_info["decimals"])
+
+        ft_approved_transfer: dict[TokenId, dict[AccountId, int]] = {}
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Initialize the inner dictionary for this token
+        ft_approved_transfer[token_id] = {}
+
+        total_amount_base = 0
+
+        # Iterate over the Pydantic models (TokenTransferEntry)
+        for transfer in parsed_params.transfers:
+            amount_base = int(to_base_unit(transfer.amount, token_decimals))
+
+            if amount_base < 0:
+                raise ValueError(f"Invalid transfer amount: {transfer.amount}")
+
+            total_amount_base += amount_base
+
+            recipient_id = AccountId.from_string(transfer.account_id)
+
+            # Add to recipient (credit)
+            current_val = ft_approved_transfer[token_id].get(recipient_id, 0)
+            ft_approved_transfer[token_id][recipient_id] = current_val + amount_base
+
+        # Add owner deduction (debit)
+        owner_id = AccountId.from_string(parsed_params.source_account_id)
+        current_owner_val = ft_approved_transfer[token_id].get(owner_id, 0)
+        ft_approved_transfer[token_id][owner_id] = current_owner_val - total_amount_base
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return TransferFungibleTokenWithAllowanceParametersNormalised(
+            ft_approved_transfer=ft_approved_transfer,
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=scheduling_params,
         )
 
     @staticmethod

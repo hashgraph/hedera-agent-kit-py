@@ -95,25 +95,25 @@ Important:
 
 **Fields that apply to the *schedule entity*, not the inner transaction:**
 
-- **isScheduled** (boolean, optional, default false):  
+- **is_scheduled** (boolean, optional, default false):  
   If true, the transaction will be created as a scheduled transaction.  
   If false or omitted, all other scheduling parameters will be ignored.
   *Always set to true when user asks for scheduling a transaction.*
 
-- **adminKey** (boolean|string, optional, default false):  
+- **admin_key** (boolean|string, optional, default false):  
   Admin key that can delete or modify the scheduled transaction before execution.  
   - If true, the operator key will be used.  
   - If false or omitted, no admin key is set.  
   - If a string is passed, it will be used as the admin key.
 
-- **payerAccountId** (string, optional):  
+- **payer_account_id** (string, optional):  
   Account that will pay the transaction fee when the scheduled transaction executes.  
   Defaults to the {default_account_desc}.
 
-- **expirationTime** (string, optional, ISO 8601):  
+- **expiration_time** (string, optional, ISO 8601):  
   Time when the scheduled transaction will expire if not fully signed.
 
-- **waitForExpiry** (boolean, optional, default false):  
+- **wait_for_expiry** (boolean, optional, default false):  
   If true, the scheduled transaction will be executed at its expiration time, regardless of when all required signatures are collected.  
   If false, the transaction will execute as soon as all required signatures are present.
 
