@@ -51,7 +51,7 @@ Parameters:
 - transaction_memo (string, optional): Optional memo for the transaction
 {usage_instructions}
 
-Note: Make sure token_approvals filed was passed - it is mandatory
+Note: Make sure token_approvals was passed - it is mandatory!
 """
 
 

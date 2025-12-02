@@ -23,6 +23,10 @@ from .approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
     APPROVE_HBAR_ALLOWANCE_TOOL,
 )
+from .approve_fungible_token_allowance import (
+    ApproveFungibleTokenAllowanceTool,
+    APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
+)
 from .update_account import UpdateAccountTool, UPDATE_ACCOUNT_TOOL
 
 core_account_plugin = Plugin(
@@ -68,4 +72,5 @@ __all__ = [
     "ApproveFungibleTokenAllowanceTool",
     "ScheduleDeleteTool",
     "ApproveHbarAllowanceTool",
+    "ApproveFungibleTokenAllowanceTool",
 ]
