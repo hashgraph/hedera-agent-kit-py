@@ -79,6 +79,7 @@ DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
 ]
 MINT_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names["MINT_FUNGIBLE_TOKEN_TOOL"]
 
+
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
@@ -116,7 +117,7 @@ async def bootstrap():
             DELETE_HBAR_ALLOWANCE_TOOL,
             AIRDROP_FUNGIBLE_TOKEN_TOOL,
             ASSOCIATE_TOKEN_TOOL,
-            MINT_FUNGIBLE_TOKEN_TOOL
+            MINT_FUNGIBLE_TOKEN_TOOL,
         ],
         plugins=[
             core_consensus_plugin,

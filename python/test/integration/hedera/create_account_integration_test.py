@@ -3,6 +3,7 @@
 This module tests the account creation tool by calling it directly with parameters,
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
+
 from os import waitid
 from typing import cast
 
@@ -22,7 +23,11 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     SchedulingParams,
 )
 from test import HederaOperationsWrapper, wait
-from test.utils.setup import get_operator_client_for_tests, get_custom_client, MIRROR_NODE_WAITING_TIME
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
@@ -163,6 +168,7 @@ async def test_create_account_with_explicit_public_key(setup_accounts):
         setup_accounts["operator_client"].operator_account_id,
     )
 
+
 @pytest.mark.asynciosetup_accounts
 async def test_create_account_with_unlimited_token_associations(setup_accounts):
     """Test creating an account with unlimited automatic token associations."""
@@ -170,9 +176,7 @@ async def test_create_account_with_unlimited_token_associations(setup_accounts):
     executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
     context: Context = setup_accounts["context"]
 
-    params = CreateAccountParameters(
-        max_automatic_token_associations=-1 # unlimited
-    )
+    params = CreateAccountParameters(max_automatic_token_associations=-1)  # unlimited
 
     tool: CreateAccountTool = CreateAccountTool(context)
     result: ToolResponse = await tool.execute(executor_client, context, params)
