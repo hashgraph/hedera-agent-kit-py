@@ -14,6 +14,7 @@ from hiero_sdk_python import (
     SupplyType,
     HbarAllowance,
     TokenAllowance,
+    TokenNftAllowance,
     TokenType,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
@@ -84,6 +85,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParameters,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    ApproveNftAllowanceParameters,
+    ApproveNftAllowanceParametersNormalised,
     GetTokenInfoParameters,
     DissociateTokenParameters,
     DissociateTokenParametersNormalised,
@@ -952,6 +955,62 @@ class HederaParameterNormaliser:
                     amount=amount.to_tinybars(),
                 )
             ],
+            transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    def normalise_approve_nft_allowance(
+        params: ApproveNftAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> ApproveNftAllowanceParametersNormalised:
+        """Normalise approve NFT allowance parameters.
+
+        Args:
+            params: Raw approve NFT allowance parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            ApproveNftAllowanceParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ApproveNftAllowanceParameters = cast(
+            ApproveNftAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ApproveNftAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        spender_account_id = parsed_params.spender_account_id
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Validate that either all_serials is true or serial_numbers is provided
+        if not parsed_params.all_serials and not parsed_params.serial_numbers:
+            raise ValueError(
+                "Either all_serials must be true or serial_numbers must be provided"
+            )
+
+        # If all_serials is true, serial_numbers should not be provided
+        if parsed_params.all_serials and parsed_params.serial_numbers:
+            raise ValueError(
+                "Cannot specify both all_serials=true and serial_numbers"
+            )
+
+        # Create the NFT allowance
+        nft_allowance = TokenNftAllowance(
+            token_id=token_id,
+            owner_account_id=AccountId.from_string(owner_account_id),
+            spender_account_id=AccountId.from_string(spender_account_id),
+            approved_for_all=parsed_params.all_serials,
+            serial_numbers=parsed_params.serial_numbers or [],
+        )
+
+        return ApproveNftAllowanceParametersNormalised(
+            nft_allowances=[nft_allowance],
             transaction_memo=parsed_params.transaction_memo,
         )
 
