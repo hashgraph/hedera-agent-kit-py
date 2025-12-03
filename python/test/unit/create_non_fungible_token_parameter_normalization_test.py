@@ -77,7 +77,7 @@ async def test_normalise_create_non_fungible_token_defaults(
 
     # Defaults to Infinite when max_supply is not set
     assert tp.supply_type == SupplyType.INFINITE
-    assert tp.max_supply is None
+    assert tp.max_supply is 0
 
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
     assert str(tp.auto_renew_account_id) == TEST_OPERATOR_ID
