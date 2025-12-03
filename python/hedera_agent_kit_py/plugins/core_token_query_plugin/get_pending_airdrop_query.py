@@ -16,13 +16,17 @@ from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils import to_display_unit
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import \
-    IHederaMirrornodeService
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     TokenAirdrop,
-    TokenAirdropsResponse, TokenInfo,
+    TokenAirdropsResponse,
+    TokenInfo,
 )
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
@@ -36,13 +40,17 @@ from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
 )
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
+
 class EnrichedTokenAirdrop(TokenAirdrop):
     """Extends the basic airdrop record with token metadata."""
+
     decimals: int
     symbol: str
 
+
 class EnrichedTokenAirdropsResponse(TypedDict):
     """Response wrapper containing enriched airdrops."""
+
     airdrops: List[EnrichedTokenAirdrop]
 
 
@@ -119,9 +127,9 @@ def post_process(account_id: str, enriched_airdrops: List[EnrichedTokenAirdrop])
 
 
 async def get_pending_airdrop_query(
-        client: Client,
-        context: Context,
-        params: PendingAirdropQueryParameters,
+    client: Client,
+    context: Context,
+    params: PendingAirdropQueryParameters,
 ) -> ToolResponse:
     """Execute a pending airdrop query using the mirrornode service."""
     try:
@@ -176,6 +184,7 @@ async def get_pending_airdrop_query(
             human_message=message,
             error=message,
         )
+
 
 GET_PENDING_AIRDROP_QUERY_TOOL: str = "get_pending_airdrop_query_tool"
 

@@ -3,7 +3,7 @@ from typing import Optional, List, Union, Annotated, Dict, Tuple
 from hiero_sdk_python import AccountId, PublicKey, TokenId, TokenNftAllowance
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
-from pydantic import Field, BaseModel
+from pydantic import Field
 
 from hedera_agent_kit_py.shared.parameter_schemas import (
     OptionalScheduledTransactionParams,
@@ -16,14 +16,20 @@ class AirdropRecipient(BaseModelWithArbitraryTypes):
     account_id: Annotated[
         str, Field(description='Recipient account ID (e.g., "0.0.xxxx").')
     ]
-    amount: Annotated[Union[int, float, str], Field(description="Amount in base unit.")]
+    amount: Annotated[
+        Union[float],
+        Field(
+            description="Amount in display unit - the tool will convert it to the correct format for the transaction."
+        ),
+    ]
 
 
 class CreateFungibleTokenParameters(OptionalScheduledTransactionParams):
     token_name: Annotated[str, Field(description="The name of the token.")]
     token_symbol: Annotated[str, Field(description="The symbol of the token.")]
     initial_supply: Annotated[
-        int, Field(description="The initial supply of the token.")
+        int,
+        Field(description="The initial supply of the token. Given in display units."),
     ] = 0
     supply_type: Annotated[
         int,
@@ -32,7 +38,8 @@ class CreateFungibleTokenParameters(OptionalScheduledTransactionParams):
         ),
     ] = 1
     max_supply: Annotated[
-        Optional[int], Field(description="The maximum supply of the token.")
+        Optional[int],
+        Field(description="The maximum supply of the token. Given in display units."),
     ] = 1000000
     decimals: Annotated[Optional[int], Field(description="The number of decimals.")] = 0
     treasury_account_id: Annotated[
@@ -75,7 +82,9 @@ class AirdropFungibleTokenParametersNormalised(
 
 class MintFungibleTokenParameters(OptionalScheduledTransactionParams):
     token_id: Annotated[str, Field(description="The id of the token.")]
-    amount: Annotated[float, Field(description="Amount of tokens to mint.")]
+    amount: Annotated[
+        float, Field(description="Amount of tokens to mint. Given in display units")
+    ]
 
 
 class MintFungibleTokenParametersNormalised(
@@ -131,7 +140,7 @@ class TokenTransferEntry(BaseModelWithArbitraryTypes):
         Union[int, float],
         Field(
             gt=0,
-            description="The amount of tokens to transfer. Must be greater than 0.",
+            description="The amount of tokens to transfer. Must be greater than 0. Given in display units.",
         ),
     ]
 
