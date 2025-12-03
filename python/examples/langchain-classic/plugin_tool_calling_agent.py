@@ -1,12 +1,12 @@
 import asyncio
 import os
+import traceback
 
 from dotenv import load_dotenv
 from hiero_sdk_python import Network, AccountId, PrivateKey, Client
 from langchain_classic.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_classic.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableWithMessageHistory, RunnableConfig
 from langchain_openai import ChatOpenAI
 
 from hedera_agent_kit_py.langchain import HederaAgentKitTool
@@ -87,33 +87,13 @@ async def bootstrap():
 
     network: Network = Network(
         network="testnet"
-    )  # ensure this matches SDK expectations
+    )
     client: Client = Client(network)
     client.set_operator(operator_id, operator_key)
 
     # Configuration placeholder
     configuration: Configuration = Configuration(
-        tools=[
-            TRANSFER_HBAR_TOOL,
-            CREATE_ACCOUNT_TOOL,
-            CREATE_TOPIC_TOOL,
-            GET_HBAR_BALANCE_QUERY_TOOL,
-            GET_TOPIC_INFO_QUERY_TOOL,
-            GET_EXCHANGE_RATE_TOOL,
-            UPDATE_ACCOUNT_TOOL,
-            DELETE_ACCOUNT_TOOL,
-            DELETE_TOPIC_TOOL,
-            CREATE_ERC20_TOOL,
-            SUBMIT_TOPIC_MESSAGE_TOOL,
-            GET_ACCOUNT_QUERY_TOOL,
-            CREATE_FUNGIBLE_TOKEN_TOOL,
-            GET_TRANSACTION_RECORD_QUERY_TOOL,
-            GET_TOKEN_INFO_QUERY_TOOL,
-            DISSOCIATE_TOKEN_TOOL,
-            GET_PENDING_AIRDROP_QUERY_TOOL,
-            DELETE_HBAR_ALLOWANCE_TOOL,
-            AIRDROP_FUNGIBLE_TOKEN_TOOL,
-        ],
+        tools=[],  # Plugins will populate the tools automatically. This is equivalent to importing all tools
         plugins=[
             core_consensus_plugin,
             core_account_query_plugin,
@@ -136,14 +116,6 @@ async def bootstrap():
     # Fetch LangChain tools from toolkit
     tools: list[HederaAgentKitTool] = hedera_toolkit.get_tools()
 
-    model.bind_tools(tools)
-    prompt = ChatPromptTemplate("You are a helpful assistant with access to Hedera blockchain tools and plugin tools")
-
-    # Create the underlying tool-calling agent
-    agent = create_tool_calling_agent(model, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools)
-    memory = InMemoryChatMessageHistory(session_id="test-session")
-
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", "You are a helpful assistant."),
@@ -156,14 +128,12 @@ async def bootstrap():
         ]
     )
 
-    agent_with_chat_history = RunnableWithMessageHistory(
-        agent_executor,
-        lambda session_id: memory,
-        input_messages_key="input",
-        history_messages_key="chat_history",
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True
     )
-
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    agent = create_tool_calling_agent(model, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
 
     print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
     print("Available plugin tools:")
@@ -182,16 +152,14 @@ async def bootstrap():
             break
 
         try:
-            agent_with_chat_history.invoke(
-                {"input": "Hi, I'm polly! What's the output of magic_function of 3?"}, config=config
+            response = await agent_executor.ainvoke(
+                {"input": user_input}
             )
 
-
+            print(f"AI: {response['output']}")
 
         except Exception as e:
             print("Error:", e)
-            import traceback
-
             traceback.print_exc()
 
 
