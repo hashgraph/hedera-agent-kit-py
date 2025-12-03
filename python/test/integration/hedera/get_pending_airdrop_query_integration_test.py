@@ -3,7 +3,6 @@
 This test verifies pending airdrop querying via Hedera mirror node using
 the Hedera Agent Kit. It covers successful airdrop retrieval and error handling.
 """
-
 import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar, SupplyType
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
@@ -138,7 +137,7 @@ async def test_get_pending_airdrop_for_recipient(setup_environment):
     result: ToolResponse = await tool.execute(executor_client, context, params)
 
     assert f"pending airdrops for account **{recipient_id}**" in result.human_message
-    assert len(result.extra["pendingAirdrops"]["airdrops"]) > 0
+    assert len(result.extra["pending_airdrops"]["airdrops"]) > 0
     assert not result.error
 
 

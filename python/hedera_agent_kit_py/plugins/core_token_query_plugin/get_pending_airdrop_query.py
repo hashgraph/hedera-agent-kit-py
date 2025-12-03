@@ -8,13 +8,21 @@ This module exposes:
 
 from __future__ import annotations
 
+import asyncio
+from decimal import Decimal
+from typing import TypedDict, List, cast
+
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit_py.shared.hedera_utils import to_display_unit
+from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode import get_mirrornode_service
+from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import \
+    IHederaMirrornodeService
 from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     TokenAirdrop,
-    TokenAirdropsResponse,
+    TokenAirdropsResponse, TokenInfo,
 )
 from hedera_agent_kit_py.shared.models import ToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
@@ -28,16 +36,18 @@ from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
 )
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
+class EnrichedTokenAirdrop(TokenAirdrop):
+    """Extends the basic airdrop record with token metadata."""
+    decimals: int
+    symbol: str
+
+class EnrichedTokenAirdropsResponse(TypedDict):
+    """Response wrapper containing enriched airdrops."""
+    airdrops: List[EnrichedTokenAirdrop]
+
 
 def get_pending_airdrop_query_prompt(context: Context = {}) -> str:
-    """Generate a human-readable description of the get pending airdrop query tool.
-
-    Args:
-        context: Optional contextual configuration that may influence the prompt.
-
-    Returns:
-        A string describing the tool, its parameters, and usage instructions.
-    """
+    """Generate a human-readable description of the get pending airdrop query tool."""
     context_snippet: str = PromptGenerator.get_context_snippet(context)
     account_desc: str = PromptGenerator.get_account_parameter_description(
         "account_id", context
@@ -55,77 +65,77 @@ Parameters:
 """
 
 
-def format_airdrop(airdrop: TokenAirdrop, index: int) -> str:
-    """Format a single airdrop record for display.
+async def enrich_single_airdrop(
+    airdrop: TokenAirdrop, mirrornode_service: IHederaMirrornodeService
+) -> EnrichedTokenAirdrop:
+    """Helper: Fetches token info for a single airdrop and adds symbol/decimals to it."""
+    enriched = cast(EnrichedTokenAirdrop, airdrop)
+    token_id = airdrop.get("token_id")
 
-    Args:
-        airdrop: The airdrop dictionary from the mirror node.
-        index: The index of the airdrop in the list.
+    # Default values in case of logic skip or error
+    decimals = 0
+    symbol = "N/A"
 
-    Returns:
-        A formatted string describing the airdrop.
-    """
-    token = airdrop.get("token_id", "N/A")
-    amount = airdrop.get("amount", 0)
-    serial = airdrop.get("serial_number", "N/A")
-    sender = airdrop.get("sender_id", "N/A")
-    receiver = airdrop.get("receiver_id", "N/A")
+    if token_id:
+        try:
+            info: TokenInfo = await mirrornode_service.get_token_info(token_id)
+            decimals = int(info.get("decimals", 0))
+            symbol = info.get("symbol", "N/A")
+        except Exception:
+            symbol = "UNKNOWN"
 
-    timestamp = airdrop.get("timestamp", {})
-    from_ts = timestamp.get("from_", "N/A")
-    to_ts = timestamp.get("to", "N/A")
+        # Assign values
+    enriched["decimals"] = decimals
+    enriched["symbol"] = symbol
 
-    time_range = f"{from_ts}"
-    if to_ts:
-        time_range += f" -> {to_ts}"
-
-    return (
-        f"#{index + 1} Token: {token}, Amount: {amount}, Serial: {serial}, "
-        f"Sender: {sender}, Receiver: {receiver}, Timestamp: {time_range}"
-    )
+    return enriched
 
 
-def post_process(account_id: str, response: TokenAirdropsResponse) -> str:
-    """Produce a human-readable summary for a pending airdrop query result.
-
-    Args:
-        account_id: The account ID that was queried.
-        response: The response from the mirrornode API.
-
-    Returns:
-        A formatted markdown message describing the pending airdrops.
-    """
-    airdrops = response.get("airdrops", [])
-    count = len(airdrops)
+def post_process(account_id: str, enriched_airdrops: List[EnrichedTokenAirdrop]) -> str:
+    """Format the enriched airdrop list into a readable Markdown string."""
+    count = len(enriched_airdrops)
 
     if count == 0:
         return f"No pending airdrops found for account {account_id}"
 
-    details = "\n".join(
-        format_airdrop(airdrop, i) for i, airdrop in enumerate(airdrops)
-    )
-    return f"Here are the pending airdrops for account **{account_id}** (total: {count}):\n\n{details}"
+    details = []
+
+    for airdrop in enriched_airdrops:
+        symbol = airdrop["symbol"]
+        decimals = airdrop["decimals"]
+
+        serial_number = airdrop.get("serial_number")
+
+        if serial_number:
+            details.append(f"- **{symbol}** #{serial_number}")
+        else:
+            amount = Decimal(airdrop.get("amount", 0))
+            display_amount_dec = to_display_unit(amount, decimals)
+            display_amount_str = f"{display_amount_dec:.{decimals}f}"
+            details.append(f"- {display_amount_str} **{symbol}**")
+
+    details_str = "\n".join(details)
+    return f"Here are the pending airdrops for account **{account_id}** (total: {count}):\n\n{details_str}"
 
 
 async def get_pending_airdrop_query(
-    client: Client,
-    context: Context,
-    params: PendingAirdropQueryParameters,
+        client: Client,
+        context: Context,
+        params: PendingAirdropQueryParameters,
 ) -> ToolResponse:
-    """Execute a pending airdrop query using the mirrornode service.
-
-    Args:
-        client: Hedera client.
-        context: Runtime context.
-        params: Query parameters.
-
-    Returns:
-        A ToolResponse with pending airdrop details.
-    """
+    """Execute a pending airdrop query using the mirrornode service."""
     try:
-        account_id = params["account_id"] or AccountResolver.get_default_account(
+        parsed_params: PendingAirdropQueryParameters = cast(
+            PendingAirdropQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, PendingAirdropQueryParameters
+            ),
+        )
+
+        account_id = parsed_params.account_id or AccountResolver.get_default_account(
             context, client
         )
+
         if not account_id:
             raise ValueError("Account ID is required and was not provided")
 
@@ -133,14 +143,29 @@ async def get_pending_airdrop_query(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )
 
-        # Fetch pending airdrops
+        # 1. Fetch the list of pending airdrops
         response: TokenAirdropsResponse = await mirrornode_service.get_pending_airdrops(
             account_id
         )
 
+        # 2. Parallel Fetch & Enrich
+        raw_airdrops = response.get("airdrops", [])
+
+        tasks = [
+            enrich_single_airdrop(airdrop, mirrornode_service)
+            for airdrop in raw_airdrops
+        ]
+
+        gathered_airdrops = await asyncio.gather(*tasks)
+
+        # 3. Return ToolResponse
+        enriched_response: EnrichedTokenAirdropsResponse = {
+            "airdrops": list(gathered_airdrops),
+        }
+
         return ToolResponse(
-            human_message=post_process(account_id, response),
-            extra={"accountId": account_id, "pendingAirdrops": response},
+            human_message=post_process(account_id, list(gathered_airdrops)),
+            extra={"accountId": account_id, "pending_airdrops": enriched_response},
         )
 
     except Exception as e:
@@ -152,7 +177,6 @@ async def get_pending_airdrop_query(
             error=message,
         )
 
-
 GET_PENDING_AIRDROP_QUERY_TOOL: str = "get_pending_airdrop_query_tool"
 
 
@@ -160,11 +184,6 @@ class GetPendingAirdropQueryTool(Tool):
     """Tool wrapper that exposes the pending airdrop query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
-        """Initialize the tool metadata.
-
-        Args:
-            context: Runtime context.
-        """
         self.method: str = GET_PENDING_AIRDROP_QUERY_TOOL
         self.name: str = "Get Pending Airdrops"
         self.description: str = get_pending_airdrop_query_prompt(context)
@@ -176,14 +195,4 @@ class GetPendingAirdropQueryTool(Tool):
     async def execute(
         self, client: Client, context: Context, params: PendingAirdropQueryParameters
     ) -> ToolResponse:
-        """Execute the pending airdrop query.
-
-        Args:
-            client: Hedera client.
-            context: Runtime context.
-            params: Query parameters.
-
-        Returns:
-            The query result.
-        """
         return await get_pending_airdrop_query(client, context, params)
