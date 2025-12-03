@@ -10,6 +10,14 @@ from .delete_hbar_allowance import (
     DeleteHbarAllowanceTool,
     DELETE_HBAR_ALLOWANCE_TOOL,
 )
+from .approve_hbar_allowance import (
+    ApproveHbarAllowanceTool,
+    APPROVE_HBAR_ALLOWANCE_TOOL,
+)
+from .approve_fungible_token_allowance import (
+    ApproveFungibleTokenAllowanceTool,
+    APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
+)
 from .schedule_delete import ScheduleDeleteTool, SCHEDULE_DELETE_TOOL
 from .approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
@@ -60,6 +68,8 @@ __all__ = [
     "UpdateAccountTool",
     "TransferHbarWithAllowanceTool",
     "DeleteHbarAllowanceTool",
+    "ApproveHbarAllowanceTool",
+    "ApproveFungibleTokenAllowanceTool",
     "ScheduleDeleteTool",
     "ApproveHbarAllowanceTool",
     "ApproveFungibleTokenAllowanceTool",

@@ -60,8 +60,8 @@ class TestApproveHbarAllowanceParameterNormalization:
         assert str(allowance.owner_account_id) == "0.0.1111"
         assert str(allowance.spender_account_id) == "0.0.2222"
         assert res.transaction_memo == "approve memo"
-        assert isinstance(allowance.amount, Hbar)
-        assert allowance.amount == Hbar(0.12345678)
+        assert isinstance(allowance.amount, int)
+        assert allowance.amount == Hbar(0.12345678).to_tinybars()
 
     def test_defaults_owner_account_id_using_account_resolver(
         self, mock_context, mock_client, mock_account_resolver, operator_id
@@ -83,4 +83,4 @@ class TestApproveHbarAllowanceParameterNormalization:
         allowance = res.hbar_allowances[0]
         assert str(allowance.owner_account_id) == operator_id
         assert str(allowance.spender_account_id) == "0.0.3333"
-        assert allowance.amount == Hbar(1)
+        assert allowance.amount == Hbar(1).to_tinybars()
