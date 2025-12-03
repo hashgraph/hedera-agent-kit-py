@@ -62,9 +62,7 @@ async def bootstrap():
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
-    hedera_toolkit = HederaLangchainToolkit(
-        client=client, configuration=configuration
-    )
+    hedera_toolkit = HederaLangchainToolkit(client=client, configuration=configuration)
     tools = hedera_toolkit.get_tools()
 
     # 4. Load the structured chat prompt
@@ -75,9 +73,7 @@ async def bootstrap():
 
     # 6. Memory Setup
     memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        return_messages=True,
-        output_key="output"
+        memory_key="chat_history", return_messages=True, output_key="output"
     )
 
     # 7. Agent Executor
@@ -86,7 +82,7 @@ async def bootstrap():
         tools=tools,
         memory=memory,
         verbose=True,
-        handle_parsing_errors=True  # Useful for structured chat if formatting fails
+        handle_parsing_errors=True,  # Useful for structured chat if formatting fails
     )
 
     print("Hedera Agent CLI Chatbot (Structured) — type 'exit' to quit")

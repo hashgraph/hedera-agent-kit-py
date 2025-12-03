@@ -77,6 +77,7 @@ DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
 
+
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
@@ -85,9 +86,7 @@ async def bootstrap():
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
 
-    network: Network = Network(
-        network="testnet"
-    )
+    network: Network = Network(network="testnet")
     client: Client = Client(network)
     client.set_operator(operator_id, operator_key)
 
@@ -128,12 +127,11 @@ async def bootstrap():
         ]
     )
 
-    memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        return_messages=True
-    )
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     agent = create_tool_calling_agent(model, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+    agent_executor = AgentExecutor(
+        agent=agent, tools=tools, memory=memory, verbose=True
+    )
 
     print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
     print("Available plugin tools:")
@@ -143,7 +141,6 @@ async def bootstrap():
     )
     print("")
 
-
     # CLI loop
     while True:
         user_input = input("You: ").strip()
@@ -152,9 +149,7 @@ async def bootstrap():
             break
 
         try:
-            response = await agent_executor.ainvoke(
-                {"input": user_input}
-            )
+            response = await agent_executor.ainvoke({"input": user_input})
 
             print(f"AI: {response['output']}")
 

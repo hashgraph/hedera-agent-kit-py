@@ -62,9 +62,7 @@ async def bootstrap():
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
-    hedera_toolkit = HederaLangchainToolkit(
-        client=client, configuration=configuration
-    )
+    hedera_toolkit = HederaLangchainToolkit(client=client, configuration=configuration)
     tools = hedera_toolkit.get_tools()
 
     # 4. Create the Tool Calling Prompt
