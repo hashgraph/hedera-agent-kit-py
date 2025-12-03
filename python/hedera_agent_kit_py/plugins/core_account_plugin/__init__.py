@@ -69,5 +69,4 @@ __all__ = [
     "ApproveFungibleTokenAllowanceTool",
     "ApproveNftAllowanceTool",
     "ScheduleDeleteTool",
-
 ]

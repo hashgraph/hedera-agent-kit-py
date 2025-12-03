@@ -996,9 +996,7 @@ class HederaParameterNormaliser:
 
         # If all_serials is true, serial_numbers should not be provided
         if parsed_params.all_serials and parsed_params.serial_numbers:
-            raise ValueError(
-                "Cannot specify both all_serials=true and serial_numbers"
-            )
+            raise ValueError("Cannot specify both all_serials=true and serial_numbers")
 
         # Create the NFT allowance
         nft_allowance = TokenNftAllowance(
