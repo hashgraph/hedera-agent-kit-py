@@ -57,6 +57,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateFungibleTokenParametersNormalised,
     ApproveNftAllowanceParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
+    TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     ExecuteStrategy,
@@ -339,6 +340,15 @@ class HederaOperationsWrapper:
         self, params: ApproveNftAllowanceParametersNormalised
     ) -> RawTransactionResponse:
         tx = HederaBuilder.approve_nft_allowance(params)
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
+
+    async def transfer_non_fungible_token_with_allowance(
+        self, params: TransferNonFungibleTokenWithAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
+        tx = HederaBuilder.transfer_non_fungible_token_with_allowance(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
