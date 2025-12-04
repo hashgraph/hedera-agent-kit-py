@@ -16,6 +16,7 @@ from hiero_sdk_python import (
     TokenAllowance,
     TokenNftAllowance,
     TokenType,
+    NftId,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
@@ -68,6 +69,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     AirdropFungibleTokenParameters,
     AirdropFungibleTokenParametersNormalised,
+    NftApprovedTransferNormalised,
 )
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
@@ -96,6 +98,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParametersNormalised,
     TransferFungibleTokenWithAllowanceParameters,
     TransferFungibleTokenWithAllowanceParametersNormalised,
+    TransferNonFungibleTokenWithAllowanceParameters,
+    TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -1840,4 +1844,50 @@ class HederaParameterNormaliser:
             ft_approved_transfer=ft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
             scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_transfer_non_fungible_token_with_allowance(
+        params: TransferNonFungibleTokenWithAllowanceParameters,
+        context: Context,
+    ) -> TransferNonFungibleTokenWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring NFTs with allowance.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferNonFungibleTokenWithAllowanceParameters = cast(
+            TransferNonFungibleTokenWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferNonFungibleTokenWithAllowanceParameters
+            ),
+        )
+
+        # Convert token_id to SDK TokenId
+        token_id = TokenId.from_string(parsed_params.token_id)
+        source_account_id = AccountId.from_string(parsed_params.source_account_id)
+
+        # Map recipients to NftApprovedTransfer objects
+        nft_transfers: List[NftApprovedTransferNormalised] = []
+
+        # Note: parsed_params.recipients contains NftApprovedTransferInput objects
+        for recipient_input in parsed_params.recipients:
+            nft_transfer = NftApprovedTransferNormalised(
+                sender_id=source_account_id,
+                receiver_id=AccountId.from_string(recipient_input.recipient),
+                serial_number=recipient_input.serial_number,
+                is_approval=True,
+            )
+            nft_transfers.append(nft_transfer)
+
+        # Group transfers by token_id (all transfers in this tool call are for the same token)
+        nft_approved_transfer = {token_id: nft_transfers}
+
+        return TransferNonFungibleTokenWithAllowanceParametersNormalised(
+            nft_approved_transfer=nft_approved_transfer,
+            transaction_memo=parsed_params.transaction_memo,
         )

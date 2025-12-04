@@ -33,6 +33,10 @@ from hedera_agent_kit_py.plugins.core_token_plugin.delete_token_allowance import
     DeleteTokenAllowanceTool,
     DELETE_TOKEN_ALLOWANCE_TOOL,
 )
+from hedera_agent_kit_py.plugins.core_token_plugin.transfer_non_fungible_token_with_allowance import (
+    TransferNftWithAllowanceTool,
+    TRANSFER_NFT_WITH_ALLOWANCE_TOOL,
+)
 from hedera_agent_kit_py.shared.plugin import Plugin
 
 core_token_plugin = Plugin(
@@ -48,6 +52,7 @@ core_token_plugin = Plugin(
         CreateNonFungibleTokenTool(context),
         MintNonFungibleTokenTool(context),
         TransferFungibleTokenWithAllowanceTool(context),
+        TransferNftWithAllowanceTool(context),
         DeleteTokenAllowanceTool(context),
     ],
 )
@@ -59,6 +64,7 @@ core_token_plugin_tool_names = {
     "DISSOCIATE_TOKEN_TOOL": DISSOCIATE_TOKEN_TOOL,
     "CREATE_NON_FUNGIBLE_TOKEN_TOOL": CREATE_NON_FUNGIBLE_TOKEN_TOOL,
     "TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL": TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+    "TRANSFER_NFT_WITH_ALLOWANCE_TOOL": TRANSFER_NFT_WITH_ALLOWANCE_TOOL,
     "AIRDROP_FUNGIBLE_TOKEN_TOOL": AIRDROP_FUNGIBLE_TOKEN_TOOL,
     "DELETE_TOKEN_ALLOWANCE_TOOL": DELETE_TOKEN_ALLOWANCE_TOOL,
     "MINT_NON_FUNGIBLE_TOKEN_TOOL": MINT_NON_FUNGIBLE_TOKEN_TOOL,
@@ -73,6 +79,7 @@ __all__ = [
     "CreateNonFungibleTokenTool",
     "MintNonFungibleTokenTool",
     "TransferFungibleTokenWithAllowanceTool",
+    "TransferNftWithAllowanceTool",
     "DeleteTokenAllowanceTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
