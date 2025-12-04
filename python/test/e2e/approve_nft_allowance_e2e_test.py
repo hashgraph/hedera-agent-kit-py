@@ -14,7 +14,8 @@ from hiero_sdk_python import (
     Client,
     SupplyType,
     TokenId,
-    TokenType, TokenNftInfo,
+    TokenType,
+    TokenNftInfo,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
@@ -365,7 +366,9 @@ async def test_should_approve_nft_allowance_and_allow_spender_to_transfer_via_ap
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 3. Verify NFT ownership moved to recipient
-    nft_info: TokenNftInfo = recipient_wrapper.get_nft_info(str(nft_token_id), serial_to_use)
+    nft_info: TokenNftInfo = recipient_wrapper.get_nft_info(
+        str(nft_token_id), serial_to_use
+    )
 
     # Verify the NFT is now owned by the recipient
     assert nft_info is not None
