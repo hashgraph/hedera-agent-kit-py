@@ -1585,13 +1585,15 @@ test = ["eth_utils (>=2.0.0)", "hypothesis (>=3.44.24)", "pytest (>=7.0.0)", "py
 
 [[package]]
 name = "hiero-sdk-python"
-version = "0.1.9.dev21+gde658a2"
+version = "0.1.9"
 description = "A Hiero SDK in pure Python"
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "hiero_sdk_python-0.1.9-py3-none-any.whl", hash = "sha256:e0edb419c782f4099ad7c775b619e60d8b80621f1dfde87193bb3c23270e9290"},
+    {file = "hiero_sdk_python-0.1.9.tar.gz", hash = "sha256:631c9189a1405b02dfc4bdfac336986e1e3b449ede7e632f92981d720c54fa36"},
+]
 
 [package.dependencies]
 cryptography = "44.0.0"
@@ -1604,10 +1606,6 @@ pycryptodome = "3.23.0"
 python-dotenv = "1.2.1"
 requests = "2.32.3"
 rlp = ">=4.0.0"
-
-[package.source]
-type = "directory"
-url = "../../hiero-sdk-python"
 
 [[package]]
 name = "httpcore"
@@ -4188,4 +4186,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "185141733ed9f8e3ef1449990f8fbdacefa73f9015ba29bcffeb516c575b48eb"
+content-hash = "745995a17ab036fcad2f7568ddd0869008399962e6b1b8aa8f4781fc493293ce"
