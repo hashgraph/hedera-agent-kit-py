@@ -69,6 +69,7 @@ GET_TOKEN_INFO_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_TOKEN_INFO_QUERY_TOOL"
 ]
 DISSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["DISSOCIATE_TOKEN_TOOL"]
+ASSOCIATE_TOKEN_TOOL = core_token_plugin_tool_names["ASSOCIATE_TOKEN_TOOL"]
 GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
     "GET_PENDING_AIRDROP_QUERY_TOOL"
 ]
@@ -76,6 +77,7 @@ GET_PENDING_AIRDROP_QUERY_TOOL = core_token_query_plugin_tool_names[
 DELETE_HBAR_ALLOWANCE_TOOL = core_account_plugin_tool_names[
     "DELETE_HBAR_ALLOWANCE_TOOL"
 ]
+MINT_FUNGIBLE_TOKEN_TOOL = core_token_plugin_tool_names["MINT_FUNGIBLE_TOKEN_TOOL"]
 
 
 async def bootstrap():
@@ -114,6 +116,8 @@ async def bootstrap():
             GET_PENDING_AIRDROP_QUERY_TOOL,
             DELETE_HBAR_ALLOWANCE_TOOL,
             AIRDROP_FUNGIBLE_TOKEN_TOOL,
+            ASSOCIATE_TOKEN_TOOL,
+            MINT_FUNGIBLE_TOKEN_TOOL,
         ],
         plugins=[
             core_consensus_plugin,
