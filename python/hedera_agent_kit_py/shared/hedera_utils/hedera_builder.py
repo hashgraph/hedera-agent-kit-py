@@ -168,10 +168,9 @@ class HederaBuilder:
             tx.set_transaction_memo(params.transaction_memo)
         return tx
 
-    @staticmethod
     def transfer_non_fungible_token_with_allowance(
         params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
-    ) -> Transaction:
+    ):
         """Build a TransferTransaction for NFTs using approved allowances.
 
         Args:
@@ -181,14 +180,17 @@ class HederaBuilder:
             Transaction: TransferTransaction including all approved NFT transfers,
             optionally wrapped in a schedule.
         """
-        tx: TransferTransaction = TransferTransaction()
+        tx = TransferTransaction()
 
         for token_id, transfers in params.nft_approved_transfer.items():
-            for sender_id, receiver_id, serial_number, _is_approved in transfers:
-                nft_id: NftId = NftId(token_id, serial_number)
-                tx.add_approved_nft_transfer(nft_id, sender_id, receiver_id)
+            for transfer in transfers:
+                nft_id = NftId(token_id, transfer.serial_number)
 
-        if getattr(params, "transaction_memo", None):
+                tx.add_approved_nft_transfer(
+                    nft_id, transfer.sender_id, transfer.receiver_id
+                )
+
+        if params.transaction_memo:
             tx.set_transaction_memo(params.transaction_memo)
 
         return HederaBuilder.maybe_wrap_in_schedule(

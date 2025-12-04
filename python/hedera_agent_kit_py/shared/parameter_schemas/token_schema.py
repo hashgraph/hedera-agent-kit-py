@@ -100,6 +100,11 @@ class MintNonFungibleTokenParametersNormalised(
     metadata: list[bytes] | None = Field(default=None)
 
 
+class NftApprovedTransfer(BaseModelWithArbitraryTypes):
+    recipient: Annotated[str, Field(description="The recipient account ID.")]
+    serial_number: Annotated[int, Field(gt=0, description="The NFT serial number.")]
+
+
 class TransferNonFungibleTokenWithAllowanceParameters(
     OptionalScheduledTransactionParams
 ):
@@ -108,7 +113,7 @@ class TransferNonFungibleTokenWithAllowanceParameters(
     ]
     token_id: Annotated[str, Field(description="The NFT token ID.")]
     recipients: Annotated[
-        List[dict],
+        List[NftApprovedTransfer],
         Field(min_length=1, description="Array of recipient and NFT serial pairs."),
     ]
     transaction_memo: Annotated[
@@ -116,10 +121,17 @@ class TransferNonFungibleTokenWithAllowanceParameters(
     ] = None
 
 
+class NftApprovedTransferNormalised(BaseModelWithArbitraryTypes):
+    sender_id: AccountId
+    receiver_id: AccountId
+    serial_number: int
+    is_approval: bool = True
+
+
 class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    nft_approved_transfer: Dict[TokenId, List[Tuple[AccountId, AccountId, int, bool]]]
+    nft_approved_transfer: Dict[TokenId, List[NftApprovedTransferNormalised]]
     transaction_memo: Optional[str] = None
 
 

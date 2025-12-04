@@ -14,7 +14,9 @@ from hiero_sdk_python import (
     SupplyType,
     HbarAllowance,
     TokenAllowance,
+    TokenNftAllowance,
     TokenType,
+    NftId,
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from hiero_sdk_python.schedule.schedule_id import ScheduleId
@@ -67,6 +69,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     AirdropFungibleTokenParameters,
     AirdropFungibleTokenParametersNormalised,
+    NftApprovedTransferNormalised,
 )
 
 from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
@@ -84,6 +87,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParameters,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+    ApproveNftAllowanceParameters,
+    ApproveNftAllowanceParametersNormalised,
     GetTokenInfoParameters,
     DissociateTokenParameters,
     DissociateTokenParametersNormalised,
@@ -93,6 +98,8 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParametersNormalised,
     TransferFungibleTokenWithAllowanceParameters,
     TransferFungibleTokenWithAllowanceParametersNormalised,
+    TransferNonFungibleTokenWithAllowanceParameters,
+    TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
 
 from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
@@ -956,6 +963,60 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    def normalise_approve_nft_allowance(
+        params: ApproveNftAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> ApproveNftAllowanceParametersNormalised:
+        """Normalise approve NFT allowance parameters.
+
+        Args:
+            params: Raw approve NFT allowance parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            ApproveNftAllowanceParametersNormalised: Normalised parameters.
+        """
+        parsed_params: ApproveNftAllowanceParameters = cast(
+            ApproveNftAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, ApproveNftAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        spender_account_id = parsed_params.spender_account_id
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Validate that either all_serials is true or serial_numbers is provided
+        if not parsed_params.all_serials and not parsed_params.serial_numbers:
+            raise ValueError(
+                "Either all_serials must be true or serial_numbers must be provided"
+            )
+
+        # If all_serials is true, serial_numbers should not be provided
+        if parsed_params.all_serials and parsed_params.serial_numbers:
+            raise ValueError("Cannot specify both all_serials=true and serial_numbers")
+
+        # Create the NFT allowance
+        nft_allowance = TokenNftAllowance(
+            token_id=token_id,
+            owner_account_id=AccountId.from_string(owner_account_id),
+            spender_account_id=AccountId.from_string(spender_account_id),
+            approved_for_all=parsed_params.all_serials,
+            serial_numbers=parsed_params.serial_numbers or [],
+        )
+
+        return ApproveNftAllowanceParametersNormalised(
+            nft_allowances=[nft_allowance],
+            transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
     async def normalise_airdrop_fungible_token_params(
         params: AirdropFungibleTokenParameters,
         context: Context,
@@ -1783,4 +1844,50 @@ class HederaParameterNormaliser:
             ft_approved_transfer=ft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
             scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    def normalise_transfer_non_fungible_token_with_allowance(
+        params: TransferNonFungibleTokenWithAllowanceParameters,
+        context: Context,
+    ) -> TransferNonFungibleTokenWithAllowanceParametersNormalised:
+        """Normalize parameters for transferring NFTs with allowance.
+
+        Args:
+            params: The raw input parameters.
+            context: The runtime context.
+
+        Returns:
+            The normalized parameters ready for transaction building.
+        """
+        parsed_params: TransferNonFungibleTokenWithAllowanceParameters = cast(
+            TransferNonFungibleTokenWithAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferNonFungibleTokenWithAllowanceParameters
+            ),
+        )
+
+        # Convert token_id to SDK TokenId
+        token_id = TokenId.from_string(parsed_params.token_id)
+        source_account_id = AccountId.from_string(parsed_params.source_account_id)
+
+        # Map recipients to NftApprovedTransfer objects
+        nft_transfers: List[NftApprovedTransferNormalised] = []
+
+        # Note: parsed_params.recipients contains NftApprovedTransferInput objects
+        for recipient_input in parsed_params.recipients:
+            nft_transfer = NftApprovedTransferNormalised(
+                sender_id=source_account_id,
+                receiver_id=AccountId.from_string(recipient_input.recipient),
+                serial_number=recipient_input.serial_number,
+                is_approval=True,
+            )
+            nft_transfers.append(nft_transfer)
+
+        # Group transfers by token_id (all transfers in this tool call are for the same token)
+        nft_approved_transfer = {token_id: nft_transfers}
+
+        return TransferNonFungibleTokenWithAllowanceParametersNormalised(
+            nft_approved_transfer=nft_approved_transfer,
+            transaction_memo=parsed_params.transaction_memo,
         )

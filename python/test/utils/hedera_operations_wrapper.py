@@ -37,6 +37,7 @@ from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     TokenBalance,
     TopicMessagesResponse,
     TokenBalancesResponse,
+    NftBalanceResponse,
 )
 from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -57,6 +58,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateFungibleTokenParametersNormalised,
     ApproveNftAllowanceParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
+    TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
 from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
     ExecuteStrategy,
@@ -344,6 +346,15 @@ class HederaOperationsWrapper:
         )
         return result.raw
 
+    async def transfer_non_fungible_token_with_allowance(
+        self, params: TransferNonFungibleTokenWithAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
+        tx = HederaBuilder.transfer_non_fungible_token_with_allowance(params)
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
+
     async def mint_nft(
         self, params: MintNonFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
@@ -353,7 +364,7 @@ class HederaOperationsWrapper:
         )
         return result.raw
 
-    async def get_account_nfts(self, account_id: str) -> Any:
+    async def get_account_nfts(self, account_id: str) -> NftBalanceResponse:
         return await self.mirrornode.get_account_nfts(account_id)
 
     async def get_scheduled_transaction_details(self, scheduled_tx_id: str) -> Any:
