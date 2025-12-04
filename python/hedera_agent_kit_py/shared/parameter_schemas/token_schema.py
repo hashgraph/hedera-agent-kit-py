@@ -116,10 +116,17 @@ class TransferNonFungibleTokenWithAllowanceParameters(
     ] = None
 
 
+class NftApprovedTransfer(BaseModelWithArbitraryTypes):
+    sender_id: AccountId
+    receiver_id: AccountId
+    serial_number: int
+    is_approval: bool = True
+
+
 class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     OptionalScheduledTransactionParamsNormalised
 ):
-    nft_approved_transfer: Dict[TokenId, List[Tuple[AccountId, AccountId, int, bool]]]
+    nft_approved_transfer: Dict[TokenId, List[NftApprovedTransfer]]
     transaction_memo: Optional[str] = None
 
 
