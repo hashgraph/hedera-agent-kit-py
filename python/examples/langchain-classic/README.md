@@ -4,7 +4,7 @@ This directory contains examples of using Hedera Agent Kit with LangChain Classi
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher (up to 3.13)
 - [Poetry](https://python-poetry.org/docs/#installation) - Python dependency management tool
 - Hedera Testnet account (get one from [Hedera Portal](https://portal.hedera.com/))
 - OpenAI API key
