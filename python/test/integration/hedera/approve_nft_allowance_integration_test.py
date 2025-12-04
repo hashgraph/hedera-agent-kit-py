@@ -131,6 +131,7 @@ async def setup_accounts():
 
     spender_client.close()
 
+
     await return_hbars_and_delete_account(
         executor_wrapper,
         executor_account_id,

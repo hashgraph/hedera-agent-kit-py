@@ -28,7 +28,7 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
-    NftApprovedTransfer, NftApprovedTransferNormalised,
+    NftApprovedTransferNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
