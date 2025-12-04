@@ -5,6 +5,7 @@ from __future__ import annotations
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit_py.shared.hedera_utils import to_display_unit
 from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
@@ -36,7 +37,7 @@ def get_token_balances_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 
-This tool will return the token balances for a given Hedera account.
+This tool will return the token balances for a given Hedera account. The human message will contain parsed balances in display units whereas the extra field will contain the raw token balances response from the mirror node with .
 
 Parameters:
 - {account_desc}
@@ -53,14 +54,17 @@ def post_process(token_balances: TokenBalancesResponse, account_id: str) -> str:
 
     balances_text = "\n".join(
         [
-            f"  Token: {token['token_id']}, Symbol: {token.get('symbol', 'UNKNOWN')}, Balance: {token['balance']}, Decimals: {token['decimals']}"
+            f"  Token: {token['token_id']}, Symbol: {token.get('symbol', 'UNKNOWN')}, Balance: { to_display_unit(token['balance'], token['decimals'])}, Decimals: {token['decimals']}"
             for token in token_balances["tokens"]
         ]
     )
 
     return f"""Details for {account_id}
 --- Token Balances ---
-{balances_text}"""
+{balances_text}
+
+The balances are given in display units.
+"""
 
 
 async def get_token_balances(
