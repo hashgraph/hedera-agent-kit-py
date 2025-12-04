@@ -37,6 +37,7 @@ from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     TokenBalance,
     TopicMessagesResponse,
     TokenBalancesResponse,
+    NftBalanceResponse,
 )
 from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from hedera_agent_kit_py.shared.parameter_schemas import (
@@ -363,7 +364,7 @@ class HederaOperationsWrapper:
         )
         return result.raw
 
-    async def get_account_nfts(self, account_id: str) -> Any:
+    async def get_account_nfts(self, account_id: str) -> NftBalanceResponse:
         return await self.mirrornode.get_account_nfts(account_id)
 
     async def get_scheduled_transaction_details(self, scheduled_tx_id: str) -> Any:

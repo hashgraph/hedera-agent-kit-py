@@ -1,4 +1,4 @@
-"""End-to-end tests for approve NFT allowance tool.
+"""End-to-end tests for transfer NFT with an allowance tool.
 
 This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution and verification of the allowance usage.
@@ -13,9 +13,8 @@ from hiero_sdk_python import (
     AccountId,
     Client,
     SupplyType,
-    TokenId,
     TokenType,
-    TokenNftInfo,
+    TokenNftAllowance,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
@@ -27,8 +26,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
-    TransferNonFungibleTokenWithAllowanceParametersNormalised,
-    NftApprovedTransferNormalised,
+    ApproveNftAllowanceParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
@@ -40,10 +38,9 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_OWNER_BALANCE = Hbar(50)
-DEFAULT_SPENDER_BALANCE = Hbar(15)
-DEFAULT_RECIPIENT_BALANCE = Hbar(15)
-TOOL_NAME = "approve_nft_allowance_tool"
+DEFAULT_OWNER_BALANCE = Hbar(100)
+DEFAULT_SPENDER_BALANCE = Hbar(50)
+TOOL_NAME = "transfer_non_fungible_token_with_allowance_tool"
 
 
 # ============================================================================
@@ -137,52 +134,10 @@ async def spender_account(
 
 
 @pytest.fixture
-async def recipient_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary recipient account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    recipient_key_pair: PrivateKey = PrivateKey.generate_ed25519()
-    recipient_resp = await operator_wrapper.create_account(
-        CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_RECIPIENT_BALANCE,
-            key=recipient_key_pair.public_key(),
-        )
-    )
-
-    recipient_account_id: AccountId = recipient_resp.account_id
-    recipient_client: Client = get_custom_client(
-        recipient_account_id, recipient_key_pair
-    )
-
-    recipient_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        recipient_client
-    )
-
-    yield (
-        recipient_account_id,
-        recipient_key_pair,
-        recipient_client,
-        recipient_wrapper_instance,
-    )
-
-    await return_hbars_and_delete_account(
-        recipient_wrapper_instance,
-        recipient_account_id,
-        operator_client.operator_account_id,
-    )
-    recipient_client.close()
-
-
-@pytest.fixture
-async def test_nft(owner_account, spender_account, recipient_account):
+async def test_nft(owner_account, spender_account):
     """Create a test NFT token owned by owner and mint one serial."""
     owner_id, owner_key, owner_client, owner_wrapper = owner_account
     spender_id, _, _, spender_wrapper = spender_account
-    recipient_id, _, _, recipient_wrapper = recipient_account
 
     treasury_public_key = owner_key.public_key()
     keys = TokenKeys(
@@ -190,9 +145,9 @@ async def test_nft(owner_account, spender_account, recipient_account):
         admin_key=treasury_public_key,
     )
     nft_params = TokenParams(
-        token_name="AK-NFT-E2E",
-        token_symbol="AKNE",
-        memo="Approve NFT allowance E2E",
+        token_name="E2E-NFT",
+        token_symbol="ENFT",
+        memo="E2E allowance integration",
         token_type=TokenType.NON_FUNGIBLE_UNIQUE,
         supply_type=SupplyType.FINITE,
         max_supply=10,
@@ -204,7 +159,7 @@ async def test_nft(owner_account, spender_account, recipient_account):
     token_resp = await owner_wrapper.create_non_fungible_token(create_params)
     nft_token_id = token_resp.token_id
 
-    # Mint at least one NFT serial
+    # Mint NFTs
     await owner_wrapper.mint_nft(
         MintNonFungibleTokenParametersNormalised(
             token_id=nft_token_id,
@@ -214,12 +169,9 @@ async def test_nft(owner_account, spender_account, recipient_account):
         )
     )
 
-    # Associate spender and recipient with the NFT token
+    # Associate spender with the NFT token
     await spender_wrapper.associate_token(
         {"accountId": str(spender_id), "tokenId": str(nft_token_id)}
-    )
-    await recipient_wrapper.associate_token(
-        {"accountId": str(recipient_id), "tokenId": str(nft_token_id)}
     )
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -234,10 +186,10 @@ def langchain_config():
 
 
 @pytest.fixture
-async def langchain_test_setup(owner_account):
-    """Set up LangChain agent and toolkit with the owner account."""
-    _, _, owner_client, _ = owner_account
-    setup = await create_langchain_test_setup(custom_client=owner_client)
+async def langchain_test_setup(spender_account):
+    """Set up LangChain agent and toolkit with the spender account (who uses allowance)."""
+    _, _, spender_client, _ = spender_account
+    setup = await create_langchain_test_setup(custom_client=spender_client)
     yield setup
     setup.cleanup()
 
@@ -300,57 +252,43 @@ def validate_tool_use(
         )
 
 
-async def spend_nft_via_allowance(
-    owner_id: AccountId,
-    recipient_id: AccountId,
-    nft_token_id: TokenId,
-    serial_number: int,
-    spender_wrapper: HederaOperationsWrapper,
-):
-    """
-    Helper to execute a TransferTransaction using the approved NFT allowance.
-    This simulates the Spender taking action to transfer the NFT.
-    """
-    transfer_details = NftApprovedTransferNormalised(
-        sender_id=owner_id,
-        receiver_id=recipient_id,
-        serial_number=serial_number,
-        is_approval=True,
-    )
-
-    params = TransferNonFungibleTokenWithAllowanceParametersNormalised(
-        nft_approved_transfer={nft_token_id: [transfer_details]}
-    )
-
-    await spender_wrapper.transfer_non_fungible_token_with_allowance(params)
-
-
 # ============================================================================
 # TEST CASES
 # ============================================================================
 
 
 @pytest.mark.asyncio
-async def test_should_approve_nft_allowance_and_allow_spender_to_transfer_via_approved_transfer(
+async def test_should_transfer_nft_via_allowance_to_recipient(
     agent_executor,
     owner_account,
     spender_account,
-    recipient_account,
     test_nft,
     langchain_config,
     response_parser,
 ):
-    """Test approving NFT allowance and using it to transfer NFT."""
-    owner_id, _, _, owner_wrapper = owner_account
-    spender_id, _, spender_client, spender_wrapper = spender_account
-    recipient_id, _, _, recipient_wrapper = recipient_account
+    """Test transferring NFT via allowance using natural language."""
+    owner_id, _, owner_client, owner_wrapper = owner_account
+    spender_id, _, _, spender_wrapper = spender_account
     nft_token_id = test_nft
     serial_to_use = 1
 
-    memo = "E2E approve NFT allowance"
+    # Approve NFT allowance using SDK
+    await owner_wrapper.approve_nft_allowance(
+        ApproveNftAllowanceParametersNormalised(
+            nft_allowances=[
+                TokenNftAllowance(
+                    token_id=nft_token_id,
+                    spender_account_id=spender_id,
+                    serial_numbers=[serial_to_use],
+                )
+            ]
+        )
+    )
 
-    # 1. Agent approves NFT allowance
-    input_text = f'Approve NFT allowance for token {nft_token_id} serial {serial_to_use} to spender {spender_id} with memo "{memo}"'
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    # Transfer NFT via allowance using natural language
+    input_text = f"Transfer NFT with allowance from {owner_id} to {spender_id} with serial number {serial_to_use} of {nft_token_id}"
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
 
     validate_tool_use(result, response_parser, TOOL_NAME)
@@ -358,17 +296,16 @@ async def test_should_approve_nft_allowance_and_allow_spender_to_transfer_via_ap
     # Wait for Mirror Node propagation
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    # 2. Spender uses the allowance to transfer NFT to the recipient
-    await spend_nft_via_allowance(
-        owner_id, recipient_id, nft_token_id, serial_to_use, spender_wrapper
-    )
+    # Verify NFT was transferred to spender
+    recipient_nfts = await spender_wrapper.get_account_nfts(str(spender_id))
 
-    await wait(MIRROR_NODE_WAITING_TIME)
+    # Check if the spender now owns the NFT
+    found_nft = False
+    for nft in recipient_nfts.get("nfts"):
+        if nft.get("token_id") == str(nft_token_id) and nft.get("serial_number") == 1:
+            found_nft = True
+            break
 
-    # 3. Verify NFT ownership moved to recipient
-    nft_info: TokenNftInfo = recipient_wrapper.get_nft_info(
-        str(nft_token_id), serial_to_use
-    )
-
-    # Verify the NFT is now owned by the recipient
-    assert nft_info is not None
+    assert (
+        found_nft
+    ), f"NFT serial {serial_to_use} not found in spender's account after transfer"
