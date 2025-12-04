@@ -205,7 +205,9 @@ async def test_transfer_nft_via_approved_allowance(setup_accounts):
 
     # Verify the NFT was transferred to the spender
     await wait(MIRROR_NODE_WAITING_TIME)
-    spender_nfts: NftBalanceResponse = await spender_wrapper.get_account_nfts(str(spender_account_id))
+    spender_nfts: NftBalanceResponse = await spender_wrapper.get_account_nfts(
+        str(spender_account_id)
+    )
 
     # Check if the spender now owns the NFT
     found_nft = False

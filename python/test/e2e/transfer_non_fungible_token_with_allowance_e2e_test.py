@@ -24,7 +24,8 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
-    CreateNonFungibleTokenParametersNormalised, MintNonFungibleTokenParametersNormalised,
+    CreateNonFungibleTokenParametersNormalised,
+    MintNonFungibleTokenParametersNormalised,
     ApproveNftAllowanceParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
