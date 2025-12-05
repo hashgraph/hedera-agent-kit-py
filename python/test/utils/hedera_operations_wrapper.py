@@ -80,9 +80,46 @@ class HederaOperationsWrapper:
     # ACCOUNT OPERATIONS
     # ---------------------------
     async def create_account(
-        self, params: CreateAccountParametersNormalised
+        self, params: Any
     ) -> RawTransactionResponse:
-        tx = HederaBuilder.create_account(params)
+        """Create an account, accepting either normalised params or a simple dict.
+
+        Tests may pass a plain dict with camelCase keys (e.g. initialBalance, key).
+        This method normalises that shape into CreateAccountParametersNormalised
+        expected by the HederaBuilder.
+        """
+        normalised: CreateAccountParametersNormalised
+
+        if isinstance(params, CreateAccountParametersNormalised):
+            normalised = params
+        elif isinstance(params, dict):
+            # Map common aliases/camelCase to snake_case expected by the normalised schema
+            key = params.get("key") or params.get("publicKey")
+            initial_balance = (
+                params.get("initial_balance")
+                or params.get("initialBalance")
+            )
+            memo = params.get("memo") or params.get("account_memo") or params.get("accountMemo")
+            max_auto = (
+                params.get("max_automatic_token_associations")
+                or params.get("maxAutomaticTokenAssociations")
+            )
+            scheduling_params = (
+                params.get("scheduling_params") or params.get("schedulingParams")
+            )
+
+            normalised = CreateAccountParametersNormalised(
+                memo=memo,
+                initial_balance=initial_balance,
+                key=key,
+                max_automatic_token_associations=max_auto,
+                scheduling_params=scheduling_params,
+            )
+        else:
+            # Fallback: attempt direct construction if a compatible pydantic model-like is provided
+            normalised = CreateAccountParametersNormalised(**vars(params))
+
+        tx = HederaBuilder.create_account(normalised)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
