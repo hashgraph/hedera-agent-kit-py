@@ -220,6 +220,33 @@ async def test_create_nft_with_max_supply(
 
 
 @pytest.mark.asyncio
+async def test_create_nft_with_explicit_finite_supply(
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
+):
+    """Test creating an NFT with explicit finite supply type."""
+    input_text = (
+        "Create a non-fungible token LimitedEdition with symbol LTD, "
+        "with finite supply and max supply 300"
+    )
+
+    result = await execute_agent_request(agent_executor, input_text, langchain_config)
+    token_id_str = extract_token_id(
+        result, response_parser, "create_non_fungible_token_tool"
+    )
+
+    # Verify on-chain
+    token_info = executor_wrapper.get_token_info(token_id_str)
+    assert token_info.name == "LimitedEdition"
+    assert token_info.symbol == "LTD"
+    assert token_info.supply_type == SupplyType.FINITE
+    assert token_info.max_supply == 300
+
+
+
+@pytest.mark.asyncio
 async def test_schedule_create_nft(
     agent_executor,
     langchain_config: RunnableConfig,
