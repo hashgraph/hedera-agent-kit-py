@@ -92,3 +92,17 @@ class AccountResolver:
 
         account = await mirror_node.get_account(address)
         return account.get("evm_address")
+
+    @staticmethod
+    async def get_hedera_account_id(
+        address: str, mirror_node: IHederaMirrornodeService
+    ) -> str:
+        """
+        Converts an EVM address to its corresponding Hedera account ID if applicable.
+        If already a Hedera address, returns it as-is.
+        """
+        if AccountResolver.is_hedera_address(address):
+            return address
+
+        account = await mirror_node.get_account(address)
+        return account.get("account_id")

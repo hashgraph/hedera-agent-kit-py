@@ -19,11 +19,19 @@ class ContractExecuteTransactionParametersNormalised(
 
 
 class TransferERC20Parameters(OptionalScheduledTransactionParams):
-    contract_id: Annotated[str, Field(description="The id of the ERC20 contract.")]
-    recipient_address: Annotated[
-        str, Field(description="Address to which the tokens will be transferred.")
+    contract_id: Annotated[
+        str,
+        Field(
+            description="The id of the ERC20 contract. This can be the EVM address or the Hedera account id."
+        ),
     ]
-    amount: Annotated[float, Field(description="The amount of tokens to transfer.")]
+    recipient_address: Annotated[
+        str,
+        Field(
+            description="The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id."
+        ),
+    ]
+    amount: Annotated[int, Field(description="The amount to be transferred. Given in base units!")]
 
 
 class CreateERC721Parameters(OptionalScheduledTransactionParams):
@@ -41,7 +49,7 @@ class CreateERC20Parameters(OptionalScheduledTransactionParams):
     ] = 18
     initial_supply: Annotated[
         int,
-        Field(ge=0, description="The initial supply of the token."),
+        Field(ge=0, description="The initial supply of the token. Given in base units!"),
     ] = 0
 
 
@@ -50,7 +58,7 @@ class TransferERC721Parameters(OptionalScheduledTransactionParams):
     from_address: Annotated[
         Optional[str],
         Field(
-            description="Address from which the token wContractExecuteTransactionParametersNormalisedill be transferred."
+            description="Address from which the token will be transferred."
         ),
     ] = None
     to_address: Annotated[
