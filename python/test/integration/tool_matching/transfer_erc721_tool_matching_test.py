@@ -30,7 +30,9 @@ async def toolkit(test_setup):
 
 
 @pytest.mark.asyncio
-async def test_match_simple_transfer_erc721_command(agent_executor, toolkit, monkeypatch):
+async def test_match_simple_transfer_erc721_command(
+    agent_executor, toolkit, monkeypatch
+):
     """Test matching a simple transfer ERC721 command."""
     input_text = "Transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x1234567890123456789012345678901234567890"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -63,9 +65,13 @@ async def test_match_simple_transfer_erc721_command(agent_executor, toolkit, mon
 
 
 @pytest.mark.asyncio
-async def test_match_command_with_hedera_addresses(agent_executor, toolkit, monkeypatch):
+async def test_match_command_with_hedera_addresses(
+    agent_executor, toolkit, monkeypatch
+):
     """Test matching a command with Hedera addresses."""
-    input_text = "Send ERC721 token 5 from contract 0.0.1234 from 0.0.5678 to account 0.0.9999"
+    input_text = (
+        "Send ERC721 token 5 from contract 0.0.1234 from 0.0.5678 to account 0.0.9999"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     # Mock Hedera API
@@ -96,7 +102,9 @@ async def test_match_command_with_hedera_addresses(agent_executor, toolkit, monk
 
 
 @pytest.mark.asyncio
-async def test_handle_command_without_explicit_from_address(agent_executor, toolkit, monkeypatch):
+async def test_handle_command_without_explicit_from_address(
+    agent_executor, toolkit, monkeypatch
+):
     """Test handling command without explicit fromAddress."""
     input_text = "Transfer ERC721 token 3 from contract 0.0.1111 to 0.0.2222"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -247,7 +255,9 @@ async def test_handle_mixed_address_formats(agent_executor, toolkit, monkeypatch
 @pytest.mark.asyncio
 async def test_handle_large_token_ids(agent_executor, toolkit, monkeypatch):
     """Test handling large token IDs."""
-    input_text = "Transfer ERC721 token 999999 from contract 0.0.1234 from 0.0.5678 to 0.0.9999"
+    input_text = (
+        "Transfer ERC721 token 999999 from contract 0.0.1234 from 0.0.5678 to 0.0.9999"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     # Mock Hedera API

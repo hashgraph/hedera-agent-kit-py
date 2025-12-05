@@ -800,7 +800,6 @@ class HederaParameterNormaliser:
             scheduling_params=scheduling_params,
         )
 
-
     @staticmethod
     def normalise_get_topic_info(
         params: GetTopicInfoParameters,

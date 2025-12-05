@@ -7,7 +7,10 @@ from hiero_sdk_python import PrivateKey, Hbar
 from hedera_agent_kit_py.plugins.core_evm_plugin import TransferERC721Tool
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import ToolResponse, ExecutedTransactionToolResponse
+from hedera_agent_kit_py.shared.models import (
+    ToolResponse,
+    ExecutedTransactionToolResponse,
+)
 from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferERC721Parameters,
@@ -213,6 +216,7 @@ async def test_schedule_transfer_of_erc721_token(setup_transfer_erc721):
     assert "Scheduled transfer of ERC721 successfully" in result.human_message
     assert exec_result.raw.schedule_id is not None
     assert exec_result.raw.transaction_id is not None
+
 
 @pytest.mark.asyncio
 async def test_fail_with_invalid_contract_id(setup_transfer_erc721):

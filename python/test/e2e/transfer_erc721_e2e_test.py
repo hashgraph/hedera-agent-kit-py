@@ -126,7 +126,9 @@ async def mint_token_for_transfer(setup_env):
     return token_id
 
 
-async def execute_agent_request(agent_executor: Any, input_text: str, config: RunnableConfig):
+async def execute_agent_request(
+    agent_executor: Any, input_text: str, config: RunnableConfig
+):
     """Execute agent request and return result."""
     return await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]},
@@ -173,14 +175,20 @@ async def test_transfer_erc721_via_natural_language(setup_environment):
     assert parsed_data["raw"]["transaction_id"] is not None
 
     await wait(MIRROR_NODE_WAITING_TIME)
-    
+
     # Verify the ownership after transfer
     executor_wrapper = env["executor_wrapper"]
-    recipient_info = await executor_wrapper.get_account_info_mirrornode(str(recipient_account_id))
+    recipient_info = await executor_wrapper.get_account_info_mirrornode(
+        str(recipient_account_id)
+    )
     recipient_evm_address = recipient_info.get("evm_address")
-    
-    owner_address = await executor_wrapper.get_erc721_owner(test_token_address, token_id)
-    assert owner_address.lower() == recipient_evm_address.lower(), f"Expected owner {recipient_evm_address}, got {owner_address}"
+
+    owner_address = await executor_wrapper.get_erc721_owner(
+        test_token_address, token_id
+    )
+    assert (
+        owner_address.lower() == recipient_evm_address.lower()
+    ), f"Expected owner {recipient_evm_address}, got {owner_address}"
 
 
 @pytest.mark.asyncio
@@ -207,14 +215,20 @@ async def test_transfer_with_explicit_from_address(setup_environment):
     assert parsed_data["raw"]["transaction_id"] is not None
 
     await wait(MIRROR_NODE_WAITING_TIME)
-    
+
     # Verify the ownership after transfer
     executor_wrapper = env["executor_wrapper"]
-    recipient_info = await executor_wrapper.get_account_info_mirrornode(str(recipient_account_id))
+    recipient_info = await executor_wrapper.get_account_info_mirrornode(
+        str(recipient_account_id)
+    )
     recipient_evm_address = recipient_info.get("evm_address")
-    
-    owner_address = await executor_wrapper.get_erc721_owner(test_token_address, token_id)
-    assert owner_address.lower() == recipient_evm_address.lower(), f"Expected owner {recipient_evm_address}, got {owner_address}"
+
+    owner_address = await executor_wrapper.get_erc721_owner(
+        test_token_address, token_id
+    )
+    assert (
+        owner_address.lower() == recipient_evm_address.lower()
+    ), f"Expected owner {recipient_evm_address}, got {owner_address}"
 
 
 @pytest.mark.asyncio

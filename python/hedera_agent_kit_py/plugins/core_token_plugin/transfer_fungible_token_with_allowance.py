@@ -37,6 +37,7 @@ from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
 )
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
+
 def transfer_fungible_token_with_allowance_prompt(context: Context = {}) -> str:
     """Generate a human-readable description of the transfer fungible token with allowance tool."""
     context_snippet: str = PromptGenerator.get_context_snippet(context)
