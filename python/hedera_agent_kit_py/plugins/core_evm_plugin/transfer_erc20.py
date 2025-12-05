@@ -68,7 +68,7 @@ Do NOT use this tool for:
 Parameters:
 - contract_id (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
 - recipient_address (str, required): The EVM or Hedera address to which the tokens will be transferred.
-- amount (number, required): The amount to be transferred.
+- amount (number, required): The amount to be transferred. Given in base units!
 - {scheduled_desc}
 
 {usage_instructions}

@@ -31,7 +31,7 @@ class TransferERC20Parameters(OptionalScheduledTransactionParams):
             description="The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id."
         ),
     ]
-    amount: Annotated[int, Field(description="The amount to be transferred.")]
+    amount: Annotated[int, Field(description="The amount to be transferred. Given in base units!")]
 
 
 class CreateERC721Parameters(OptionalScheduledTransactionParams):
@@ -49,7 +49,7 @@ class CreateERC20Parameters(OptionalScheduledTransactionParams):
     ] = 18
     initial_supply: Annotated[
         int,
-        Field(ge=0, description="The initial supply of the token."),
+        Field(ge=0, description="The initial supply of the token. Given in base units!"),
     ] = 0
 
 
@@ -58,7 +58,7 @@ class TransferERC721Parameters(OptionalScheduledTransactionParams):
     from_address: Annotated[
         Optional[str],
         Field(
-            description="Address from which the token wContractExecuteTransactionParametersNormalisedill be transferred."
+            description="Address from which the token will be transferred."
         ),
     ] = None
     to_address: Annotated[
