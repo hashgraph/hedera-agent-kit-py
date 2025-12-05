@@ -137,6 +137,7 @@ async def test_transfer_erc20_via_natural_language(setup_environment):
     recipient_account_id = env["recipient_account_id"]
 
     input_text = f"Transfer 10 ERC20 tokens {test_token_address} to {recipient_account_id}"
+    print(input_text)
 
     result = await execute_agent_request(agent_executor, input_text, config)
     tool_call = extract_tool_result(result, response_parser)
@@ -147,6 +148,14 @@ async def test_transfer_erc20_via_natural_language(setup_environment):
     assert parsed_data["raw"]["transaction_id"] is not None
 
     await wait(MIRROR_NODE_WAITING_TIME)
+    
+    # Verify the balance after transfer
+    executor_wrapper = env["executor_wrapper"]
+    recipient_balance = await executor_wrapper.get_erc20_balance(
+        test_token_address, str(recipient_account_id)
+    )
+    expected_balance = 10
+    assert recipient_balance == expected_balance, f"Expected balance {expected_balance}, got {recipient_balance}"
 
 
 @pytest.mark.asyncio
@@ -165,6 +174,7 @@ async def test_handle_various_natural_language_variations(setup_environment):
         f"Transfer 2 tokens of contract {test_token_address} to address {recipient_account_id}",
     ]
 
+    total_transferred = 0
     for input_text in variations:
         result = await execute_agent_request(agent_executor, input_text, config)
         tool_call = extract_tool_result(result, response_parser)
@@ -173,6 +183,21 @@ async def test_handle_various_natural_language_variations(setup_environment):
         parsed_data = tool_call.parsedData
         assert parsed_data["raw"]["status"] == "SUCCESS"
         assert parsed_data["raw"]["transaction_id"] is not None
+        
+        # Extract amount from the input text
+        amount_str = input_text.split()[1]
+        total_transferred += int(amount_str)
+    
+    await wait(MIRROR_NODE_WAITING_TIME)
+    
+    # Verify the cumulative balance after all transfers
+    executor_wrapper = env["executor_wrapper"]
+    recipient_balance = await executor_wrapper.get_erc20_balance(
+        test_token_address, str(recipient_account_id)
+    )
+    # Total transferred: 1 + 5 + 2 = 8 tokens, plus 10 from the first test = 18 base units
+    expected_balance = 18
+    assert recipient_balance == expected_balance, f"Expected balance {expected_balance}, got {recipient_balance}"
 
 
 @pytest.mark.asyncio

@@ -361,6 +361,82 @@ class HederaOperationsWrapper:
             print("[HederaOperationsWrapper] Error creating ERC20:", exc)
             raise
 
+    async def get_erc20_balance(
+        self, erc20_contract_address: str, account_address: str
+    ) -> int:
+        """Get ERC20 token balance for an account by calling balanceOf on the contract.
+        
+        Args:
+            erc20_contract_address: The ERC20 contract address (EVM format like 0x...)
+            account_address: The account address to check balance for (Hedera ID like 0.0.123)
+            
+        Returns:
+            int: The token balance (in base units, not adjusted for decimals)
+        """
+        from hedera_agent_kit_py.shared.constants.contracts import (
+            ERC20_BALANCE_OF_FUNCTION_ABI,
+            ERC20_BALANCE_OF_FUNCTION_NAME,
+        )
+        from hiero_sdk_python import ContractCallQuery
+        from hiero_sdk_python.contract.contract_id import ContractId
+        from web3 import Web3
+        
+        try:
+            # Get EVM address for the account
+            account_info = await self.get_account_info_mirrornode(account_address)
+            account_evm_address = account_info.get("evm_address")
+            
+            if not account_evm_address:
+                raise ValueError(f"Could not get EVM address for account {account_address}")
+            
+            # Encode the balanceOf function call
+            w3 = Web3()
+            checksummed_account = w3.to_checksum_address(account_evm_address)
+            contract = w3.eth.contract(abi=ERC20_BALANCE_OF_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC20_BALANCE_OF_FUNCTION_NAME,
+                args=[checksummed_account],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+            
+            # Create ContractId from EVM address
+            # Strip 0x prefix and convert to bytes
+            addr_hex = erc20_contract_address.lower().replace("0x", "")
+            evm_bytes = bytes.fromhex(addr_hex)
+            
+            if len(evm_bytes) != 20:
+                raise ValueError(
+                    f"Invalid EVM address length: expected 20 bytes, got {len(evm_bytes)}"
+                )
+            
+            # Create ContractId with only EVM address (shard=0, realm=0, contract=0)
+            contract_id = ContractId(
+                shard=0, realm=0, contract=0, evm_address=evm_bytes
+            )
+            
+            # Execute a contract call query
+            query = (
+                ContractCallQuery()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+            
+            result = query.execute(self.client)
+            
+            # Decode the result - balanceOf returns uint256
+            result_bytes = getattr(result, "contract_call_result", None)
+            if not result_bytes or len(result_bytes) < 32:
+                return 0
+            
+            # uint256 is encoded as 32 bytes
+            balance = int.from_bytes(result_bytes[:32], "big")
+            return balance
+            
+        except Exception as exc:
+            print(f"[HederaOperationsWrapper] Error getting ERC20 balance: {exc}")
+            raise
+
     async def _get_erc_address( self, transaction_id: TransactionId
     ) -> str | None:
         """Minimal helper to resolve the deployed ERC721 EVM address via SDK."""

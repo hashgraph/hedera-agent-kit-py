@@ -89,6 +89,21 @@ ERC20_TRANSFER_FUNCTION_ABI = [
 ]
 
 # Human-readable:
+# function balanceOf(address account) external view returns (uint256)
+ERC20_BALANCE_OF_FUNCTION_NAME = "balanceOf"
+ERC20_BALANCE_OF_FUNCTION_ABI = [
+    {
+        "inputs": [
+            {"internalType": "address", "name": "account", "type": "address"},
+        ],
+        "name": "balanceOf",
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view",
+        "type": "function",
+    }
+]
+
+# Human-readable:
 # function transferFrom(address from, address to, uint256 tokenId) external returns (bool)
 ERC721_TRANSFER_FUNCTION_NAME = "transferFrom"
 ERC721_TRANSFER_FUNCTION_ABI = [
