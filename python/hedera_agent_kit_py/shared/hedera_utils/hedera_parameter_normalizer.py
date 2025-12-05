@@ -57,6 +57,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     ContractExecuteTransactionParametersNormalised,
     CreateERC20Parameters,
     TransferERC20Parameters,
+    CreateERC721Parameters,
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
     CreateFungibleTokenParametersNormalised,
@@ -150,7 +151,7 @@ class HederaParameterNormaliser:
             str: Formatted error message summarising all field errors.
         """
         return "; ".join(
-            f'Field "{".".join(str(loc) for loc in err["loc"]) or "root"}" - {err["msg"]}' 
+            f'Field "{".".join(str(loc) for loc in err["loc"]) or "root"}" - {err["msg"]}'
             for err in error.errors()
         )
 
@@ -570,6 +571,64 @@ class HederaParameterNormaliser:
         function_parameters = bytes.fromhex(encoded_data[2:])
 
         # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=ContractId.from_string(factory_address),
+            function_parameters=function_parameters,
+            gas=3_000_000,  # TODO: make configurable
+            scheduling_params=scheduling_params,
+        )
+
+    @staticmethod
+    async def normalise_create_erc721_params(
+        params: CreateERC721Parameters,
+        factory_address: str,
+        ERC721_FACTORY_ABI: list[str],
+        factory_contract_function_name: str,
+        context: Context,
+        client: Client,
+    ) -> ContractExecuteTransactionParametersNormalised:
+        """Normalise ERC721 creation parameters for BaseERC721Factory contract deployment.
+
+        Prepares encoded function call data for `deployToken(name, symbol, baseURI)` and
+        optionally includes scheduling parameters when requested.
+
+        Args:
+            params: Raw ERC721 creation parameters.
+            factory_address: The address/ID of the ERC721 factory contract.
+            ERC721_FACTORY_ABI: ABI of the BaseERC721Factory contract.
+            factory_contract_function_name: Function to invoke (e.g., 'deployToken').
+            context: Application context.
+            client: Active Hedera client instance.
+
+        Returns:
+            ContractExecuteTransactionParametersNormalised
+        """
+        parsed_params: CreateERC721Parameters = cast(
+            CreateERC721Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, CreateERC721Parameters
+            ),
+        )
+
+        w3 = Web3()
+        contract = w3.eth.contract(abi=ERC721_FACTORY_ABI)
+        encoded_data = contract.encode_abi(
+            abi_element_identifier=factory_contract_function_name,
+            args=[
+                parsed_params.token_name,
+                parsed_params.token_symbol,
+                parsed_params.base_uri,
+            ],
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
         scheduling_params: ScheduleCreateParams | None = None
         if getattr(parsed_params, "scheduling_params", None):
             if parsed_params.scheduling_params.is_scheduled:
