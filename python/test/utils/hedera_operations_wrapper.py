@@ -69,6 +69,17 @@ from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
 )
 from hedera_agent_kit_py.shared.utils import LedgerId
 from . import from_evm_address
+from hedera_agent_kit_py.shared.constants.contracts import (
+    ERC721_OWNER_OF_FUNCTION_ABI,
+    ERC721_OWNER_OF_FUNCTION_NAME,
+)
+from hedera_agent_kit_py.shared.constants.contracts import (
+    ERC20_BALANCE_OF_FUNCTION_ABI,
+    ERC20_BALANCE_OF_FUNCTION_NAME,
+)
+from hiero_sdk_python import ContractCallQuery
+from hiero_sdk_python.contract.contract_id import ContractId
+from web3 import Web3
 
 
 class HederaOperationsWrapper:
@@ -497,13 +508,7 @@ class HederaOperationsWrapper:
         Returns:
             int: The token balance (in base units, not adjusted for decimals)
         """
-        from hedera_agent_kit_py.shared.constants.contracts import (
-            ERC20_BALANCE_OF_FUNCTION_ABI,
-            ERC20_BALANCE_OF_FUNCTION_NAME,
-        )
-        from hiero_sdk_python import ContractCallQuery
-        from hiero_sdk_python.contract.contract_id import ContractId
-        from web3 import Web3
+
         
         try:
             # Get EVM address for the account
@@ -559,6 +564,66 @@ class HederaOperationsWrapper:
             
         except Exception as exc:
             print(f"[HederaOperationsWrapper] Error getting ERC20 balance: {exc}")
+            raise
+
+    async def get_erc721_owner(
+        self, erc721_contract_address: str, token_id: int
+    ) -> str:
+        """Get the owner of an ERC721 token by calling ownerOf on the contract.
+        
+        Args:
+            erc721_contract_address: The ERC721 contract address (EVM format like 0x...)
+            token_id: The token ID to check ownership for
+            
+        Returns:
+            str: The owner's EVM address (0x...)
+        """
+        try:
+            # Encode the ownerOf function call
+            w3 = Web3()
+            contract = w3.eth.contract(abi=ERC721_OWNER_OF_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC721_OWNER_OF_FUNCTION_NAME,
+                args=[token_id],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+            
+            # Create ContractId from EVM address
+            addr_hex = erc721_contract_address.lower().replace("0x", "")
+            evm_bytes = bytes.fromhex(addr_hex)
+            
+            if len(evm_bytes) != 20:
+                raise ValueError(
+                    f"Invalid EVM address length: expected 20 bytes, got {len(evm_bytes)}"
+                )
+            
+            contract_id = ContractId(
+                shard=0, realm=0, contract=0, evm_address=evm_bytes
+            )
+            
+            # Execute a contract call query
+            query = (
+                ContractCallQuery()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+            
+            result = query.execute(self.client)
+            
+            # Decode the result - ownerOf returns address (20 bytes)
+            result_bytes = getattr(result, "contract_call_result", None)
+            if not result_bytes or len(result_bytes) < 32:
+                raise ValueError("Invalid response from ownerOf call")
+            
+            # Address is encoded as 32 bytes (left-padded with zeros)
+            # Take the last 20 bytes
+            owner_bytes = result_bytes[:32][-20:]
+            owner_address = "0x" + owner_bytes.hex()
+            return owner_address
+            
+        except Exception as exc:
+            print(f"[HederaOperationsWrapper] Error getting ERC721 owner: {exc}")
             raise
 
     async def _get_erc_address( self, transaction_id: TransactionId
