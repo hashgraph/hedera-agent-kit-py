@@ -8,7 +8,7 @@ This module exposes:
 
 from __future__ import annotations
 
-from hiero_sdk_python import Client, TransferTransaction
+from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
 from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -37,27 +37,28 @@ from hedera_agent_kit_py.shared.utils.default_tool_output_parsing import (
 )
 from hedera_agent_kit_py.shared.utils.prompt_generator import PromptGenerator
 
-
 def transfer_fungible_token_with_allowance_prompt(context: Context = {}) -> str:
-    """Generate a human-readable description of the transfer fungible token with allowance tool.
-
-    Args:
-        context: Optional contextual configuration.
-
-    Returns:
-        A string describing the tool, its parameters, and usage instructions.
-    """
+    """Generate a human-readable description of the transfer fungible token with allowance tool."""
     context_snippet: str = PromptGenerator.get_context_snippet(context)
     usage_instructions: str = PromptGenerator.get_parameter_usage_instructions()
 
     return f"""
 {context_snippet}
 
-This tool will transfer a fungible token using an existing **token allowance**.
+This tool transfers Fungible Tokens **on behalf of another account** using a pre-approved **Allowance**. 
+
+Use this tool ONLY when:
+- The request involves spending from a "source account" that is NOT the current signer.
+- The user explicitly mentions "allowance", "delegated transfer", or "spending limit".
+- You are moving funds *from* a specific owner *to* a recipient using previously granted permissions.
+
+Do NOT use this tool for:
+- Standard direct transfers of ERC20 tokens (use the ERC20 tool).
+- Standard direct transfers of HTS tokens where the signer owns the tokens.
 
 Parameters:
 - token_id (string, required): The token ID to transfer (e.g. "0.0.12345")
-- source_account_id (string, required): Account ID of the token owner (the allowance granter)
+- source_account_id (string, required): Account ID of the token owner (the allowance granter).
 - transfers (array of objects, required): List of token transfers. Each object should contain:
   - account_id (string): Recipient account ID
   - amount (number): Amount of tokens to transfer in display unit
@@ -66,8 +67,8 @@ Parameters:
 
 {usage_instructions}
 
-Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
-Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+Example: "Spend allowance from account 0.0.1002 to send 25 tokens to 0.0.2002"
+Example: "Use my allowance on account 0.0.5555 to transfer 100 tokens"
 """
 
 
