@@ -203,9 +203,7 @@ async def test_create_erc721_with_base_uri(
     response_parser: ResponseParserService,
 ):
     """Test creating an ERC721 token with a base URI via natural language."""
-    input_text = (
-        "Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/"
-    )
+    input_text = "Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/"
     parsed_data = await execute_create_erc721(
         agent_executor, input_text, langchain_config, response_parser
     )

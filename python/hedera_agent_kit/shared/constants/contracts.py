@@ -133,6 +133,19 @@ ERC721_MINT_FUNCTION_ABI = [
     }
 ]
 
+# Human-readable:
+# function ownerOf(uint256 tokenId) external view returns (address)
+ERC721_OWNER_OF_FUNCTION_NAME = "ownerOf"
+ERC721_OWNER_OF_FUNCTION_ABI = [
+    {
+        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+        "name": "ownerOf",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function",
+    }
+]
+
 
 # =====================================================
 #  Helper Functions

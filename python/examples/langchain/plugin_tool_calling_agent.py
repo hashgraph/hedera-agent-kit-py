@@ -28,6 +28,7 @@ from hedera_agent_kit.shared.configuration import AgentMode, Context, Configurat
 
 load_dotenv(".env")
 
+
 async def bootstrap():
     # Initialize LLM
     model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")

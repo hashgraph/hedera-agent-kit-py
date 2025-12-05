@@ -38,9 +38,7 @@ async def toolkit(test_setup):
 @pytest.mark.asyncio
 async def test_match_simple_create_erc721_command(agent_executor, toolkit, monkeypatch):
     """Test that the tool matches a simple ERC721 creation command."""
-    input_text = (
-        "Create an ERC721 token named TestNFT with symbol TNFT and base URI https://example.com/"
-    )
+    input_text = "Create an ERC721 token named TestNFT with symbol TNFT and base URI https://example.com/"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()

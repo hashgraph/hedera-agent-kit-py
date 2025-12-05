@@ -44,7 +44,9 @@ async def test_encodes_function_call_with_all_parameters(
     mock_contract = MagicMock()
     mock_contract.encode_abi.return_value = "0x1234abcd"
     mock_web3.return_value.eth.contract.return_value = mock_contract
-    mock_web3.return_value.to_checksum_address.return_value = "0x1234567890123456789012345678901234567890"
+    mock_web3.return_value.to_checksum_address.return_value = (
+        "0x1234567890123456789012345678901234567890"
+    )
 
     result = await HederaParameterNormaliser.normalise_transfer_erc20_params(
         params,
@@ -94,7 +96,9 @@ async def test_resolves_hedera_address_to_evm_for_recipient(
     mock_contract = MagicMock()
     mock_contract.encode_abi.return_value = "0xabcd1234"
     mock_web3.return_value.eth.contract.return_value = mock_contract
-    mock_web3.return_value.to_checksum_address.return_value = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    mock_web3.return_value.to_checksum_address.return_value = (
+        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    )
 
     result = await HederaParameterNormaliser.normalise_transfer_erc20_params(
         params,
@@ -146,7 +150,9 @@ async def test_resolves_evm_address_to_hedera_for_contract(
     mock_contract = MagicMock()
     mock_contract.encode_abi.return_value = "0xbeef1234"
     mock_web3.return_value.eth.contract.return_value = mock_contract
-    mock_web3.return_value.to_checksum_address.return_value = "0x2222222222222222222222222222222222222222"
+    mock_web3.return_value.to_checksum_address.return_value = (
+        "0x2222222222222222222222222222222222222222"
+    )
 
     result = await HederaParameterNormaliser.normalise_transfer_erc20_params(
         params,
@@ -194,7 +200,9 @@ async def test_handles_large_amount_values(
     mock_contract = MagicMock()
     mock_contract.encode_abi.return_value = "0xdeadbeef"
     mock_web3.return_value.eth.contract.return_value = mock_contract
-    mock_web3.return_value.to_checksum_address.return_value = "0x1234567890123456789012345678901234567890"
+    mock_web3.return_value.to_checksum_address.return_value = (
+        "0x1234567890123456789012345678901234567890"
+    )
 
     result = await HederaParameterNormaliser.normalise_transfer_erc20_params(
         params,
@@ -212,6 +220,7 @@ async def test_handles_large_amount_values(
     )
 
     assert result.gas == 100_000
+
 
 @pytest.mark.asyncio
 @patch.object(AccountResolver, "get_hedera_evm_address")

@@ -57,6 +57,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     ContractExecuteTransactionParametersNormalised,
     CreateERC20Parameters,
     TransferERC20Parameters,
+    TransferERC721Parameters,
     CreateERC721Parameters,
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
@@ -716,6 +717,88 @@ class HederaParameterNormaliser:
             scheduling_params=scheduling_params,
         )
 
+    @staticmethod
+    async def normalise_transfer_erc721_params(
+        params: TransferERC721Parameters,
+        factory_contract_abi: list[dict],
+        factory_contract_function_name: str,
+        context: Context,
+        mirrornode_service: IHederaMirrornodeService,
+        client: Client,
+    ) -> ContractExecuteTransactionParametersNormalised:
+        """Normalise ERC721 transfer parameters for contract execution.
+
+        This method mirrors the TypeScript `normaliseTransferERC721Params` logic and prepares
+        the encoded contract function call for transferring ERC721 tokens (NFTs).
+
+        Args:
+            params: Raw ERC721 transfer parameters.
+            factory_contract_abi: ABI of the ERC721 contract.
+            factory_contract_function_name: Function to invoke (e.g., 'transferFrom').
+            context: Application context.
+            mirrornode_service: Mirror node service for address resolution.
+            client: Active Hedera client instance.
+
+        Returns:
+            ContractExecuteTransactionParametersNormalised: Normalised parameters ready for execution.
+        """
+        # Validate and parse parameters
+        parsed_params: TransferERC721Parameters = cast(
+            TransferERC721Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferERC721Parameters
+            ),
+        )
+
+        # Resolve from_address using AccountResolver pattern (defaults to operator)
+        resolved_from_address = AccountResolver.resolve_account(
+            parsed_params.from_address, context, client
+        )
+        from_address = await AccountResolver.get_hedera_evm_address(
+            resolved_from_address, mirrornode_service
+        )
+
+        # Resolve to_address to EVM address
+        to_address = await AccountResolver.get_hedera_evm_address(
+            parsed_params.to_address, mirrornode_service
+        )
+
+        # Resolve contract ID to Hedera account ID
+        contract_id_str = await AccountResolver.get_hedera_account_id(
+            parsed_params.contract_id, mirrornode_service
+        )
+        contract_id = ContractId.from_string(contract_id_str)
+
+        # Encode the function call
+        w3 = Web3()
+        # Convert both addresses to checksum format as required by Web3.py
+        checksummed_from = w3.to_checksum_address(from_address)
+        checksummed_to = w3.to_checksum_address(to_address)
+        contract = w3.eth.contract(abi=factory_contract_abi)
+        encoded_data = contract.encode_abi(
+            abi_element_identifier=factory_contract_function_name,
+            args=[
+                checksummed_from,
+                checksummed_to,
+                parsed_params.token_id,
+            ],
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=contract_id,
+            function_parameters=function_parameters,
+            gas=100_000,
+            scheduling_params=scheduling_params,
+        )
 
     @staticmethod
     def normalise_get_topic_info(

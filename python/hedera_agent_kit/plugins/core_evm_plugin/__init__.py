@@ -11,6 +11,11 @@ from hedera_agent_kit.plugins.core_evm_plugin.create_erc721 import (
     CREATE_ERC721_TOOL,
 )
 from hedera_agent_kit.shared.plugin import Plugin
+from hedera_agent_kit.plugins.core_evm_plugin.transfer_erc721 import (
+    TransferERC721Tool,
+    TRANSFER_ERC721_TOOL,
+)
+from hedera_agent_kit.shared.plugin import Plugin
 
 
 core_evm_plugin = Plugin(
@@ -21,6 +26,7 @@ core_evm_plugin = Plugin(
         CreateERC20Tool(context),
         TransferERC20Tool(context),
         CreateERC721Tool(context),
+        TransferERC721Tool(context),
     ],
 )
 
@@ -28,6 +34,7 @@ core_evm_plugin_tool_names = {
     "CREATE_ERC20_TOOL": CREATE_ERC20_TOOL,
     "TRANSFER_ERC20_TOOL": TRANSFER_ERC20_TOOL,
     "CREATE_ERC721_TOOL": CREATE_ERC721_TOOL,
+    "TRANSFER_ERC721_TOOL": TRANSFER_ERC721_TOOL,
 }
 
 __all__ = [
@@ -36,4 +43,5 @@ __all__ = [
     CreateERC20Tool,
     TransferERC20Tool,
     CreateERC721Tool,
+    TransferERC721Tool,
 ]
