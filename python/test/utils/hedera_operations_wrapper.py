@@ -27,6 +27,9 @@ from hiero_sdk_python.consensus.topic_info import TopicInfo
 from hiero_sdk_python.contract.contract_create_transaction import (
     ContractCreateTransaction,
 )
+from hiero_sdk_python.contract.contract_execute_transaction import (
+    ContractExecuteTransaction,
+)
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -70,11 +73,14 @@ from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     ExecuteStrategy,
     RawTransactionResponse,
 )
-from hedera_agent_kit.shared.utils import LedgerId
+from hedera_agent_kit.shared.utils import LedgerId, ledger_id_from_network
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 from . import from_evm_address
 from hedera_agent_kit.shared.constants.contracts import (
     ERC721_OWNER_OF_FUNCTION_ABI,
     ERC721_OWNER_OF_FUNCTION_NAME,
+    ERC721_MINT_FUNCTION_ABI,
+    ERC721_MINT_FUNCTION_NAME,
 )
 from hedera_agent_kit.shared.constants.contracts import (
     ERC20_BALANCE_OF_FUNCTION_ABI,
@@ -343,7 +349,7 @@ class HederaOperationsWrapper:
             HederaParameterNormaliser,
         )
         from hedera_agent_kit.shared.utils import ledger_id_from_network
-        
+
         from hedera_agent_kit.shared.utils import ledger_id_from_network
 
         try:
@@ -390,14 +396,14 @@ class HederaOperationsWrapper:
         Returns:
             Dict containing erc721_address, transaction_id, and human_message
         """
-        from hedera_agent_kit_py.shared.constants.contracts import (
+        from hedera_agent_kit.shared.constants.contracts import (
             get_erc721_factory_address,
             ERC721_FACTORY_ABI,
         )
-        from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+        from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
             HederaParameterNormaliser,
         )
-        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
 
         try:
             factory_address = get_erc721_factory_address(
