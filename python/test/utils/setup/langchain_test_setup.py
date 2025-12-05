@@ -6,9 +6,9 @@ from hiero_sdk_python import Client
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.shared.configuration import Context, Configuration
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.shared.configuration import Context, Configuration
 from .client_setup import get_operator_client_for_tests
 from .langchain_test_config import (
     TOOLKIT_OPTIONS,

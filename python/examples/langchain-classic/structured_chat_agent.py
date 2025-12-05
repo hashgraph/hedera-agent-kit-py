@@ -9,10 +9,10 @@ from langchain_classic.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from hiero_sdk_python import AccountId, PrivateKey, Client, Network
 
-from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
-from hedera_agent_kit_py.plugins import (
+from hedera_agent_kit.plugins import (
     core_account_plugin,
     core_consensus_plugin,
     core_account_query_plugin,

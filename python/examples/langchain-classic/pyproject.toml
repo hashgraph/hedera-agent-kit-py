@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "langchain-classic-hedera-agent-kit-examples"
 version = "3.0.0"
-description = "Example applications using hedera-agent-kit-py with langchain-classic"
+description = "Example applications using hedera-agent-kit with langchain-classic"
 package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-hedera-agent-kit-py = { path = "../../", develop = true }
+hedera-agent-kit = { path = "../../", develop = true }
 langchain-classic = "1.0.0"
 
 [build-system]

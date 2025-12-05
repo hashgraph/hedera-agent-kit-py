@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "hedera-agent-kit-py"
+name = "hedera-agent-kit"
 version = "3.0.0"
 description = "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like"
 authors = ["Hashgraph"]
 license = "Apache-2.0"
-readme = "../README.md"
-packages = [{ include = "hedera_agent_kit_py" }]
+readme = "README.md"
+packages = [{ include = "hedera_agent_kit" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"

@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from hiero_sdk_python import AccountId, Client
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
-from hedera_agent_kit_py.shared.parameter_schemas import DeleteAccountParameters
-from hedera_agent_kit_py.shared.configuration import Context
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
+from hedera_agent_kit.shared.parameter_schemas import DeleteAccountParameters
+from hedera_agent_kit.shared.configuration import Context
 
 
 @pytest.fixture

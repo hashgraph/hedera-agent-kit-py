@@ -12,16 +12,16 @@ from web3 import Web3
 from hiero_sdk_python.contract.contract_id import ContractId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateERC20Parameters,
     CreateERC721Parameters,
     SchedulingParams,
 )
-from hedera_agent_kit_py.shared.constants.contracts import (
+from hedera_agent_kit.shared.constants.contracts import (
     ERC20_FACTORY_ABI,
     ERC721_FACTORY_ABI,
 )

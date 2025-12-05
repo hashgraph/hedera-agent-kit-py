@@ -9,8 +9,8 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait

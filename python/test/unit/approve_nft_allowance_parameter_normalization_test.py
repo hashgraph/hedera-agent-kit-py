@@ -3,11 +3,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from hiero_sdk_python import Client
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     ApproveNftAllowanceParameters,
 )
 
@@ -28,7 +28,7 @@ class TestApproveNftAllowanceParameterNormalization:
     @pytest.fixture
     def mock_account_resolver(self, operator_id):
         with patch(
-            "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
+            "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
         ) as mock:
             mock.resolve_account.return_value = operator_id
             yield mock

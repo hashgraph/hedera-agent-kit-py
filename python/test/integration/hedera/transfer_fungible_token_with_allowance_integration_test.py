@@ -11,20 +11,20 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
-from hedera_agent_kit_py.plugins.core_token_plugin.transfer_fungible_token_with_allowance import (
+from hedera_agent_kit.plugins.core_token_plugin.transfer_fungible_token_with_allowance import (
     TransferFungibleTokenWithAllowanceTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
     ApproveTokenAllowanceParametersNormalised,
     TransferFungibleTokenWithAllowanceParameters,
     SchedulingParams,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import TokenTransferEntry
+from hedera_agent_kit.shared.parameter_schemas.token_schema import TokenTransferEntry
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
     get_operator_client_for_tests,

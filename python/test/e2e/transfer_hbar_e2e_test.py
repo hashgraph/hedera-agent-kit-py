@@ -11,14 +11,14 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_account_plugin import (
+from hedera_agent_kit.plugins.core_account_plugin import (
     core_account_plugin_tool_names,
 )
-from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.hedera_utils import to_tinybars
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import get_operator_client_for_tests, get_custom_client

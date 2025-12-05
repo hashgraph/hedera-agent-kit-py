@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from hiero_sdk_python import AccountId, Client, Network
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     UpdateAccountParameters,
     UpdateAccountParametersNormalised,
     SchedulingParams,
@@ -25,7 +25,7 @@ async def test_resolves_account_id_and_includes_only_supported_fields():
     params = UpdateAccountParameters(account_memo="hello")
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ), patch.object(
         HederaParameterNormaliser, "normalise_scheduled_transaction_params", AsyncMock()
@@ -59,7 +59,7 @@ async def test_passes_through_account_id_only():
     params = UpdateAccountParameters(account_id="0.0.7777")
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ), patch.object(
         HederaParameterNormaliser, "normalise_scheduled_transaction_params", AsyncMock()
@@ -87,7 +87,7 @@ async def test_omits_all_unsupported_fields_when_not_provided():
     params = UpdateAccountParameters(account_id="0.0.1")
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ), patch.object(
         HederaParameterNormaliser, "normalise_scheduled_transaction_params", AsyncMock()
@@ -119,7 +119,7 @@ async def test_supports_scheduling_params_when_provided():
     )
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ), patch.object(
         HederaParameterNormaliser,

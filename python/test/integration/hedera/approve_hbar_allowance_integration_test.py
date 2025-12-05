@@ -9,16 +9,16 @@ from hiero_sdk_python import (
     AccountId,
 )
 
-from hedera_agent_kit_py.plugins.core_account_plugin.approve_hbar_allowance import (
+from hedera_agent_kit.plugins.core_account_plugin.approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParameters,
     CreateAccountParametersNormalised,
 )

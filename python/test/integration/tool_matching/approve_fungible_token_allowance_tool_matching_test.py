@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_account_plugin.approve_fungible_token_allowance import (
+from hedera_agent_kit.plugins.core_account_plugin.approve_fungible_token_allowance import (
     APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
 )
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test import create_langchain_test_setup
 
 

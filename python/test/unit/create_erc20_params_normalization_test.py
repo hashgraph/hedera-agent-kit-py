@@ -2,23 +2,23 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from hiero_sdk_python.contract.contract_id import ContractId
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.constants.contracts import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.constants.contracts import (
     ERC20_FACTORY_ABI,
     get_erc20_factory_address,
 )
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import CreateERC20Parameters
-from hedera_agent_kit_py.shared.utils import LedgerId
+from hedera_agent_kit.shared.parameter_schemas import CreateERC20Parameters
+from hedera_agent_kit.shared.utils import LedgerId
 
 FACTORY_ADDRESS = get_erc20_factory_address(LedgerId.TESTNET)
 FUNCTION_NAME = "deployToken"
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_encodes_function_call_with_all_params(mock_parse, mock_web3):
     mock_context = Context(account_id="0.0.1234")
@@ -54,7 +54,7 @@ async def test_encodes_function_call_with_all_params(mock_parse, mock_web3):
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_defaults_decimals_and_supply_when_missing(mock_parse, mock_web3):
     mock_context = Context()
@@ -85,7 +85,7 @@ async def test_defaults_decimals_and_supply_when_missing(mock_parse, mock_web3):
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_handles_zero_decimals(mock_parse, mock_web3):
     mock_context = Context()
@@ -117,7 +117,7 @@ async def test_handles_zero_decimals(mock_parse, mock_web3):
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_large_initial_supply(mock_parse, mock_web3):
     mock_context = Context()

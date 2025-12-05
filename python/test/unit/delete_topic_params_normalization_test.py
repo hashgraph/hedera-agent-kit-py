@@ -3,11 +3,11 @@ from unittest.mock import patch
 import pytest
 from hiero_sdk_python import TopicId
 
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import DeleteTopicParameters
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
+from hedera_agent_kit.shared.parameter_schemas import DeleteTopicParameters
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 
 
 @pytest.fixture(autouse=True)

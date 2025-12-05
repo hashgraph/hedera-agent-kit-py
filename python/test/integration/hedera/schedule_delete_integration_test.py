@@ -11,20 +11,20 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
-from hedera_agent_kit_py.plugins.core_account_plugin.schedule_delete import (
+from hedera_agent_kit.plugins.core_account_plugin.schedule_delete import (
     ScheduleDeleteTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferHbarParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ScheduleDeleteTransactionParameters,
 )
 from test import HederaOperationsWrapper

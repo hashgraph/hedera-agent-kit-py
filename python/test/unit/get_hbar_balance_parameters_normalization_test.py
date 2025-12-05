@@ -1,11 +1,11 @@
 from unittest.mock import MagicMock, patch
 from hiero_sdk_python import Client, Network
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
 )
@@ -19,7 +19,7 @@ def test_normalises_hbar_balance_params_with_provided_account_id():
 
     # Patch AccountResolver to ensure it's NOT called
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
     ) as mock_account_resolver:
         params = AccountBalanceQueryParameters(account_id="0.0.1001")
 
@@ -40,7 +40,7 @@ def test_normalises_hbar_balance_params_without_provided_account_id():
     mock_client.network = Network(network="testnet")
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
     ) as mock_account_resolver:
         mock_account_resolver.get_default_account.return_value = "0.0.1001"
 

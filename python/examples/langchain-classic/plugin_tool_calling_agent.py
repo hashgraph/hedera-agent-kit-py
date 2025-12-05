@@ -9,9 +9,9 @@ from langchain_classic.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from hedera_agent_kit_py.langchain import HederaAgentKitTool
-from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.plugins import (
+from hedera_agent_kit.langchain import HederaAgentKitTool
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.plugins import (
     core_account_plugin_tool_names,
     core_account_plugin,
     core_consensus_query_plugin,
@@ -33,7 +33,7 @@ from hedera_agent_kit_py.plugins import (
 )
 
 
-from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
+from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
 
