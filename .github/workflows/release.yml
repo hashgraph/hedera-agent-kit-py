@@ -36,6 +36,9 @@ jobs:
       - name: Install build dependencies
         run: pip install build setuptools wheel
 
+      - name: Copy README to python directory
+        run: cp README.md python/README.md
+
       - name: Build wheel and sdist
         run: python -m build python/
 

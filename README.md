@@ -1,37 +1,81 @@
 # 🧠 Hedera Agent Kit (Python)
 
-**Python ≥3.10**
-**License:** Apache 2.0
+[![PyPI version](https://badge.fury.io/py/hedera-agent-kit.svg)](https://pypi.org/project/hedera-agent-kit/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
 This is the **Python edition** of the [Hedera Agent Kit for TypeScript/JavaScript](https://github.com/hedera-dev/hedera-agent-kit).
 
-It will provide a flexible and extensible framework for building **AI-powered Hedera agents**.
+A flexible and extensible framework for building **AI-powered Hedera agents**.
 
-Planned features include:
+**Features:**
 
-* 🔌 **Third-party plugin support**
-* 🧠 **Integration with LangChain**, **MCP**, and other AI frameworks
-* 🪙 **Tools for interacting with Hedera services**, including:
-
-  * Token creation and management
-  * Smart contract execution
+* 🔌 **Plugin architecture** for easy extensibility
+* 🧠 **LangChain integration** with support for multiple AI frameworks
+* 🪙 **Comprehensive Hedera tools**, including:
+  * Token creation and management (HTS)
+  * Smart contract execution (EVM)
   * Account operations
   * Topic (HCS) creation and messaging
+  * Transaction scheduling
+  * Allowances and approvals
 
 ---
 
 ## 🚀 Getting Started
 
-Before you begin, make sure you have **Python ≥3.10** and [**Poetry**](https://python-poetry.org/docs/#installation) installed.
+### Installation
+
+Install the Hedera Agent Kit from PyPI:
+
+```bash
+pip install hedera-agent-kit
+```
+
+**Requirements:**
+- Python ≥3.10
+- Hedera testnet or mainnet account ([create one here](https://portal.hedera.com))
 
 > **Note:**
-> This project now uses **Hiero SDK 0.1.9** from PyPI. No local SDK setup required!
+> This package uses **Hiero SDK 0.1.9** from PyPI.
 >
 > **Current Limitation:** The kit currently supports **autonomous mode only** (transactions are automatically executed). The **return bytes mode** (where users must sign transaction bytes separately) is not yet supported, as it requires additional Hiero SDK features not available in version 0.1.9.
 
 ---
+
+### Quick Start Example
+
+```python
+import os
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.shared.configuration import Configuration, Context, AgentMode
+from hedera_agent_kit.plugins import core_account_plugin, core_token_plugin
+from hiero_sdk_python import AccountId, PrivateKey, Client, Network
+
+# Set up Hedera client
+account_id = AccountId.from_string(os.getenv("ACCOUNT_ID"))
+private_key = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
+client = Client(Network(network="testnet"))
+client.set_operator(account_id, private_key)
+
+# Configure the toolkit
+config = Configuration(
+    plugins=[core_account_plugin, core_token_plugin],
+    context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(account_id))
+)
+
+# Create toolkit and get tools
+toolkit = HederaLangchainToolkit(client=client, configuration=config)
+tools = toolkit.get_tools()
+```
+
+---
+
+## 🛠️ Development Setup
+
+If you want to contribute or run examples from the repository:
 
 ### 1️⃣ Clone the Repository
 
@@ -40,24 +84,19 @@ git clone https://github.com/hashgraph/hedera-agent-kit-py.git
 cd hedera-agent-kit-py/python
 ```
 
----
-
-### 2️⃣ Install the Hedera Agent Kit SDK
+### 2️⃣ Install with Poetry
 
 ```bash
 poetry install
 ```
 
-This will:
-
-* Create a Poetry-managed virtual environment
-* Install all dependencies, including Hiero SDK 0.1.9 from PyPI
+This creates a Poetry-managed virtual environment with all dependencies.
 
 ---
 
 ### 3️⃣ Configure Environment Variables
 
-The LangChain example requires API keys and credentials to connect to Hedera and OpenAI.
+The LangChain examples require API keys and credentials to connect to Hedera and OpenAI.
 
 Copy the example file and edit your own `.env`:
 
@@ -78,14 +117,34 @@ OPENAI_API_KEY="sk-proj-"  # your OpenAI API key
 
 ---
 
-### 4️⃣ Run the LangChain Example
+### 4️⃣ Run the LangChain Examples
+
+From the `python/examples/langchain` directory:
 
 ```bash
-poetry install
 poetry run python plugin_tool_calling_agent.py
 ```
 
-This launches the example agent, demonstrating how to use the Hedera Agent Kit with LangChain tools and plugins.
+This launches an example agent, demonstrating how to use the Hedera Agent Kit with LangChain tools and plugins.
+
+---
+
+## 📚 Usage
+
+After installing via pip, you can use the toolkit in your Python projects:
+
+```python
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.shared.configuration import Configuration, Context, AgentMode
+from hedera_agent_kit.plugins import (
+    core_account_plugin,
+    core_token_plugin,
+    core_consensus_plugin,
+    core_evm_plugin,
+)
+```
+
+See the [examples directory](https://github.com/hashgraph/hedera-agent-kit-py/tree/main/python/examples) for complete working examples with LangChain.
 
 ---
 
