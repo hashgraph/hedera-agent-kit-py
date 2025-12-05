@@ -67,8 +67,8 @@ Parameters:
 
 {usage_instructions}
 
-Example: "Spend allowance from account 0.0.1002 to send 25 tokens to 0.0.2002"
-Example: "Use my allowance on account 0.0.5555 to transfer 100 tokens"
+Example: "Spend allowance from account 0.0.1002 to send 25 tokens (token id: 0.0.123123) to 0.0.2002"
+Example: "Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002"
 """
 
 
