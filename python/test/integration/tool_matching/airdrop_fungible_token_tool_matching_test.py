@@ -35,7 +35,7 @@ async def toolkit(test_setup):
 
 @pytest.mark.asyncio
 async def test_match_airdrop_minimal(agent_executor, toolkit, monkeypatch):
-    input_text = "Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002"
+    input_text = "Airdrop 10 tokens with id 0.0.1234 from acc 0.0.1001 to acc 0.0.2002"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     # Mock Hedera API

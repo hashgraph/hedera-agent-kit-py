@@ -66,7 +66,7 @@ __all__ = [
     "TransferHbarWithAllowanceTool",
     "DeleteHbarAllowanceTool",
     "ApproveHbarAllowanceTool",
-    "ApproveFungibleTokenAllowanceTool",
     "ApproveNftAllowanceTool",
     "ScheduleDeleteTool",
+    "ApproveFungibleTokenAllowanceTool",
 ]

@@ -188,9 +188,10 @@ class ApproveHbarAllowanceParametersNormalised(BaseModelWithArbitraryTypes):
 class TokenApproval(BaseModelWithArbitraryTypes):
     token_id: str = Field(description="Token ID")
     amount: Annotated[
-        int,
+        float,
         Field(
-            ge=0, description="Amount of tokens to approve (must be positive integer)"
+            ge=0,
+            description="Amount of tokens to approve (must be positive number). Given in display units",
         ),
     ]
 

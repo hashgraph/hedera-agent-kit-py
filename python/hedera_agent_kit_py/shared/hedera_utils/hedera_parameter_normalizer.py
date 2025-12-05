@@ -1117,7 +1117,6 @@ class HederaParameterNormaliser:
         total_amount = 0
 
         for recipient in parsed_params.recipients:
-            # NEVER convert to float — destroys precision
             amount_raw = Decimal(str(recipient.amount))
 
             if amount_raw <= 0:

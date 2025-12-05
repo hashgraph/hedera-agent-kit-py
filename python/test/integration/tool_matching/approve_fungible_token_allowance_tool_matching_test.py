@@ -40,7 +40,7 @@ async def test_match_approve_token_allowance_minimal(
     agent_executor, toolkit, monkeypatch
 ):
     """Test matching approve token allowance tool with minimal params (implicit owner)."""
-    input_text = "Approve allowance of 100 tokens with id 0.0.7777 to spender 0.0.2002"
+    input_text = "Approve allowance of 1.23 tokens with id 0.0.7777 to spender 0.0.2002"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -62,7 +62,7 @@ async def test_match_approve_token_allowance_minimal(
 
     approval = payload.get("token_approvals")[0]
     assert approval.token_id == "0.0.7777"
-    assert approval.amount == 100
+    assert approval.amount == 1.23
     assert "owner_account_id" not in payload or payload.get("owner_account_id") is None
 
 

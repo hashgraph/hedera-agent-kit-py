@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from pprint import pprint
-
 from hiero_sdk_python import Client
 
 from hedera_agent_kit_py.shared.configuration import Context
@@ -65,7 +63,7 @@ Parameters:
 - {source_account_desc}
 - recipients (array, required): A list of recipient objects, each containing:
   - account_id (string): The recipient's account ID (e.g., "0.0.1234")
-  - amount (number or string): The amount of tokens to send to that recipient (in base units)
+  - amount (number or string): The amount of tokens to send to that recipient (in display units, the tool will parse them itself)
 - transaction_memo (str, optional): Optional memo for the transaction
 {scheduled_params_desc}
 {usage_instructions}
