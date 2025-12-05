@@ -10,12 +10,12 @@ from hiero_sdk_python import PrivateKey, Hbar, SupplyType
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait

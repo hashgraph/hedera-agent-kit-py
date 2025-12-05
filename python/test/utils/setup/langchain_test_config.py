@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from typing import List
 
-from hedera_agent_kit_py.plugins import (
+from hedera_agent_kit.plugins import (
     core_account_plugin_tool_names,
     core_account_plugin,
     core_consensus_query_plugin,
@@ -22,8 +22,8 @@ from hedera_agent_kit_py.plugins import (
     core_transaction_query_plugin,
     core_transaction_query_plugin_tool_names,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.plugin import Plugin
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
 
 
