@@ -1272,7 +1272,7 @@ class HederaParameterNormaliser:
         initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
 
         if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
-            raise ValueError(f"Cannot set max supply and INFINITE supply type")
+            raise ValueError("Cannot set max supply and INFINITE supply type")
 
         # Resolve Supply Type
         if parsed_params.supply_type is None:
@@ -1677,7 +1677,7 @@ class HederaParameterNormaliser:
             mirrornode: The Mirrornode service instance.
 
         Returns:
-            The normalized parameters ready for transaction building.
+            The normalized parameters are ready for transaction building.
         """
         parsed_params: CreateNonFungibleTokenParameters = cast(
             CreateNonFungibleTokenParameters,
@@ -1687,20 +1687,35 @@ class HederaParameterNormaliser:
         )
 
         # Treasury Resolution
-        default_account_id = (
-            str(client.operator_account_id) if client.operator_account_id else None
-        )
+        default_account_id = AccountResolver.get_default_account(context, client)
         treasury_account_id = parsed_params.treasury_account_id or default_account_id
 
         if not treasury_account_id:
             raise ValueError("Must include treasury account ID")
 
-        # Resolve Supply Type and Max Supply based solely on max_supply presence
-        if parsed_params.max_supply is not None:
-            supply_type = SupplyType.FINITE
-            max_supply = int(parsed_params.max_supply)
+        # Validate max_supply with an INFINITE supply type
+        if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
+            raise ValueError("Cannot set max supply and INFINITE supply type")
+
+        # Resolve Supply Type
+        if parsed_params.supply_type is None:
+            supply_type = SupplyType.FINITE  # SPEC DEFAULT
         else:
-            supply_type = SupplyType.INFINITE
+            if parsed_params.supply_type in (0, SupplyType.INFINITE, "infinite"):
+                supply_type = SupplyType.INFINITE
+            elif parsed_params.supply_type in (1, SupplyType.FINITE, "finite"):
+                supply_type = SupplyType.FINITE
+            else:
+                raise ValueError("Invalid supply_type; must be finite or infinite.")
+
+        # Resolve Max Supply
+        max_supply = None
+        if supply_type == SupplyType.FINITE:
+            if parsed_params.max_supply is not None:
+                max_supply = int(parsed_params.max_supply)
+            else:
+                max_supply = 100  # Default max supply for FINITE NFTs
+        else:
             max_supply = 0  # Python SDK uses 0 to denote infinite supply
 
         # Supply Key Resolution (MANDATORY for NFTs)
@@ -1725,7 +1740,7 @@ class HederaParameterNormaliser:
         if public_key_str:
             supply_key = PublicKey.from_string(public_key_str)
         else:
-            # Explicitly raise an error as Supply Key is mandatory
+            # Explicitly raise an error as Supply Key is mandatory for NFTs
             raise ValueError(
                 "Could not resolve a Supply Key (required for NFTs). Ensure Treasury has a public key or Operator is configured."
             )

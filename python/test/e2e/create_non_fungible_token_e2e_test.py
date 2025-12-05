@@ -8,7 +8,7 @@ from pprint import pprint
 from typing import AsyncGenerator, Any
 
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType
+from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType, SupplyType
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
@@ -153,6 +153,7 @@ def extract_token_id(
     return str(token_id)
 
 
+
 async def execute_agent_request(
     agent_executor, input_text: str, config: RunnableConfig
 ):
@@ -189,7 +190,7 @@ async def test_create_nft_minimal_params(
     assert token_info.name == "MyNFT"
     assert token_info.symbol == "MNFT"
     assert token_info.token_type == TokenType.NON_FUNGIBLE_UNIQUE
-    # Default max supply is 100
+    assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 100
 
 
