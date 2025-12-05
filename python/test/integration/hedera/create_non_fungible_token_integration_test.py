@@ -39,7 +39,7 @@ async def setup_client():
 
 @pytest.mark.asyncio
 async def test_create_nft_with_minimal_params(setup_client):
-    """Test creating NFT with minimal params defaults to Infinite supply."""
+    """Test creating NFT with minimal params defaults to FINITE supply."""
     client, hedera_operations_wrapper, context = setup_client
 
     params = CreateNonFungibleTokenParameters(token_name="TestNFT", token_symbol="TNFT")
@@ -60,19 +60,20 @@ async def test_create_nft_with_minimal_params(setup_client):
     assert token_info.symbol == params.token_symbol
     assert token_info.token_type == TokenType.NON_FUNGIBLE_UNIQUE
 
-    # Updated expectation: Default is now INFINITE when max_supply is missing
-    assert token_info.supply_type == SupplyType.INFINITE
+    # Updated expectation: Default is now FINITE when supply_type is not specified
+    assert token_info.supply_type == SupplyType.FINITE
+    assert token_info.max_supply == 100  # Default max supply
 
 
 @pytest.mark.asyncio
 async def test_create_nft_explicit_infinite_supply(setup_client):
-    """Test explicitly creating an NFT with infinite supply (implicit via no max_supply)."""
+    """Test explicitly creating an NFT with infinite supply."""
     client, hedera_operations_wrapper, context = setup_client
 
     params = CreateNonFungibleTokenParameters(
         token_name="InfiniteNFT",
         token_symbol="INFT",
-        max_supply=None,  # Explicitly None to verify Infinite behavior
+        supply_type=0,  # Explicitly INFINITE
     )
 
     tool = CreateNonFungibleTokenTool(context)
@@ -110,6 +111,34 @@ async def test_create_nft_with_max_supply(setup_client):
     assert token_info.name == params.token_name
     assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 500
+
+
+@pytest.mark.asyncio
+async def test_create_nft_with_explicit_finite_supply_type(setup_client):
+    """Test creating NFT with explicit FINITE supply type and custom max_supply."""
+    client, hedera_operations_wrapper, context = setup_client
+
+    params = CreateNonFungibleTokenParameters(
+        token_name="ExplicitFiniteNFT",
+        token_symbol="EFNFT",
+        supply_type=1,  # Explicitly FINITE
+        max_supply=250,
+    )
+
+    tool = CreateNonFungibleTokenTool(context)
+    result: ToolResponse = await tool.execute(client, context, params)
+    exec_result = cast(ExecutedTransactionToolResponse, result)
+
+    assert result.error is None
+    token_id_str = str(exec_result.raw.token_id)
+
+    token_info = hedera_operations_wrapper.get_token_info(token_id_str)
+
+    assert token_info.name == "ExplicitFiniteNFT"
+    assert token_info.symbol == "EFNFT"
+    assert token_info.supply_type == SupplyType.FINITE
+    assert token_info.max_supply == 250
+
 
 
 @pytest.mark.asyncio
