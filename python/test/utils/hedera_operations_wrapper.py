@@ -49,7 +49,10 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     DeleteAccountParametersNormalised,
     CreateAccountParametersNormalised,
     ApproveHbarAllowanceParametersNormalised,
-    ApproveTokenAllowanceParametersNormalised, CreateERC20Parameters,
+    ApproveTokenAllowanceParametersNormalised,
+    CreateERC20Parameters,
+    CreateERC721Parameters,
+    MintERC721Parameters,
 )
 from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
@@ -359,6 +362,127 @@ class HederaOperationsWrapper:
             }
         except Exception as exc:
             print("[HederaOperationsWrapper] Error creating ERC20:", exc)
+            raise
+
+    async def create_erc721(
+        self, params: CreateERC721Parameters
+    ) -> Dict[str, Optional[str]]:
+        """Create an ERC721 token using the factory contract.
+        
+        Args:
+            params: ERC721 creation parameters
+            
+        Returns:
+            Dict containing erc721_address, transaction_id, and human_message
+        """
+        from hedera_agent_kit_py.shared.constants.contracts import (
+            get_erc721_factory_address,
+            ERC721_FACTORY_ABI,
+        )
+        from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+            HederaParameterNormaliser,
+        )
+        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+        
+        try:
+            factory_address = get_erc721_factory_address(
+                ledger_id_from_network(self.client.network)
+            )
+            
+            normalised_params = (
+                await HederaParameterNormaliser.normalise_create_erc721_params(
+                    params,
+                    factory_address,
+                    ERC721_FACTORY_ABI,
+                    "deployToken",
+                    Context(),
+                    self.client,
+                )
+            )
+            
+            tx = HederaBuilder.execute_transaction(normalised_params)
+            result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+                tx, self.client, Context()
+            )
+            
+            # Get ERC721 address from the transaction
+            erc721_address = await self._get_erc_address(result.raw.transaction_id)
+            
+            return {
+                "erc721_address": erc721_address,
+                "transaction_id": str(result.raw.transaction_id),
+                "human_message": f"ERC721 token created successfully at address {erc721_address}",
+            }
+        except Exception as exc:
+            print("[HederaOperationsWrapper] Error creating ERC721:", exc)
+            raise
+
+    async def mint_erc721(
+        self, params: MintERC721Parameters
+    ) -> Dict[str, Optional[str]]:
+        """Mint an ERC721 token.
+        
+        Args:
+            params: ERC721 minting parameters
+            
+        Returns:
+            Dict containing transaction_id and human_message
+        """
+        from hedera_agent_kit_py.shared.constants.contracts import (
+            ERC721_MINT_FUNCTION_ABI,
+            ERC721_MINT_FUNCTION_NAME,
+        )
+        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+        from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
+        from hiero_sdk_python import ContractExecuteTransaction
+        from hiero_sdk_python.contract.contract_id import ContractId
+        from web3 import Web3
+        
+        try:
+            mirrornode_service = get_mirrornode_service(
+                None, ledger_id_from_network(self.client.network)
+            )
+            
+            # Resolve to_address (defaults to operator if not provided)
+            to_address_input = params.to_address or str(self.client.operator_account_id)
+            to_address = await AccountResolver.get_hedera_evm_address(
+                to_address_input, mirrornode_service
+            )
+            
+            # Resolve contract ID
+            contract_id_str = await AccountResolver.get_hedera_account_id(
+                params.contract_id, mirrornode_service
+            )
+            contract_id = ContractId.from_string(contract_id_str)
+            
+            # Encode the mint function call
+            w3 = Web3()
+            checksummed_to = w3.to_checksum_address(to_address)
+            contract = w3.eth.contract(abi=ERC721_MINT_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC721_MINT_FUNCTION_NAME,
+                args=[checksummed_to],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+            
+            # Execute the contract call
+            tx = (
+                ContractExecuteTransaction()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+            
+            result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+                tx, self.client, Context()
+            )
+            
+            return {
+                "transaction_id": str(result.raw.transaction_id),
+                "human_message": "ERC721 token minted successfully",
+            }
+        except Exception as exc:
+            print("[HederaOperationsWrapper] Error minting ERC721:", exc)
             raise
 
     async def get_erc20_balance(
