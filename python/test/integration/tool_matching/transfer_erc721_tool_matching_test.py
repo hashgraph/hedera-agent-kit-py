@@ -370,3 +370,78 @@ async def test_tool_available(toolkit):
     assert transfer_erc721 is not None
     assert transfer_erc721.name == TRANSFER_ERC721_TOOL
     assert "transfer an existing erc721 token" in transfer_erc721.description.lower()
+
+
+@pytest.mark.asyncio
+async def test_missing_token_id(agent_executor, toolkit, monkeypatch):
+    """Test handling missing token ID."""
+    input_text = "Transfer ERC721 from contract 0.0.1234 to 0.0.5678"
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    # Mock Hedera API
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    # Invoke agent
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]},
+        config=config,
+    )
+
+    # Assertions
+    mock_run.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
+    """Test handling missing recipient address."""
+    input_text = "Transfer ERC721 token 123 from contract 0.0.2222"
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    # Mock Hedera API
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    # Invoke agent
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]},
+        config=config,
+    )
+
+    # Assertions
+    mock_run.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_missing_erc721_contract(agent_executor, toolkit, monkeypatch):
+    """Test handling missing ERC721 contract address."""
+    input_text = "Transfer ERC721 token 123 to account 0.0.5678"
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+
+    # Mock Hedera API
+    hedera_api = toolkit.get_hedera_agentkit_api()
+    mock_run = AsyncMock(
+        return_value=ToolResponse(
+            human_message="Operation Mocked - this is a test call and can be ended here"
+        )
+    )
+    monkeypatch.setattr(hedera_api, "run", mock_run)
+
+    # Invoke agent
+    await agent_executor.ainvoke(
+        {"messages": [{"role": "user", "content": input_text}]},
+        config=config,
+    )
+
+    # Assertions
+    mock_run.assert_not_awaited()
