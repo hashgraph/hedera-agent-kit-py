@@ -60,7 +60,7 @@ Parameters:
 - token_name (str, required): The name of the token.
 - token_symbol (str, required): The token symbol (e.g., HED).
 - decimals (int, optional): Number of decimal places (default: 18).
-- initial_supply (int, optional): Initial supply of the token (default: 0).
+- initial_supply (int, optional): Initial supply of the token (default: 0). Given in base units!
 {scheduled_desc}
 
 {usage_instructions}

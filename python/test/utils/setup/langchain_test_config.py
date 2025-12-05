@@ -22,8 +22,6 @@ from hedera_agent_kit_py.plugins import (
     core_transaction_query_plugin,
     core_transaction_query_plugin_tool_names,
 )
-
-
 from hedera_agent_kit_py.shared import AgentMode
 from hedera_agent_kit_py.shared.plugin import Plugin
 from .llm_factory import LLMProvider, LLMOptions
@@ -48,7 +46,7 @@ def get_provider_api_key_map() -> dict:
 DEFAULT_LLM_OPTIONS: LLMOptions = LLMOptions(
     provider=LLMProvider.OPENAI,
     model="gpt-4o-mini",
-    temperature=0.7,
+    temperature=0.4,
     max_iterations=1,
     system_prompt="""You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
         When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.

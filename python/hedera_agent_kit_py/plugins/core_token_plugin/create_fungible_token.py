@@ -63,9 +63,9 @@ ONLY token_name and token_symbol ARE REQUIRED!
 Parameters:
 - token_name (str, required): The name of the token, required. If not explicitly specified, do not call this tool and ask user for specific token name.
 - token_symbol (str, required): The symbol of the token, required.  If not explicitly specified, do not call this tool and ask user for specific token symbol 
-- initial_supply (int, optional): The initial supply of the token, defaults to 0
+- initial_supply (int, optional): The initial supply of the token, defaults to 0. Given in display units.
 - supply_type (int, optional): The supply type of the token. Can be finite = 1 or infinite = 0. Defaults to finite = 1
-- max_supply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified
+- max_supply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified. Given in display units.
 - decimals (int, optional): The number of decimals the token supports. Defaults to 0
 - {treasury_account_desc}
 - is_supply_key (boolean, optional): If user wants to set supply key set to true, otherwise false. Defaults to true if max supply is specified or finite supply is set.

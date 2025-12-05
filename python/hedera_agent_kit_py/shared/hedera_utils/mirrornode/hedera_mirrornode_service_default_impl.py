@@ -70,11 +70,16 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
         if not account_public_key:
             raise ValueError(f"Account public key not found for account {account_id}")
 
+        # Get the EVM address from the raw data (returned by Mirror Node API)
+        evm_address = raw_data.get("evm_address")
+        if not evm_address:
+            raise ValueError(f"EVM address not found for account {account_id}")
+
         return {
             "account_id": raw_data["account"],
             "account_public_key": key_info["key"],
             "balance": raw_data["balance"],
-            "evm_address": account_public_key,
+            "evm_address": evm_address,
         }
 
     async def get_account_hbar_balance(self, account_id: str) -> Decimal:
