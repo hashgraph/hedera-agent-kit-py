@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Annotated, Dict, Tuple
+from typing import Optional, List, Union, Annotated, Dict
 
 from hiero_sdk_python import AccountId, PublicKey, TokenId, TokenNftAllowance
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
@@ -239,9 +239,15 @@ class UpdateTokenParametersNormalised(OptionalScheduledTransactionParamsNormalis
 class CreateNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     token_name: Annotated[str, Field(description="The name of the token")]
     token_symbol: Annotated[str, Field(description="The symbol of the token")]
+    supply_type: Annotated[
+        int,
+        Field(
+            description="Supply type of the token encoded by int value. Pass 0 for infinite and 1 for finite. Default is 1."
+        ),
+    ] = 1
     max_supply: Optional[
         Annotated[
-            int, Field(description="Maximum supply of NFTs. If not set, infinite.")
+            int, Field(description="Maximum supply of NFTs. If not set, the supply will be infinite. If supply_type is set and max_supply is not, the tool will set it to 100.")
         ]
     ] = None
     treasury_account_id: Annotated[
