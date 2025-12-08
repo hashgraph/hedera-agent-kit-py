@@ -176,8 +176,8 @@ async def test_get_token_balances_for_specific_account(setup_environment):
     # Check for core elements in the response
     assert "Token Balances" in human_message
     assert str(token_id) in human_message
-    # We transferred 25 raw units
-    assert "25" in human_message
+    # We transferred 25 raw units, the human-readable balance should be 0.25 (2 decimals)
+    assert "0.25" in human_message
     assert raw_data.get("error") is None
 
 
@@ -201,9 +201,10 @@ async def test_get_token_balances_for_self(setup_environment):
     human_message = tool_call.parsedData.get("humanMessage", "")
     raw_data = tool_call.parsedData.get("raw", {})
 
+    # We transferred 25 raw units, the human-readable balance should be 0.25 (2 decimals)
     assert "Token Balances" in human_message
     assert str(token_id) in human_message
-    assert "25" in human_message
+    assert "0.25" in human_message
     assert raw_data.get("error") is None
 
 

@@ -123,7 +123,7 @@ async def test_get_token_balances_for_account(setup_environment):
 
     assert "Token Balances" in result.human_message
     assert str(token_id) in result.human_message
-    assert "Balance: 50" in result.human_message
+    assert "Balance: 0.5" in result.human_message # token has 2 decimals
     assert not result.error
 
 
@@ -141,7 +141,7 @@ async def test_get_token_balances_default_account(setup_environment):
 
     assert "Token Balances" in result.human_message
     assert str(token_id) in result.human_message
-    assert "Balance: 50" in result.human_message
+    assert "Balance: 0.5" in result.human_message  # token has 2 decimals
     assert not result.error
 
 
@@ -162,5 +162,5 @@ async def test_get_token_balances_specific_token(setup_environment):
 
     assert "Token Balances" in result.human_message
     assert str(token_id) in result.human_message
-    assert "Balance: 50" in result.human_message
+    assert "Balance: 0.5" in result.human_message  # token has 2 decimals
     assert not result.error

@@ -24,9 +24,25 @@ class DeleteTopicParametersNormalised(BaseModelWithArbitraryTypes):
 
 
 class CreateTopicParameters(BaseModelWithArbitraryTypes):
-    is_submit_key: Annotated[
-        bool, Field(description="Whether to set a submit key for the topic (optional).")
-    ] = False
+    submit_key: Annotated[
+        Optional[Union[bool, str]],
+        Field(
+            description=(
+                "Submit key for the topic. Pass boolean `True` to use the operator/user key, "
+                "or provide a Hedera-compatible public key string (optional)."
+            ),
+        ),
+    ] = None
+
+    admin_key: Annotated[
+        Optional[Union[bool, str]],
+        Field(
+            description=(
+                "Admin key for the topic. Pass boolean `True` to use the operator/user key, "
+                "or provide a Hedera-compatible public key string (optional). Defaults to True."
+            ),
+        ),
+    ] = True
 
     topic_memo: Annotated[
         Optional[str], Field(description="Memo for the topic (optional).")

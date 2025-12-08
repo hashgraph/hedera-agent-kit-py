@@ -51,8 +51,10 @@ This tool will create a new topic on the Hedera network.
 Parameters:
 - topic_memo (str, optional): A memo for the topic.
 - transaction_memo (str, optional): An optional memo to include on the submitted transaction.
-- is_submit_key (bool, optional): Whether to set a submit key for the topic. 
-  Set to true if the user wants to set a submit key, otherwise false.
+- submit_key (bool or str, optional): Submit key for the topic. Pass boolean `true` to use the operator/user key,
+  or provide a Hedera-compatible public key string. Defaults to None (no submit key).
+- admin_key (bool or str, optional): Admin key for the topic. Pass boolean `true` to use the operator/user key,
+  or provide a Hedera-compatible public key string. Defaults to true (operator key).
 
 {usage_instructions}
 """
