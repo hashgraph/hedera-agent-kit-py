@@ -4,7 +4,6 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-from pprint import pprint
 from typing import AsyncGenerator, Any
 
 import pytest
@@ -179,7 +178,6 @@ async def test_create_nft_minimal_params(
     input_text = "Create a non-fungible token named MyNFT with symbol MNFT"
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
-    pprint(result)
 
     token_id_str = extract_token_id(
         result, response_parser, "create_non_fungible_token_tool"
