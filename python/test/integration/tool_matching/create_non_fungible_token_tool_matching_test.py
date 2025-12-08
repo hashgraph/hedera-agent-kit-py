@@ -52,7 +52,7 @@ async def test_match_create_nft_minimal(agent_executor, toolkit, monkeypatch):
     mock_run = AsyncMock(return_value=MOCKED_RESPONSE)
     monkeypatch.setattr(hedera_api, "run", mock_run)
 
-    resp = await agent_executor.ainvoke(
+    await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config
     )
 
