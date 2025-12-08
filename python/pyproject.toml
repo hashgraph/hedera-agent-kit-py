@@ -19,6 +19,7 @@ pydantic = "^2.12.3"
 # Local editable package
 hiero-sdk-python = "0.1.9"
 web3 = "==7.14.0"
+pytest-rerunfailures = "^16.1"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=25.9.0,<26.0.0"

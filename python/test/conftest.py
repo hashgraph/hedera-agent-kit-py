@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -33,3 +34,12 @@ def load_test_env():
     print(f"ACCOUNT_ID={os.getenv('ACCOUNT_ID')}")
     print(f"PRIVATE_KEY={'***' if os.getenv('PRIVATE_KEY') else None}")
     print(f"OPENAI_API_KEY={'***' if os.getenv('OPENAI_API_KEY') else None}")
+
+
+@pytest.fixture(autouse=True)
+def slow_down_tests():
+    """Add a delay between tests to avoid rate limiting."""
+    yield
+    delay_ms = float(os.getenv('TEST_DELAY_MS', '0'))
+    if delay_ms > 0:
+        time.sleep(delay_ms / 1000)
