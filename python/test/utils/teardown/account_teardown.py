@@ -3,8 +3,8 @@ from decimal import Decimal
 
 from hiero_sdk_python import AccountId
 
-from hedera_agent_kit_py.shared.hedera_utils import to_base_unit
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.hedera_utils import to_base_unit
+from hedera_agent_kit.shared.parameter_schemas import (
     DeleteAccountParametersNormalised,
     TransferHbarParametersNormalised,
 )

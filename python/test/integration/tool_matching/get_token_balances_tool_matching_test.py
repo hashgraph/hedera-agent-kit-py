@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
 GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = "get_account_token_balances_query_tool"

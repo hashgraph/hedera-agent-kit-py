@@ -4,15 +4,19 @@ import pytest
 from typing import cast
 from hiero_sdk_python import PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import TransferERC20Tool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import AccountResponse
-from hedera_agent_kit_py.shared.models import ToolResponse, ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.plugins.core_evm_plugin import TransferERC20Tool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import AccountResponse
+from hedera_agent_kit.shared.models import (
+    ToolResponse,
+    ExecutedTransactionToolResponse,
+)
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferERC20Parameters,
-    CreateERC20Parameters, SchedulingParams,
+    CreateERC20Parameters,
+    SchedulingParams,
 )
 from test import HederaOperationsWrapper
 from test.utils.setup import (
@@ -85,7 +89,10 @@ async def setup_transfer_erc20():
 async def create_recipient_account(wrapper: HederaOperationsWrapper):
     """Helper to create a recipient account."""
     resp = await wrapper.create_account(
-        CreateAccountParametersNormalised(key=wrapper.client.operator_private_key.public_key(), initial_balance=Hbar(5))
+        CreateAccountParametersNormalised(
+            key=wrapper.client.operator_private_key.public_key(),
+            initial_balance=Hbar(5),
+        )
     )
     return resp.account_id
 
@@ -139,7 +146,9 @@ async def test_transfer_tokens_using_evm_addresses(setup_transfer_erc20):
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # Get EVM address for the recipient
-    recipient_info: AccountResponse = await executor_wrapper.get_account_info_mirrornode(str(recipient_account_id))
+    recipient_info: AccountResponse = (
+        await executor_wrapper.get_account_info_mirrornode(str(recipient_account_id))
+    )
     recipient_evm_address = recipient_info.get("evm_address", None)
     assert (
         recipient_evm_address is not None
@@ -191,7 +200,9 @@ async def test_schedule_transfer_erc20_tokens(setup_transfer_erc20):
     exec_result = cast(ExecutedTransactionToolResponse, result)
 
     assert exec_result.error is None
-    assert "scheduled transfer of erc20 successfully" in exec_result.human_message.lower()
+    assert (
+        "scheduled transfer of erc20 successfully" in exec_result.human_message.lower()
+    )
     assert exec_result.raw.schedule_id is not None
 
     # Cleanup recipient
@@ -200,6 +211,7 @@ async def test_schedule_transfer_erc20_tokens(setup_transfer_erc20):
         recipient_account_id,
         executor_client.operator_account_id,
     )
+
 
 @pytest.mark.asyncio
 async def test_fail_when_contract_id_invalid(setup_transfer_erc20):

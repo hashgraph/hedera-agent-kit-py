@@ -9,33 +9,25 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
-from hedera_agent_kit_py.langchain import HederaAgentKitTool
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit_py.plugins import (
-    core_account_plugin_tool_names,
+from hedera_agent_kit.langchain import HederaAgentKitTool
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.plugins import (
     core_account_plugin,
     core_consensus_query_plugin,
-    core_consensus_query_plugin_tool_names,
     core_account_query_plugin,
-    core_account_query_plugin_tool_names,
-    core_consensus_plugin_tool_names,
     core_consensus_plugin,
-    core_evm_plugin_tool_names,
     core_evm_plugin,
-    core_misc_query_plugin_tool_names,
     core_misc_query_plugin,
     core_transaction_query_plugin,
-    core_transaction_query_plugin_tool_names,
-    core_token_query_plugin_tool_names,
     core_token_query_plugin,
     core_token_plugin,
-    core_token_plugin_tool_names,
 )
 
-from hedera_agent_kit_py.shared.configuration import AgentMode, Context, Configuration
+from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
+
 
 async def bootstrap():
     # Initialize LLM

@@ -11,16 +11,16 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised,
     TokenParams,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import SchedulingParams
+from hedera_agent_kit.shared.parameter_schemas import SchedulingParams
 
 # Test constants
 TEST_OPERATOR_ID = "0.0.1001"
@@ -55,11 +55,11 @@ def mock_mirrornode():
 async def test_normalise_create_non_fungible_token_defaults(
     mock_context, mock_client, mock_mirrornode
 ):
-    """Should use correct defaults: Infinite supply if max_supply is missing."""
+    """Should use correct defaults: FINITE supply type by default, supply key always set."""
     params = CreateNonFungibleTokenParameters(
         token_name="NFT Token",
         token_symbol="NFT",
-        # No max_supply provided
+        # No max_supply or supply_type provided - should default to FINITE with max_supply=100
     )
 
     result = await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
@@ -75,14 +75,14 @@ async def test_normalise_create_non_fungible_token_defaults(
     assert tp.token_symbol == "NFT"
     assert tp.token_type == TokenType.NON_FUNGIBLE_UNIQUE
 
-    # Defaults to Infinite when max_supply is not set
-    assert tp.supply_type == SupplyType.INFINITE
-    assert tp.max_supply is 0
+    # Defaults to FINITE when supply_type is not explicitly set
+    assert tp.supply_type == SupplyType.FINITE
+    assert tp.max_supply == 100  # Default max supply for FINITE NFTs
 
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
     assert str(tp.auto_renew_account_id) == TEST_OPERATOR_ID
 
-    # Keys should be set (supply key is needed for NFTs)
+    # Supply key is always set for NFTs (required for minting)
     assert result.keys is not None
     assert result.keys.supply_key.to_string_der() == TEST_PUBLIC_KEY.to_string_der()
     assert result.scheduling_params is None
@@ -92,11 +92,12 @@ async def test_normalise_create_non_fungible_token_defaults(
 async def test_normalise_explicit_finite_values(
     mock_context, mock_client, mock_mirrornode
 ):
-    """Should set supply_type to FINITE if max_supply is provided."""
+    """Should set supply_type to FINITE and use provided max_supply."""
     params = CreateNonFungibleTokenParameters(
         token_name="My NFT",
         token_symbol="MNFT",
-        max_supply=500,  # Presence of this implies Finite
+        supply_type=1,  # Explicitly FINITE
+        max_supply=500,
         treasury_account_id=TEST_OPERATOR_ID,
     )
 
@@ -110,6 +111,73 @@ async def test_normalise_explicit_finite_values(
     assert tp.supply_type == SupplyType.FINITE
     assert tp.max_supply == 500
     assert str(tp.treasury_account_id) == TEST_OPERATOR_ID
+
+
+@pytest.mark.asyncio
+async def test_normalise_explicit_infinite_supply(
+    mock_context, mock_client, mock_mirrornode
+):
+    """Should set supply_type to INFINITE when explicitly requested."""
+    params = CreateNonFungibleTokenParameters(
+        token_name="Infinite NFT",
+        token_symbol="INFT",
+        supply_type=0,  # Explicitly INFINITE
+    )
+
+    result = await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
+        params, mock_context, mock_client, mock_mirrornode
+    )
+
+    tp = result.token_params
+    assert tp.token_name == "Infinite NFT"
+    assert tp.token_symbol == "INFT"
+    assert tp.supply_type == SupplyType.INFINITE
+    assert tp.max_supply == 0
+
+
+@pytest.mark.asyncio
+async def test_validates_max_supply_with_infinite_type(
+    mock_context, mock_client, mock_mirrornode
+):
+    """Should raise ValueError if max_supply is set with INFINITE supply type."""
+    params = CreateNonFungibleTokenParameters(
+        token_name="Invalid NFT",
+        token_symbol="INV",
+        supply_type=0,  # INFINITE
+        max_supply=100,  # Conflicting with INFINITE
+    )
+
+    with pytest.raises(
+        ValueError, match="Cannot set max supply and INFINITE supply type"
+    ):
+        await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
+            params, mock_context, mock_client, mock_mirrornode
+        )
+
+
+@pytest.mark.asyncio
+async def test_raises_error_if_supply_key_cannot_be_resolved(
+    mock_context, mock_mirrornode
+):
+    """Should raise ValueError if supply key cannot be resolved (no operator key)."""
+    # Setup client without operator key
+    client = MagicMock(spec=Client)
+    client.operator_account_id = AccountId.from_string(TEST_OPERATOR_ID)
+    client.operator_private_key = None  # No operator key
+    client.network = Network(network="testnet")
+
+    # Setup mirror node to fail
+    mock_mirrornode.get_account.side_effect = Exception("Mirror node offline")
+
+    params = CreateNonFungibleTokenParameters(
+        token_name="No Key NFT",
+        token_symbol="NKNFT",
+    )
+
+    with pytest.raises(ValueError, match="Could not resolve a Supply Key"):
+        await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
+            params, mock_context, client, mock_mirrornode
+        )
 
 
 @pytest.mark.asyncio

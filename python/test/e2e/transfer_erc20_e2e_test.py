@@ -10,8 +10,8 @@ from typing import Any
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateERC20Parameters,
 )
@@ -106,7 +106,9 @@ async def setup_environment():
 # ============================================================================
 
 
-async def execute_agent_request(agent_executor, input_text: str, config: RunnableConfig):
+async def execute_agent_request(
+    agent_executor, input_text: str, config: RunnableConfig
+):
     """Execute an agent request with the given input text."""
     return await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config
@@ -136,8 +138,9 @@ async def test_transfer_erc20_via_natural_language(setup_environment):
     test_token_address = env["test_token_address"]
     recipient_account_id = env["recipient_account_id"]
 
-    input_text = f"Transfer 10 ERC20 tokens {test_token_address} to {recipient_account_id}"
-    print(input_text)
+    input_text = (
+        f"Transfer 10 ERC20 tokens {test_token_address} to {recipient_account_id}"
+    )
 
     result = await execute_agent_request(agent_executor, input_text, config)
     tool_call = extract_tool_result(result, response_parser)
@@ -148,14 +151,16 @@ async def test_transfer_erc20_via_natural_language(setup_environment):
     assert parsed_data["raw"]["transaction_id"] is not None
 
     await wait(MIRROR_NODE_WAITING_TIME)
-    
+
     # Verify the balance after transfer
     executor_wrapper = env["executor_wrapper"]
     recipient_balance = await executor_wrapper.get_erc20_balance(
         test_token_address, str(recipient_account_id)
     )
     expected_balance = 10
-    assert recipient_balance == expected_balance, f"Expected balance {expected_balance}, got {recipient_balance}"
+    assert (
+        recipient_balance == expected_balance
+    ), f"Expected balance {expected_balance}, got {recipient_balance}"
 
 
 @pytest.mark.asyncio
@@ -183,13 +188,13 @@ async def test_handle_various_natural_language_variations(setup_environment):
         parsed_data = tool_call.parsedData
         assert parsed_data["raw"]["status"] == "SUCCESS"
         assert parsed_data["raw"]["transaction_id"] is not None
-        
+
         # Extract amount from the input text
         amount_str = input_text.split()[1]
         total_transferred += int(amount_str)
-    
+
     await wait(MIRROR_NODE_WAITING_TIME)
-    
+
     # Verify the cumulative balance after all transfers
     executor_wrapper = env["executor_wrapper"]
     recipient_balance = await executor_wrapper.get_erc20_balance(
@@ -197,7 +202,9 @@ async def test_handle_various_natural_language_variations(setup_environment):
     )
     # Total transferred: 1 + 5 + 2 = 8 tokens, plus 10 from the first test = 18 base units
     expected_balance = 18
-    assert recipient_balance == expected_balance, f"Expected balance {expected_balance}, got {recipient_balance}"
+    assert (
+        recipient_balance == expected_balance
+    ), f"Expected balance {expected_balance}, got {recipient_balance}"
 
 
 @pytest.mark.asyncio
@@ -222,4 +229,7 @@ async def test_schedule_transfer_erc20_via_natural_language(setup_environment):
     parsed_data = tool_call.parsedData
     assert parsed_data["raw"]["transaction_id"] is not None
     assert parsed_data["raw"]["schedule_id"] is not None
-    assert "scheduled transfer of erc20 successfully" in parsed_data["humanMessage"].lower()
+    assert (
+        "scheduled transfer of erc20 successfully"
+        in parsed_data["humanMessage"].lower()
+    )

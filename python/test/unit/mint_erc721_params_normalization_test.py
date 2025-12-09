@@ -6,18 +6,18 @@ from hiero_sdk_python.schedule.schedule_create_transaction import (
     ScheduleCreateParams,
 )
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     MintERC721Parameters,
     SchedulingParams,
 )
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_uses_provided_evm_to_address_as_is(mock_parse, mock_web3):
     """Should encode safeMint with provided EVM address and set contract id."""
@@ -65,7 +65,7 @@ async def test_uses_provided_evm_to_address_as_is(mock_parse, mock_web3):
 @patch.object(
     # patch AccountResolver.get_hedera_evm_address used inside normaliser
     __import__(
-        "hedera_agent_kit_py.shared.utils.account_resolver",
+        "hedera_agent_kit.shared.utils.account_resolver",
         fromlist=["AccountResolver"],
     ).AccountResolver,
     "get_hedera_evm_address",
@@ -73,12 +73,12 @@ async def test_uses_provided_evm_to_address_as_is(mock_parse, mock_web3):
 )
 @patch(
     __import__(
-        "hedera_agent_kit_py.shared.utils.account_resolver",
+        "hedera_agent_kit.shared.utils.account_resolver",
         fromlist=["AccountResolver"],
     ).AccountResolver.__module__
     + ".AccountResolver.get_default_account"
 )
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_defaults_to_context_account_and_resolves_hedera_id(
     mock_parse,
@@ -131,7 +131,7 @@ async def test_defaults_to_context_account_and_resolves_hedera_id(
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_uses_evm_address_without_mirrornode_when_evm_given(
     mock_parse, mock_web3
@@ -156,7 +156,7 @@ async def test_uses_evm_address_without_mirrornode_when_evm_given(
     # Patch AccountResolver.get_hedera_evm_address to ensure it is not called
     with patch(
         __import__(
-            "hedera_agent_kit_py.shared.utils.account_resolver",
+            "hedera_agent_kit.shared.utils.account_resolver",
             fromlist=["AccountResolver"],
         ).AccountResolver.__module__
         + ".AccountResolver.get_hedera_evm_address",
@@ -186,7 +186,7 @@ async def test_uses_evm_address_without_mirrornode_when_evm_given(
     "normalise_scheduled_transaction_params",
     new_callable=AsyncMock,
 )
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_scheduling_params_processed_when_scheduled(
     mock_parse, mock_web3, mock_sched_norm
@@ -214,7 +214,7 @@ async def test_scheduling_params_processed_when_scheduled(
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 async def test_ignores_scheduling_when_not_scheduled(mock_parse, mock_web3):
     mock_context = Context()

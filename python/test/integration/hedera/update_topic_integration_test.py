@@ -1,18 +1,16 @@
-import asyncio
 from typing import cast
 
 import pytest
-from eth_keys.datatypes import PublicKey
 from hiero_sdk_python import Client, PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_consensus_plugin import UpdateTopicTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.plugins.core_consensus_plugin import UpdateTopicTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     UpdateTopicParameters,
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,

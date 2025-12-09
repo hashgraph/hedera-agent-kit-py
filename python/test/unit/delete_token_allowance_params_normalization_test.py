@@ -3,17 +3,17 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from hiero_sdk_python import TokenId, Client
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     DeleteTokenAllowanceParameters,
 )
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ class TestDeleteTokenAllowanceParamsNormalization:
         mock_resolver = Mock(spec=AccountResolver)
         # Mock static method resolve_account
         monkeypatch.setattr(
-            "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver.resolve_account",
+            "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver.resolve_account",
             mock_resolver.resolve_account,
         )
         return mock_resolver

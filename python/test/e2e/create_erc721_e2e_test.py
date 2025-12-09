@@ -10,8 +10,8 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
@@ -203,9 +203,7 @@ async def test_create_erc721_with_base_uri(
     response_parser: ResponseParserService,
 ):
     """Test creating an ERC721 token with a base URI via natural language."""
-    input_text = (
-        "Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/"
-    )
+    input_text = "Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/"
     parsed_data = await execute_create_erc721(
         agent_executor, input_text, langchain_config, response_parser
     )

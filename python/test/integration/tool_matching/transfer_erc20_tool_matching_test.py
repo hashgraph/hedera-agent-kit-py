@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.plugins.core_evm_plugin import core_evm_plugin_tool_names
+from hedera_agent_kit.shared.models import ToolResponse
 from test import create_langchain_test_setup
 
 TRANSFER_ERC20_TOOL = core_evm_plugin_tool_names["TRANSFER_ERC20_TOOL"]
@@ -30,7 +30,9 @@ async def toolkit(test_setup):
 
 
 @pytest.mark.asyncio
-async def test_match_simple_transfer_erc20_command(agent_executor, toolkit, monkeypatch):
+async def test_match_simple_transfer_erc20_command(
+    agent_executor, toolkit, monkeypatch
+):
     """Test matching a simple transfer ERC20 command."""
     input_text = "Transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -62,7 +64,9 @@ async def test_match_simple_transfer_erc20_command(agent_executor, toolkit, monk
 
 
 @pytest.mark.asyncio
-async def test_match_command_with_hedera_addresses(agent_executor, toolkit, monkeypatch):
+async def test_match_command_with_hedera_addresses(
+    agent_executor, toolkit, monkeypatch
+):
     """Test matching a command with Hedera addresses."""
     input_text = "Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -166,7 +170,7 @@ async def test_match_scheduled_transaction(agent_executor, toolkit, monkeypatch)
 
 
 @pytest.mark.asyncio
-async def   test_handle_various_natural_language_variations(
+async def test_handle_various_natural_language_variations(
     agent_executor, toolkit, monkeypatch
 ):
     """Test handling various natural language variations."""
@@ -329,7 +333,6 @@ async def test_tool_available(toolkit):
     assert "transfer of **erc20 tokens**" in transfer_erc20.description.lower()
 
 
-
 @pytest.mark.asyncio
 async def test_missing_amount(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
@@ -354,6 +357,7 @@ async def test_missing_amount(agent_executor, toolkit, monkeypatch):
     # Assertions
     mock_run.assert_not_awaited()
 
+
 @pytest.mark.asyncio
 async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
@@ -377,6 +381,7 @@ async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
 
     # Assertions
     mock_run.assert_not_awaited()
+
 
 @pytest.mark.asyncio
 async def test_missing_erc20_address(agent_executor, toolkit, monkeypatch):
