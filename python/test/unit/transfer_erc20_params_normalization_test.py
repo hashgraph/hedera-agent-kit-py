@@ -4,20 +4,20 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from hiero_sdk_python.contract.contract_id import ContractId
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.constants.contracts import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.constants.contracts import (
     ERC20_TRANSFER_FUNCTION_ABI,
     ERC20_TRANSFER_FUNCTION_NAME,
 )
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import TransferERC20Parameters
-from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
+from hedera_agent_kit.shared.parameter_schemas import TransferERC20Parameters
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 @patch.object(AccountResolver, "get_hedera_evm_address")
 @patch.object(AccountResolver, "get_hedera_account_id")
@@ -71,7 +71,7 @@ async def test_encodes_function_call_with_all_parameters(
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 @patch.object(AccountResolver, "get_hedera_evm_address")
 @patch.object(AccountResolver, "get_hedera_account_id")
@@ -123,7 +123,7 @@ async def test_resolves_hedera_address_to_evm_for_recipient(
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 @patch.object(AccountResolver, "get_hedera_evm_address")
 @patch.object(AccountResolver, "get_hedera_account_id")
@@ -173,7 +173,7 @@ async def test_resolves_evm_address_to_hedera_for_contract(
 
 
 @pytest.mark.asyncio
-@patch("hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.Web3")
+@patch("hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.Web3")
 @patch.object(HederaParameterNormaliser, "parse_params_with_schema")
 @patch.object(AccountResolver, "get_hedera_evm_address")
 @patch.object(AccountResolver, "get_hedera_account_id")

@@ -4,16 +4,16 @@ from typing import cast
 import pytest
 from hiero_sdk_python import SupplyType, TokenType
 
-from hedera_agent_kit_py.plugins.core_token_plugin.create_non_fungible_token import (
+from hedera_agent_kit.plugins.core_token_plugin.create_non_fungible_token import (
     CreateNonFungibleTokenTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ToolResponse,
     ExecutedTransactionToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateNonFungibleTokenParameters,
     SchedulingParams,
 )
@@ -138,7 +138,6 @@ async def test_create_nft_with_explicit_finite_supply_type(setup_client):
     assert token_info.symbol == "EFNFT"
     assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 250
-
 
 
 @pytest.mark.asyncio

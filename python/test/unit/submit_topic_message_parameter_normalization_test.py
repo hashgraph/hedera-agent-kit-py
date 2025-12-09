@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hiero_sdk_python import Client, Network, TopicId
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     SubmitTopicMessageParameters,
     SubmitTopicMessageParametersNormalised,
     SchedulingParams,

@@ -4,14 +4,14 @@ import pytest
 from typing import cast
 from hiero_sdk_python import PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import TransferERC721Tool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.plugins.core_evm_plugin import TransferERC721Tool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ToolResponse,
     ExecutedTransactionToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferERC721Parameters,
     CreateERC721Parameters,

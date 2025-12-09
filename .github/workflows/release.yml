@@ -1,0 +1,48 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: hedera-agent-linux-medium
+    environment:
+      name: pypi
+      url: https://pypi.org/p/hedera-agent-kit
+    permissions:
+      id-token: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
+      - name: Install build dependencies
+        run: pip install build setuptools wheel
+
+      - name: Copy README to python directory
+        run: cp README.md python/README.md
+
+      - name: Build wheel and sdist
+        run: python -m build python/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
+        with:
+          packages_dir: python/dist/

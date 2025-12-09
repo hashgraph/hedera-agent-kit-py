@@ -2,11 +2,11 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from hiero_sdk_python import Client, PrivateKey, PublicKey, Network
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateTopicParameters,
     CreateTopicParametersNormalised,
 )
@@ -25,7 +25,7 @@ async def test_applies_defaults_when_values_not_provided():
     mock_account_resolver.get_default_public_key = AsyncMock(return_value=None)
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
         params = CreateTopicParameters()
@@ -57,7 +57,7 @@ async def test_sets_submit_key_when_requested():
     )
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
         params = CreateTopicParameters(is_submit_key=True, topic_memo="hello")
@@ -90,7 +90,7 @@ async def test_falls_back_to_operator_public_key():
     )
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
         params = CreateTopicParameters(is_submit_key=True)
@@ -122,7 +122,7 @@ async def test_raises_when_no_public_key_available():
     )
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
         params = CreateTopicParameters(is_submit_key=True)
@@ -146,7 +146,7 @@ async def test_raises_when_no_default_account_id():
     mock_account_resolver.get_default_account.return_value = None
 
     with patch(
-        "hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
         params = CreateTopicParameters()

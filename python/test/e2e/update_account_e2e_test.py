@@ -2,7 +2,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper

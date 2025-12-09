@@ -4,15 +4,14 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-from pprint import pprint
 from typing import AsyncGenerator, Any
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType, SupplyType
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
@@ -153,7 +152,6 @@ def extract_token_id(
     return str(token_id)
 
 
-
 async def execute_agent_request(
     agent_executor, input_text: str, config: RunnableConfig
 ):
@@ -179,7 +177,6 @@ async def test_create_nft_minimal_params(
     input_text = "Create a non-fungible token named MyNFT with symbol MNFT"
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
-    pprint(result)
 
     token_id_str = extract_token_id(
         result, response_parser, "create_non_fungible_token_tool"
@@ -243,7 +240,6 @@ async def test_create_nft_with_explicit_finite_supply(
     assert token_info.symbol == "LTD"
     assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 300
-
 
 
 @pytest.mark.asyncio

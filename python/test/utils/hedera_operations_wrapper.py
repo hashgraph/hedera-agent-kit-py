@@ -27,13 +27,16 @@ from hiero_sdk_python.consensus.topic_info import TopicInfo
 from hiero_sdk_python.contract.contract_create_transaction import (
     ContractCreateTransaction,
 )
+from hiero_sdk_python.contract.contract_execute_transaction import (
+    ContractExecuteTransaction,
+)
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
+from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
     get_mirrornode_service,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TokenAirdropsResponse,
     TokenAllowanceResponse,
     TokenBalance,
@@ -42,8 +45,8 @@ from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
     NftBalanceResponse,
     AccountResponse,
 )
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit.shared.parameter_schemas import (
     AirdropFungibleTokenParametersNormalised,
     TransferHbarParametersNormalised,
     SubmitTopicMessageParametersNormalised,
@@ -57,7 +60,7 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateERC721Parameters,
     MintERC721Parameters,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
     DeleteTokenParametersNormalised,
     CreateNonFungibleTokenParametersNormalised,
@@ -66,17 +69,20 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
     MintNonFungibleTokenParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
-from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
+from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     ExecuteStrategy,
     RawTransactionResponse,
 )
-from hedera_agent_kit_py.shared.utils import LedgerId
+from hedera_agent_kit.shared.utils import LedgerId, ledger_id_from_network
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 from . import from_evm_address
-from hedera_agent_kit_py.shared.constants.contracts import (
+from hedera_agent_kit.shared.constants.contracts import (
     ERC721_OWNER_OF_FUNCTION_ABI,
     ERC721_OWNER_OF_FUNCTION_NAME,
+    ERC721_MINT_FUNCTION_ABI,
+    ERC721_MINT_FUNCTION_NAME,
 )
-from hedera_agent_kit_py.shared.constants.contracts import (
+from hedera_agent_kit.shared.constants.contracts import (
     ERC20_BALANCE_OF_FUNCTION_ABI,
     ERC20_BALANCE_OF_FUNCTION_NAME,
 )
@@ -335,14 +341,16 @@ class HederaOperationsWrapper:
         Returns:
             Dict containing erc20_address, transaction_id, and human_message
         """
-        from hedera_agent_kit_py.shared.constants.contracts import (
+        from hedera_agent_kit.shared.constants.contracts import (
             get_erc20_factory_address,
             ERC20_FACTORY_ABI,
         )
-        from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+        from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
             HederaParameterNormaliser,
         )
-        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
+
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
 
         try:
             factory_address = get_erc20_factory_address(
@@ -388,14 +396,14 @@ class HederaOperationsWrapper:
         Returns:
             Dict containing erc721_address, transaction_id, and human_message
         """
-        from hedera_agent_kit_py.shared.constants.contracts import (
+        from hedera_agent_kit.shared.constants.contracts import (
             get_erc721_factory_address,
             ERC721_FACTORY_ABI,
         )
-        from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+        from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
             HederaParameterNormaliser,
         )
-        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
 
         try:
             factory_address = get_erc721_factory_address(
@@ -441,16 +449,6 @@ class HederaOperationsWrapper:
         Returns:
             Dict containing transaction_id and human_message
         """
-        from hedera_agent_kit_py.shared.constants.contracts import (
-            ERC721_MINT_FUNCTION_ABI,
-            ERC721_MINT_FUNCTION_NAME,
-        )
-        from hedera_agent_kit_py.shared.utils import ledger_id_from_network
-        from hedera_agent_kit_py.shared.utils.account_resolver import AccountResolver
-        from hiero_sdk_python import ContractExecuteTransaction
-        from hiero_sdk_python.contract.contract_id import ContractId
-        from web3 import Web3
-
         try:
             mirrornode_service = get_mirrornode_service(
                 None, ledger_id_from_network(self.client.network)

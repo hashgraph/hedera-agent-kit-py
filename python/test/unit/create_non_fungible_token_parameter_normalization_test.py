@@ -11,16 +11,16 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised,
     TokenParams,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import SchedulingParams
+from hedera_agent_kit.shared.parameter_schemas import SchedulingParams
 
 # Test constants
 TEST_OPERATOR_ID = "0.0.1001"
@@ -147,7 +147,9 @@ async def test_validates_max_supply_with_infinite_type(
         max_supply=100,  # Conflicting with INFINITE
     )
 
-    with pytest.raises(ValueError, match="Cannot set max supply and INFINITE supply type"):
+    with pytest.raises(
+        ValueError, match="Cannot set max supply and INFINITE supply type"
+    ):
         await HederaParameterNormaliser.normalise_create_non_fungible_token_params(
             params, mock_context, mock_client, mock_mirrornode
         )
