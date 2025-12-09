@@ -140,7 +140,6 @@ async def test_create_nft_with_explicit_finite_supply_type(setup_client):
     assert token_info.max_supply == 250
 
 
-
 @pytest.mark.asyncio
 async def test_create_nft_with_treasury_account(setup_client):
     client, hedera_operations_wrapper, context = setup_client

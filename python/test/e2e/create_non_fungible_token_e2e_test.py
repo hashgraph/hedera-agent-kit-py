@@ -152,7 +152,6 @@ def extract_token_id(
     return str(token_id)
 
 
-
 async def execute_agent_request(
     agent_executor, input_text: str, config: RunnableConfig
 ):
@@ -241,7 +240,6 @@ async def test_create_nft_with_explicit_finite_supply(
     assert token_info.symbol == "LTD"
     assert token_info.supply_type == SupplyType.FINITE
     assert token_info.max_supply == 300
-
 
 
 @pytest.mark.asyncio

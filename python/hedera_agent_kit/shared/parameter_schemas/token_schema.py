@@ -247,7 +247,10 @@ class CreateNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     ] = 1
     max_supply: Optional[
         Annotated[
-            int, Field(description="Maximum supply of NFTs. If not set, the supply will be infinite. If supply_type is set and max_supply is not, the tool will set it to 100.")
+            int,
+            Field(
+                description="Maximum supply of NFTs. If not set, the supply will be infinite. If supply_type is set and max_supply is not, the tool will set it to 100."
+            ),
         ]
     ] = None
     treasury_account_id: Annotated[
