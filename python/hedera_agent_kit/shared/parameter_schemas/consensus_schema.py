@@ -29,7 +29,7 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
         Field(
             description=(
                 "Submit key for the topic. Pass boolean `True` to use the operator/user key, "
-                "or provide a Hedera-compatible public key string (optional)."
+                "or provide a Hedera-compatible public key string (optional). If set, restricts who can submit messages to the topic."
             ),
         ),
     ] = None
