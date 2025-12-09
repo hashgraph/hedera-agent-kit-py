@@ -96,7 +96,7 @@ async def test_match_command_with_explicit_decimals(
 
 @pytest.mark.asyncio
 async def test_handle_minimal_input_with_defaults(agent_executor, toolkit, monkeypatch):
-    """Test that the tool matches when only token name and symbol are provided."""
+    """Test that the tool matches when only a token name and symbol are provided."""
     input_text = "Create an ERC20 token SampleCoin with symbol SC"
     config: "RunnableConfig" = {"configurable": {"thread_id": "1"}}
 

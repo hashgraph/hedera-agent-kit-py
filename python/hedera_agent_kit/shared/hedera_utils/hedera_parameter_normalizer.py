@@ -310,10 +310,7 @@ class HederaParameterNormaliser:
         if raw_value is None:
             return None
         if isinstance(raw_value, str):
-            try:
-                return PublicKey.from_string_ed25519(raw_value)
-            except Exception:
-                return PublicKey.from_string_ecdsa(raw_value)
+            return PublicKey.from_string(raw_value)
         if raw_value:
             return user_key
         return None
