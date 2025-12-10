@@ -5,15 +5,15 @@ the correct tool when given various natural language inputs.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
 import uuid
+from unittest.mock import AsyncMock
 
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names
-from hedera_agent_kit_py.shared.models import ToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import SchedulingParams
+from hedera_agent_kit.plugins.core_evm_plugin import core_evm_plugin_tool_names
+from hedera_agent_kit.shared.models import ToolResponse
+from hedera_agent_kit.shared.parameter_schemas import SchedulingParams
 from test.utils import create_langchain_test_setup
 
 MINT_ERC721_TOOL = core_evm_plugin_tool_names["MINT_ERC721_TOOL"]
@@ -91,7 +91,9 @@ async def test_missing_contract_id_and_no_recipient_should_not_call_tool(
 
 
 @pytest.mark.asyncio
-async def test_match_min_erc721_with_evm_to_address(agent_executor, toolkit, monkeypatch, run_config):
+async def test_match_min_erc721_with_evm_to_address(
+    agent_executor, toolkit, monkeypatch, run_config
+):
     """Should match the min_erc721 tool and extract EVM recipient address."""
     input_text = (
         "Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b"
@@ -111,14 +113,13 @@ async def test_match_min_erc721_with_evm_to_address(agent_executor, toolkit, mon
     assert args[0] == MINT_ERC721_TOOL
     payload = args[1]
     assert payload.get("contract_id") == "0.0.6486793"
-    assert (
-        payload.get("to_address")
-        == "0xd94dc7f82f103757f715514e4a37186be6e4580b"
-    )
+    assert payload.get("to_address") == "0xd94dc7f82f103757f715514e4a37186be6e4580b"
 
 
 @pytest.mark.asyncio
-async def test_match_min_erc721_with_hedera_to_address(agent_executor, toolkit, monkeypatch, run_config):
+async def test_match_min_erc721_with_hedera_to_address(
+    agent_executor, toolkit, monkeypatch, run_config
+):
     """Should match the tool and keep Hedera account id for to_address (normaliser resolves later)."""
     # Be explicit about ERC721 and that the recipient is a Hedera account to avoid ambiguity
     input_text = "Mint ERC721 token 0.0.1234 to Hedera account 0.0.5678"
@@ -141,7 +142,9 @@ async def test_match_min_erc721_with_hedera_to_address(agent_executor, toolkit, 
 
 
 @pytest.mark.asyncio
-async def test_match_min_erc721_without_to_address_defaults(agent_executor, toolkit, monkeypatch, run_config):
+async def test_match_min_erc721_without_to_address_defaults(
+    agent_executor, toolkit, monkeypatch, run_config
+):
     """If recipient not specified, tool should be called without to_address (normaliser will default)."""
     input_text = "Mint ERC721 token 0.0.9999"
     config: RunnableConfig = run_config
@@ -164,11 +167,11 @@ async def test_match_min_erc721_without_to_address_defaults(agent_executor, tool
 
 
 @pytest.mark.asyncio
-async def test_extract_scheduling_parameters(agent_executor, toolkit, monkeypatch, run_config):
+async def test_extract_scheduling_parameters(
+    agent_executor, toolkit, monkeypatch, run_config
+):
     """Should extract scheduling params for ERC721 minting when asked to schedule."""
-    input_text = (
-        "Schedule mint of ERC721 token 0.0.1234 to 0x1111111111111111111111111111111111111111 and wait for its expiration"
-    )
+    input_text = "Schedule mint of ERC721 token 0.0.1234 to 0x1111111111111111111111111111111111111111 and wait for its expiration"
     config: RunnableConfig = run_config
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -184,10 +187,7 @@ async def test_extract_scheduling_parameters(agent_executor, toolkit, monkeypatc
     assert args[0] == MINT_ERC721_TOOL
     payload = args[1]
     assert payload.get("contract_id") == "0.0.1234"
-    assert (
-        payload.get("to_address")
-        == "0x1111111111111111111111111111111111111111"
-    )
+    assert payload.get("to_address") == "0x1111111111111111111111111111111111111111"
     scheduling_params: SchedulingParams = payload.get("scheduling_params", {})
     assert scheduling_params.is_scheduled is True
     assert scheduling_params.wait_for_expiry is True
