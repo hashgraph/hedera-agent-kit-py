@@ -19,27 +19,34 @@ from hiero_sdk_python import (
     TokenInfo,
     TokenNftInfo,
     TransactionReceipt,
+    TransactionRecordQuery,
+    TransactionId,
 )
 from hiero_sdk_python.account.account_balance import AccountBalance
 from hiero_sdk_python.consensus.topic_info import TopicInfo
 from hiero_sdk_python.contract.contract_create_transaction import (
     ContractCreateTransaction,
 )
+from hiero_sdk_python.contract.contract_execute_transaction import (
+    ContractExecuteTransaction,
+)
 
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.hedera_builder import HederaBuilder
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
+from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
     get_mirrornode_service,
 )
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import (
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TokenAirdropsResponse,
     TokenAllowanceResponse,
     TokenBalance,
     TopicMessagesResponse,
     TokenBalancesResponse,
+    NftBalanceResponse,
+    AccountResponse,
 )
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit.shared.parameter_schemas import (
     AirdropFungibleTokenParametersNormalised,
     TransferHbarParametersNormalised,
     SubmitTopicMessageParametersNormalised,
@@ -49,21 +56,39 @@ from hedera_agent_kit_py.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     ApproveHbarAllowanceParametersNormalised,
     ApproveTokenAllowanceParametersNormalised,
+    CreateERC20Parameters,
+    CreateERC721Parameters,
+    MintERC721Parameters,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
     DeleteTokenParametersNormalised,
     CreateNonFungibleTokenParametersNormalised,
     CreateFungibleTokenParametersNormalised,
     ApproveNftAllowanceParametersNormalised,
     MintNonFungibleTokenParametersNormalised,
+    TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
-from hedera_agent_kit_py.shared.strategies.tx_mode_strategy import (
+from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     ExecuteStrategy,
     RawTransactionResponse,
 )
-from hedera_agent_kit_py.shared.utils import LedgerId
+from hedera_agent_kit.shared.utils import LedgerId, ledger_id_from_network
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 from . import from_evm_address
+from hedera_agent_kit.shared.constants.contracts import (
+    ERC721_OWNER_OF_FUNCTION_ABI,
+    ERC721_OWNER_OF_FUNCTION_NAME,
+    ERC721_MINT_FUNCTION_ABI,
+    ERC721_MINT_FUNCTION_NAME,
+)
+from hedera_agent_kit.shared.constants.contracts import (
+    ERC20_BALANCE_OF_FUNCTION_ABI,
+    ERC20_BALANCE_OF_FUNCTION_NAME,
+)
+from hiero_sdk_python import ContractCallQuery
+from hiero_sdk_python.contract.contract_id import ContractId
+from web3 import Web3
 
 
 class HederaOperationsWrapper:
@@ -78,9 +103,46 @@ class HederaOperationsWrapper:
     # ACCOUNT OPERATIONS
     # ---------------------------
     async def create_account(
-        self, params: CreateAccountParametersNormalised
+        self, params: Any
     ) -> RawTransactionResponse:
-        tx = HederaBuilder.create_account(params)
+        """Create an account, accepting either normalised params or a simple dict.
+
+        Tests may pass a plain dict with camelCase keys (e.g. initialBalance, key).
+        This method normalises that shape into CreateAccountParametersNormalised
+        expected by the HederaBuilder.
+        """
+        normalised: CreateAccountParametersNormalised
+
+        if isinstance(params, CreateAccountParametersNormalised):
+            normalised = params
+        elif isinstance(params, dict):
+            # Map common aliases/camelCase to snake_case expected by the normalised schema
+            key = params.get("key") or params.get("publicKey")
+            initial_balance = (
+                params.get("initial_balance")
+                or params.get("initialBalance")
+            )
+            memo = params.get("memo") or params.get("account_memo") or params.get("accountMemo")
+            max_auto = (
+                params.get("max_automatic_token_associations")
+                or params.get("maxAutomaticTokenAssociations")
+            )
+            scheduling_params = (
+                params.get("scheduling_params") or params.get("schedulingParams")
+            )
+
+            normalised = CreateAccountParametersNormalised(
+                memo=memo,
+                initial_balance=initial_balance,
+                key=key,
+                max_automatic_token_associations=max_auto,
+                scheduling_params=scheduling_params,
+            )
+        else:
+            # Fallback: attempt direct construction if a compatible pydantic model-like is provided
+            normalised = CreateAccountParametersNormalised(**vars(params))
+
+        tx = HederaBuilder.create_account(normalised)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
@@ -218,6 +280,10 @@ class HederaOperationsWrapper:
         query = AccountInfoQuery().set_account_id(AccountId.from_string(account_id))
         return query.execute(self.client)
 
+    async def get_account_info_mirrornode(self, account_id: str) -> AccountResponse:
+        account_info: AccountResponse = await self.mirrornode.get_account(account_id)
+        return account_info
+
     def get_topic_info(self, topic_id: str) -> TopicInfo:
         query = TopicInfoQuery().set_topic_id(TopicId.from_string(topic_id))
         return query.execute(self.client)
@@ -282,6 +348,14 @@ class HederaOperationsWrapper:
     # CONTRACTS / EVM
     # ---------------------------
     async def deploy_erc20(self, bytecode: bytes) -> Dict[str, Optional[str]]:
+        """Deploy an ERC20 contract from bytecode (legacy method).
+
+        Args:
+            bytecode: The contract bytecode
+
+        Returns:
+            Dict containing contractId and transactionId
+        """
         try:
             tx = ContractCreateTransaction().set_gas(3_000_000).set_bytecode(bytecode)
             receipt: TransactionReceipt = tx.execute(self.client)
@@ -292,6 +366,334 @@ class HederaOperationsWrapper:
         except Exception as exc:
             print("[HederaOperationsWrapper] Error deploying ERC20:", exc)
             raise
+
+    async def create_erc20(
+        self, params: CreateERC20Parameters
+    ) -> Dict[str, Optional[str]]:
+        """Create an ERC20 token using the factory contract.
+
+        Args:
+            params: ERC20 creation parameters
+
+        Returns:
+            Dict containing erc20_address, transaction_id, and human_message
+        """
+        from hedera_agent_kit.shared.constants.contracts import (
+            get_erc20_factory_address,
+            ERC20_FACTORY_ABI,
+        )
+        from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
+            HederaParameterNormaliser,
+        )
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
+
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
+
+        try:
+            factory_address = get_erc20_factory_address(
+                ledger_id_from_network(self.client.network)
+            )
+
+            normalised_params = (
+                await HederaParameterNormaliser.normalise_create_erc20_params(
+                    params,
+                    factory_address,
+                    ERC20_FACTORY_ABI,
+                    "deployToken",
+                    Context(),
+                    self.client,
+                )
+            )
+
+            tx = HederaBuilder.execute_transaction(normalised_params)
+            result: ExecutedTransactionToolResponse = (
+                await self.execute_strategy.handle(tx, self.client, Context())
+            )
+
+            # Get ERC20 address from the transaction
+            erc20_address = await self._get_erc_address(result.raw.transaction_id)
+
+            return {
+                "erc20_address": erc20_address,
+                "transaction_id": str(result.raw.transaction_id),
+                "human_message": f"ERC20 token created successfully at address {erc20_address}",
+            }
+        except Exception as exc:
+            print("[HederaOperationsWrapper] Error creating ERC20:", exc)
+            raise
+
+    async def create_erc721(
+        self, params: CreateERC721Parameters
+    ) -> Dict[str, Optional[str]]:
+        """Create an ERC721 token using the factory contract.
+
+        Args:
+            params: ERC721 creation parameters
+
+        Returns:
+            Dict containing erc721_address, transaction_id, and human_message
+        """
+        from hedera_agent_kit.shared.constants.contracts import (
+            get_erc721_factory_address,
+            ERC721_FACTORY_ABI,
+        )
+        from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
+            HederaParameterNormaliser,
+        )
+        from hedera_agent_kit.shared.utils import ledger_id_from_network
+
+        try:
+            factory_address = get_erc721_factory_address(
+                ledger_id_from_network(self.client.network)
+            )
+
+            normalised_params = (
+                await HederaParameterNormaliser.normalise_create_erc721_params(
+                    params,
+                    factory_address,
+                    ERC721_FACTORY_ABI,
+                    "deployToken",
+                    Context(),
+                    self.client,
+                )
+            )
+
+            tx = HederaBuilder.execute_transaction(normalised_params)
+            result: ExecutedTransactionToolResponse = (
+                await self.execute_strategy.handle(tx, self.client, Context())
+            )
+
+            # Get ERC721 address from the transaction
+            erc721_address = await self._get_erc_address(result.raw.transaction_id)
+
+            return {
+                "erc721_address": erc721_address,
+                "transaction_id": str(result.raw.transaction_id),
+                "human_message": f"ERC721 token created successfully at address {erc721_address}",
+            }
+        except Exception as exc:
+            print("[HederaOperationsWrapper] Error creating ERC721:", exc)
+            raise
+
+    async def mint_erc721(
+        self, params: MintERC721Parameters
+    ) -> Dict[str, Optional[str]]:
+        """Mint an ERC721 token.
+
+        Args:
+            params: ERC721 minting parameters
+
+        Returns:
+            Dict containing transaction_id and human_message
+        """
+        try:
+            mirrornode_service = get_mirrornode_service(
+                None, ledger_id_from_network(self.client.network)
+            )
+
+            # Resolve to_address (defaults to operator if not provided)
+            to_address_input = params.to_address or str(self.client.operator_account_id)
+            to_address = await AccountResolver.get_hedera_evm_address(
+                to_address_input, mirrornode_service
+            )
+
+            # Resolve contract ID
+            contract_id_str = await AccountResolver.get_hedera_account_id(
+                params.contract_id, mirrornode_service
+            )
+            contract_id = ContractId.from_string(contract_id_str)
+
+            # Encode the mint function call
+            w3 = Web3()
+            checksummed_to = w3.to_checksum_address(to_address)
+            contract = w3.eth.contract(abi=ERC721_MINT_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC721_MINT_FUNCTION_NAME,
+                args=[checksummed_to],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+
+            # Execute the contract call
+            tx = (
+                ContractExecuteTransaction()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+
+            result: ExecutedTransactionToolResponse = (
+                await self.execute_strategy.handle(tx, self.client, Context())
+            )
+
+            return {
+                "transaction_id": str(result.raw.transaction_id),
+                "human_message": "ERC721 token minted successfully",
+            }
+        except Exception as exc:
+            print("[HederaOperationsWrapper] Error minting ERC721:", exc)
+            raise
+
+    async def get_erc20_balance(
+        self, erc20_contract_address: str, account_address: str
+    ) -> int:
+        """Get ERC20 token balance for an account by calling balanceOf on the contract.
+
+        Args:
+            erc20_contract_address: The ERC20 contract address (EVM format like 0x...)
+            account_address: The account address to check balance for (Hedera ID like 0.0.123)
+
+        Returns:
+            int: The token balance (in base units, not adjusted for decimals)
+        """
+
+        try:
+            # Get EVM address for the account
+            account_info = await self.get_account_info_mirrornode(account_address)
+            account_evm_address = account_info.get("evm_address")
+
+            if not account_evm_address:
+                raise ValueError(
+                    f"Could not get EVM address for account {account_address}"
+                )
+
+            # Encode the balanceOf function call
+            w3 = Web3()
+            checksummed_account = w3.to_checksum_address(account_evm_address)
+            contract = w3.eth.contract(abi=ERC20_BALANCE_OF_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC20_BALANCE_OF_FUNCTION_NAME,
+                args=[checksummed_account],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+
+            # Create ContractId from EVM address
+            # Strip 0x prefix and convert to bytes
+            addr_hex = erc20_contract_address.lower().replace("0x", "")
+            evm_bytes = bytes.fromhex(addr_hex)
+
+            if len(evm_bytes) != 20:
+                raise ValueError(
+                    f"Invalid EVM address length: expected 20 bytes, got {len(evm_bytes)}"
+                )
+
+            # Create ContractId with only EVM address (shard=0, realm=0, contract=0)
+            contract_id = ContractId(
+                shard=0, realm=0, contract=0, evm_address=evm_bytes
+            )
+
+            # Execute a contract call query
+            query = (
+                ContractCallQuery()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+
+            result = query.execute(self.client)
+
+            # Decode the result - balanceOf returns uint256
+            result_bytes = getattr(result, "contract_call_result", None)
+            if not result_bytes or len(result_bytes) < 32:
+                return 0
+
+            # uint256 is encoded as 32 bytes
+            balance = int.from_bytes(result_bytes[:32], "big")
+            return balance
+
+        except Exception as exc:
+            print(f"[HederaOperationsWrapper] Error getting ERC20 balance: {exc}")
+            raise
+
+    async def get_erc721_owner(
+        self, erc721_contract_address: str, token_id: int
+    ) -> str:
+        """Get the owner of an ERC721 token by calling ownerOf on the contract.
+
+        Args:
+            erc721_contract_address: The ERC721 contract address (EVM format like 0x...)
+            token_id: The token ID to check ownership for
+
+        Returns:
+            str: The owner's EVM address (0x...)
+        """
+        try:
+            # Encode the ownerOf function call
+            w3 = Web3()
+            contract = w3.eth.contract(abi=ERC721_OWNER_OF_FUNCTION_ABI)
+            encoded_data = contract.encode_abi(
+                abi_element_identifier=ERC721_OWNER_OF_FUNCTION_NAME,
+                args=[token_id],
+            )
+            function_parameters = bytes.fromhex(encoded_data[2:])
+
+            # Create ContractId from EVM address
+            addr_hex = erc721_contract_address.lower().replace("0x", "")
+            evm_bytes = bytes.fromhex(addr_hex)
+
+            if len(evm_bytes) != 20:
+                raise ValueError(
+                    f"Invalid EVM address length: expected 20 bytes, got {len(evm_bytes)}"
+                )
+
+            contract_id = ContractId(
+                shard=0, realm=0, contract=0, evm_address=evm_bytes
+            )
+
+            # Execute a contract call query
+            query = (
+                ContractCallQuery()
+                .set_contract_id(contract_id)
+                .set_gas(100_000)
+                .set_function_parameters(function_parameters)
+            )
+
+            result = query.execute(self.client)
+
+            # Decode the result - ownerOf returns address (20 bytes)
+            result_bytes = getattr(result, "contract_call_result", None)
+            if not result_bytes or len(result_bytes) < 32:
+                raise ValueError("Invalid response from ownerOf call")
+
+            # Address is encoded as 32 bytes (left-padded with zeros)
+            # Take the last 20 bytes
+            owner_bytes = result_bytes[:32][-20:]
+            owner_address = "0x" + owner_bytes.hex()
+            return owner_address
+
+        except Exception as exc:
+            print(f"[HederaOperationsWrapper] Error getting ERC721 owner: {exc}")
+            raise
+
+    async def _get_erc_address(self, transaction_id: TransactionId) -> str | None:
+        """Minimal helper to resolve the deployed ERC721 EVM address via SDK."""
+
+        record = (
+            TransactionRecordQuery()
+            .set_transaction_id(transaction_id)
+            .execute(self.client)
+        )
+
+        contract_call_result = getattr(record, "call_result", None)
+
+        if contract_call_result is None:
+            return None
+
+        # Access the raw ABI-encoded return bytes from the function result
+        result_bytes = getattr(contract_call_result, "contract_call_result", None)
+
+        if not result_bytes or not isinstance(result_bytes, (bytes, bytearray)):
+            return None
+
+        # The factory returns an EVM address as the first return value.
+        # In Solidity ABI, an address is encoded as a 32-byte word left-padded with zeros.
+        # We need to take the last 20 bytes of the first 32-byte word.
+        if len(result_bytes) < 32:
+            return None
+
+        first_word = bytes(result_bytes[:32])
+        addr_last_20 = first_word[-20:]
+        evm_addr = "0x" + addr_last_20.hex()
+        return evm_addr
 
     async def get_contract_info(self, evm_contract_address: str) -> Any:
         # ContractId lack method for creation from EVM address, so we need to create it manually
@@ -344,6 +746,15 @@ class HederaOperationsWrapper:
         )
         return result.raw
 
+    async def transfer_non_fungible_token_with_allowance(
+        self, params: TransferNonFungibleTokenWithAllowanceParametersNormalised
+    ) -> RawTransactionResponse:
+        tx = HederaBuilder.transfer_non_fungible_token_with_allowance(params)
+        result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
+            tx, self.client, Context()
+        )
+        return result.raw
+
     async def mint_nft(
         self, params: MintNonFungibleTokenParametersNormalised
     ) -> RawTransactionResponse:
@@ -353,7 +764,7 @@ class HederaOperationsWrapper:
         )
         return result.raw
 
-    async def get_account_nfts(self, account_id: str) -> Any:
+    async def get_account_nfts(self, account_id: str) -> NftBalanceResponse:
         return await self.mirrornode.get_account_nfts(account_id)
 
     async def get_scheduled_transaction_details(self, scheduled_tx_id: str) -> Any:

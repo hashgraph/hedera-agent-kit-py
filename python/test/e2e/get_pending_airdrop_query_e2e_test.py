@@ -11,8 +11,8 @@ from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenK
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
     AirdropFungibleTokenParametersNormalised,
@@ -183,7 +183,7 @@ async def test_get_pending_airdrops_e2e(setup_environment):
 
     human_message = tool_call.parsedData.get("humanMessage", "")
     raw_data = tool_call.parsedData.get("raw", {})
-    pending_airdrops = raw_data.get("pendingAirdrops", {}).get("airdrops", [])
+    pending_airdrops = raw_data.get("pending_airdrops", {}).get("airdrops", [])
 
     assert raw_data.get("error") is None
     assert f"pending airdrops for account **{recipient_id}**" in human_message

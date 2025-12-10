@@ -1,11 +1,11 @@
 import pytest
 from hiero_sdk_python import TopicId, PublicKey, PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_consensus_query_plugin import (
+from hedera_agent_kit.plugins.core_consensus_query_plugin import (
     GetTopicInfoQueryTool,
 )
-from hedera_agent_kit_py.shared.configuration import Context, AgentMode
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.configuration import Context, AgentMode
+from hedera_agent_kit.shared.parameter_schemas import (
     GetTopicInfoParameters,
     CreateTopicParametersNormalised,
     SubmitTopicMessageParametersNormalised,

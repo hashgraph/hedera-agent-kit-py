@@ -4,25 +4,30 @@ This module tests the account creation tool by calling it directly with paramete
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
 
+from os import waitid
 from typing import cast
 
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar, PublicKey, Client
 
-from hedera_agent_kit_py.plugins.core_account_plugin import CreateAccountTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.plugins.core_account_plugin import CreateAccountTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ToolResponse,
     ExecutedTransactionToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParameters,
     CreateAccountParametersNormalised,
     SchedulingParams,
 )
-from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test import HederaOperationsWrapper, wait
+from test.utils.setup import (
+    get_operator_client_for_tests,
+    get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
+)
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
@@ -155,6 +160,37 @@ async def test_create_account_with_explicit_public_key(setup_accounts):
 
     assert result.error is None
     assert exec_result.raw.account_id is not None
+
+    # Cleanup created an account
+    await return_hbars_and_delete_account(
+        executor_wrapper,
+        exec_result.raw.account_id,
+        setup_accounts["operator_client"].operator_account_id,
+    )
+
+
+@pytest.mark.asynciosetup_accounts
+async def test_create_account_with_unlimited_token_associations(setup_accounts):
+    """Test creating an account with unlimited automatic token associations."""
+    executor_client: Client = setup_accounts["executor_client"]
+    executor_wrapper: HederaOperationsWrapper = setup_accounts["executor_wrapper"]
+    context: Context = setup_accounts["context"]
+
+    params = CreateAccountParameters(max_automatic_token_associations=-1)  # unlimited
+
+    tool: CreateAccountTool = CreateAccountTool(context)
+    result: ToolResponse = await tool.execute(executor_client, context, params)
+    assert result.error is None  # check that the response is not an error
+    exec_result = cast(ExecutedTransactionToolResponse, result)
+
+    assert result.error is None
+    assert exec_result.raw.account_id is not None
+
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    # Verify max automatic token associations
+    info = executor_wrapper.get_account_info(str(exec_result.raw.account_id))
+    assert info.max_automatic_token_associations == -1  # unlimited is represented as
 
     # Cleanup created an account
     await return_hbars_and_delete_account(

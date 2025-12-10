@@ -8,9 +8,8 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
-
 
 GET_CONTRACT_INFO_QUERY_TOOL = "get_contract_info_query_tool"
 GET_TOPIC_INFO_QUERY_TOOL = "get_topic_info_query_tool"
@@ -174,5 +173,6 @@ async def test_tool_available(toolkit):
     assert tool is not None
     assert tool.name == GET_CONTRACT_INFO_QUERY_TOOL
     assert (
-        "This tool will return the information for a given Hedera EVM contract" in tool.description
+        "This tool will return the information for a given Hedera EVM contract"
+        in tool.description
     )

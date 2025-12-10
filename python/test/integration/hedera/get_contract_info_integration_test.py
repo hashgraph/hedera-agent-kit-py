@@ -1,11 +1,11 @@
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_evm_query_plugin import (
+from hedera_agent_kit.plugins.core_evm_query_plugin import (
     GetContractInfoQueryTool,
 )
-from hedera_agent_kit_py.shared.configuration import Context, AgentMode
-from hedera_agent_kit_py.shared.parameter_schemas import CreateAccountParametersNormalised
+from hedera_agent_kit.shared.configuration import Context, AgentMode
+from hedera_agent_kit.shared.parameter_schemas import CreateAccountParametersNormalised
 from test import HederaOperationsWrapper
 from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account

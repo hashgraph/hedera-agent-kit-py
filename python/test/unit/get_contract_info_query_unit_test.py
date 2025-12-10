@@ -1,18 +1,15 @@
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from hiero_sdk_python import Network
 
-from hedera_agent_kit_py.plugins.core_evm_query_plugin.get_contract_info_query import (
+from hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query import (
     post_process,
     _format_timestamp,
     _format_key,
     get_contract_info_query,
 )
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.parameter_schemas.evm_schema import (
-    ContractInfoQueryParameters,
-)
+from hedera_agent_kit.shared.configuration import Context
 
 
 def test_post_process_with_full_data():
@@ -78,7 +75,7 @@ def test_post_process_with_missing_data_uses_defaults():
 
 @pytest.mark.asyncio
 @patch(
-    "hedera_agent_kit_py.plugins.core_evm_query_plugin.get_contract_info_query.get_mirrornode_service"
+    "hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query.get_mirrornode_service"
 )
 async def test_get_contract_info_query_returns_expected_output(mock_get_service):
     # Arrange mock mirrornode service
