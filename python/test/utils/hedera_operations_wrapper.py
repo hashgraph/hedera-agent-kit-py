@@ -102,9 +102,7 @@ class HederaOperationsWrapper:
     # ---------------------------
     # ACCOUNT OPERATIONS
     # ---------------------------
-    async def create_account(
-        self, params: Any
-    ) -> RawTransactionResponse:
+    async def create_account(self, params: Any) -> RawTransactionResponse:
         """Create an account, accepting either normalised params or a simple dict.
 
         Tests may pass a plain dict with camelCase keys (e.g. initialBalance, key).
@@ -118,17 +116,19 @@ class HederaOperationsWrapper:
         elif isinstance(params, dict):
             # Map common aliases/camelCase to snake_case expected by the normalised schema
             key = params.get("key") or params.get("publicKey")
-            initial_balance = (
-                params.get("initial_balance")
-                or params.get("initialBalance")
+            initial_balance = params.get("initial_balance") or params.get(
+                "initialBalance"
             )
-            memo = params.get("memo") or params.get("account_memo") or params.get("accountMemo")
-            max_auto = (
-                params.get("max_automatic_token_associations")
-                or params.get("maxAutomaticTokenAssociations")
+            memo = (
+                params.get("memo")
+                or params.get("account_memo")
+                or params.get("accountMemo")
             )
-            scheduling_params = (
-                params.get("scheduling_params") or params.get("schedulingParams")
+            max_auto = params.get("max_automatic_token_associations") or params.get(
+                "maxAutomaticTokenAssociations"
+            )
+            scheduling_params = params.get("scheduling_params") or params.get(
+                "schedulingParams"
             )
 
             normalised = CreateAccountParametersNormalised(

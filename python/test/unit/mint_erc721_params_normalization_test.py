@@ -51,9 +51,7 @@ async def test_uses_provided_evm_to_address_as_is(mock_parse, mock_web3):
     )
     called_kwargs = mock_contract.encode_abi.call_args.kwargs
     assert called_kwargs["abi_element_identifier"] == "safeMint"
-    assert called_kwargs["args"] == [
-        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-    ]
+    assert called_kwargs["args"] == ["0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"]
 
     assert isinstance(result.contract_id, ContractId)
     assert str(result.contract_id) == "0.0.7001"
@@ -113,18 +111,14 @@ async def test_defaults_to_context_account_and_resolves_hedera_id(
         params, mock_context, mock_mirrornode_service, mock_client
     )
 
-    mock_get_evm_address.assert_awaited_once_with(
-        "0.0.1234", mock_mirrornode_service
-    )
+    mock_get_evm_address.assert_awaited_once_with("0.0.1234", mock_mirrornode_service)
 
     # Ensure checksum conversion was called on the resolved EVM address
     mock_web3.return_value.to_checksum_address.assert_called_once_with(
         "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     )
     called_kwargs = mock_contract.encode_abi.call_args.kwargs
-    assert called_kwargs["args"] == [
-        "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-    ]
+    assert called_kwargs["args"] == ["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
 
     assert str(result.contract_id) == "0.0.91011"
     assert result.gas == 3_000_000
@@ -175,9 +169,7 @@ async def test_uses_evm_address_without_mirrornode_when_evm_given(
         "0x9999999999999999999999999999999999999999"
     )
     called_kwargs = mock_contract.encode_abi.call_args.kwargs
-    assert called_kwargs["args"] == [
-        "0x9999999999999999999999999999999999999999"
-    ]
+    assert called_kwargs["args"] == ["0x9999999999999999999999999999999999999999"]
 
 
 @pytest.mark.asyncio
