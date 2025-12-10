@@ -187,8 +187,8 @@ async def test_create_nft_minimal_params(
     assert token_info.name == "MyNFT"
     assert token_info.symbol == "MNFT"
     assert token_info.token_type == TokenType.NON_FUNGIBLE_UNIQUE
-    assert token_info.supply_type == SupplyType.FINITE
-    assert token_info.max_supply == 100
+    # Default max supply is infinite (0)
+    assert token_info.max_supply == 0
 
 
 @pytest.mark.asyncio

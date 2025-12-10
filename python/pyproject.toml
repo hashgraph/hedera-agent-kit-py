@@ -16,7 +16,6 @@ langchain-groq = "=1.0.0"
 python-dotenv = ">=1,<2"
 aiohttp = ">=3.13.1,<4.0.0"
 pydantic = "^2.12.3"
-# Local editable package
 hiero-sdk-python = "0.1.9"
 web3 = "==7.14.0"
 

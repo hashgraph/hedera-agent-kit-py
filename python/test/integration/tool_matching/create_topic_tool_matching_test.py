@@ -86,7 +86,7 @@ async def test_match_create_topic_with_memo_and_submit_key(
     payload = args[1]
     assert args[0] == CREATE_TOPIC_TOOL
     assert payload.get("topic_memo") == "Payments"
-    assert payload.get("is_submit_key") is True
+    assert payload.get("submit_key") is True
 
 
 @pytest.mark.asyncio
@@ -95,11 +95,12 @@ async def test_match_create_topic_with_memo_and_submit_key(
     [
         ("Open a new consensus topic", {}),
         ('Create topic with memo "My memo"', {"topic_memo": "My memo"}),
-        ("Create topic and set submit key", {"is_submit_key": True}),
+        ("Create topic and set submit key", {"submit_key": True}),
         (
             'Create topic with transaction memo "TX: memo"',
             {"transaction_memo": "TX: memo"},
         ),
+        ("Create topic without admin key", {"admin_key": False}),
     ],
 )
 async def test_handle_various_natural_language_variations(

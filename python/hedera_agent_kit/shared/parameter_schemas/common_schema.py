@@ -12,7 +12,10 @@ class SchedulingParams(BaseModelWithArbitraryTypes):
     """Optional scheduling parameters for transactions."""
 
     is_scheduled: Annotated[
-        bool, Field(description="If true, the transaction will be scheduled")
+        bool,
+        Field(
+            description="Set to true when user asks for scheduling, executing later a transaction or creating a scheduled transaction"
+        ),
     ] = False
 
     admin_key: Annotated[

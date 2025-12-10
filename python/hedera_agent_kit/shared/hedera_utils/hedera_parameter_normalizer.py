@@ -319,10 +319,7 @@ class HederaParameterNormaliser:
         if raw_value is None:
             return None
         if isinstance(raw_value, str):
-            try:
-                return PublicKey.from_string_ed25519(raw_value)
-            except Exception:
-                return PublicKey.from_string_ecdsa(raw_value)
+            return PublicKey.from_string(raw_value)
         if raw_value:
             return user_key
         return None
@@ -486,7 +483,7 @@ class HederaParameterNormaliser:
         This function:
           - Validates and parses the raw parameters using the CreateTopicParameters schema.
           - Resolves the default account ID from context or client configuration.
-          - Optionally resolves a submit key if `is_submit_key` is True.
+          - Resolves admin and submit keys if provided (supports boolean or string values).
           - Populates topic and transaction memos for SDK use.
 
         Args:
@@ -525,12 +522,18 @@ class HederaParameterNormaliser:
             memo=parsed_params.topic_memo,
             transaction_memo=parsed_params.transaction_memo,
             submit_key=None,
-            admin_key=account_public_key,
+            admin_key=None,
         )
 
-        # Optionally resolve submit key if requested
-        if parsed_params.is_submit_key:
-            normalised.submit_key = account_public_key
+        # Resolve admin key if provided
+        normalised.admin_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.admin_key, account_public_key
+        )
+
+        # Resolve submit key if provided
+        normalised.submit_key = HederaParameterNormaliser.resolve_key(
+            parsed_params.submit_key, account_public_key
+        )
 
         return normalised
 
