@@ -62,12 +62,12 @@ def post_process(response: RawTransactionResponse, topic_id: str) -> str:
 
     Args:
         response: The raw response returned by the transaction execution.
+        topic_id: The ID of the topic that was deleted.
 
     Returns:
         A concise message describing the status and transaction ID.
     """
     return f"Topic with id {topic_id} deleted successfully. Transaction id {response.transaction_id}"
-
 
 async def delete_topic(
     client: Client,
