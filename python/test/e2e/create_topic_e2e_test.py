@@ -181,6 +181,8 @@ async def test_create_topic_with_default_settings(
     assert topic_info is not None
     assert topic_info.submit_key is None
     assert topic_info.memo == ""
+    # Admin key should be set by default (defaults to True)
+    assert topic_info.admin_key is not None
 
 
 @pytest.mark.asyncio
@@ -204,6 +206,8 @@ async def test_create_topic_with_memo_and_submit_key(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
+    # Admin key should be set by default
+    assert topic_info.admin_key is not None
     assert (
         topic_info.submit_key.ECDSA_secp256k1
         == executor_client.operator_private_key.public_key().to_bytes_raw()
@@ -231,4 +235,29 @@ async def test_create_topic_with_memo_and_no_submit_key(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
+    assert topic_info.submit_key is None
+    # Admin key should be set by default
+    assert topic_info.admin_key is not None
+
+
+@pytest.mark.asyncio
+async def test_create_topic_without_admin_key(
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
+):
+    """Test creating a topic without an admin key."""
+    input_text = 'Create a topic with memo "No admin key" and do not set an admin key'
+    parsed_data = await execute_create_topic(
+        agent_executor, input_text, langchain_config, response_parser
+    )
+
+    raw_data = parsed_data["raw"]
+
+    # Wait for mirror node ingestion
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    topic_info = executor_wrapper.get_topic_info(raw_data["topic_id"])
+    assert topic_info.admin_key is None
     assert topic_info.submit_key is None

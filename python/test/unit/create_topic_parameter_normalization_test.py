@@ -14,35 +14,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 
 @pytest.mark.asyncio
 async def test_applies_defaults_when_values_not_provided():
-    """Should apply defaults when no values are provided (no submit key)."""
-    mock_context = Context(account_id="0.0.1001")
-    mock_client = MagicMock(spec=Client)
-    mock_client.network = Network(network="testnet")
-
-    # Unified AccountResolver mock
-    mock_account_resolver = MagicMock()
-    mock_account_resolver.get_default_account.return_value = "0.0.1001"
-    mock_account_resolver.get_default_public_key = AsyncMock(return_value=None)
-
-    with patch(
-        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
-        mock_account_resolver,
-    ):
-        params = CreateTopicParameters()
-
-        result = await HederaParameterNormaliser.normalise_create_topic_params(
-            params, mock_context, mock_client
-        )
-
-        assert isinstance(result, CreateTopicParametersNormalised)
-        assert result.submit_key is None
-        assert result.memo is None
-        assert isinstance(result.admin_key, (PublicKey, type(None)))
-
-
-@pytest.mark.asyncio
-async def test_sets_submit_key_when_requested():
-    """Should set submit_key using AccountResolver when is_submit_key is True."""
+    """Should apply defaults when no values are provided (admin key defaults to True)."""
     mock_context = Context(account_id="0.0.1001")
     mock_client = MagicMock(spec=Client)
     mock_client.network = Network(network="testnet")
@@ -60,7 +32,41 @@ async def test_sets_submit_key_when_requested():
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
-        params = CreateTopicParameters(is_submit_key=True, topic_memo="hello")
+        params = CreateTopicParameters()
+
+        result = await HederaParameterNormaliser.normalise_create_topic_params(
+            params, mock_context, mock_client
+        )
+
+        assert isinstance(result, CreateTopicParametersNormalised)
+        assert result.submit_key is None
+        assert result.memo is None
+        # Admin key should default to operator key (True)
+        assert result.admin_key is not None
+        assert result.admin_key.to_string_der() == keypair.public_key().to_string_der()
+
+
+@pytest.mark.asyncio
+async def test_sets_submit_key_when_requested():
+    """Should set submit_key using AccountResolver when submit_key is True."""
+    mock_context = Context(account_id="0.0.1001")
+    mock_client = MagicMock(spec=Client)
+    mock_client.network = Network(network="testnet")
+
+    keypair = PrivateKey.generate_ed25519()
+
+    # Unified AccountResolver mock
+    mock_account_resolver = MagicMock()
+    mock_account_resolver.get_default_account.return_value = "0.0.1001"
+    mock_account_resolver.get_default_public_key = AsyncMock(
+        return_value=keypair.public_key()
+    )
+
+    with patch(
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        mock_account_resolver,
+    ):
+        params = CreateTopicParameters(submit_key=True, topic_memo="hello")
 
         result = await HederaParameterNormaliser.normalise_create_topic_params(
             params, mock_context, mock_client
@@ -74,7 +80,7 @@ async def test_sets_submit_key_when_requested():
 
 @pytest.mark.asyncio
 async def test_falls_back_to_operator_public_key():
-    """Should use AccountResolver.get_default_public_key when no submit key provided."""
+    """Should use AccountResolver.get_default_public_key when submit_key is True."""
     mock_context = Context(account_id="0.0.1001")
     operator_key = PrivateKey.generate_ed25519()
 
@@ -93,7 +99,7 @@ async def test_falls_back_to_operator_public_key():
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
-        params = CreateTopicParameters(is_submit_key=True)
+        params = CreateTopicParameters(submit_key=True)
 
         result = await HederaParameterNormaliser.normalise_create_topic_params(
             params, mock_context, mock_client
@@ -108,31 +114,74 @@ async def test_falls_back_to_operator_public_key():
 
 
 @pytest.mark.asyncio
-async def test_raises_when_no_public_key_available():
-    """Should raise ValueError when AccountResolver.get_default_public_key fails."""
+async def test_accepts_custom_public_key_string():
+    """Should accept and parse a custom public key string for submit_key."""
     mock_context = Context(account_id="0.0.1001")
     mock_client = MagicMock(spec=Client)
     mock_client.network = Network(network="testnet")
+
+    custom_keypair = PrivateKey.generate_ed25519()
+    custom_public_key_str = custom_keypair.public_key().to_string_der()
+
+    operator_keypair = PrivateKey.generate_ed25519()
 
     # Unified AccountResolver mock
     mock_account_resolver = MagicMock()
     mock_account_resolver.get_default_account.return_value = "0.0.1001"
     mock_account_resolver.get_default_public_key = AsyncMock(
-        side_effect=ValueError("Could not determine public key for submit key")
+        return_value=operator_keypair.public_key()
     )
 
     with patch(
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
         mock_account_resolver,
     ):
-        params = CreateTopicParameters(is_submit_key=True)
+        params = CreateTopicParameters(
+            submit_key=custom_public_key_str, topic_memo="custom key test"
+        )
 
-        with pytest.raises(
-            ValueError, match="Could not determine public key for submit key"
-        ):
-            await HederaParameterNormaliser.normalise_create_topic_params(
-                params, mock_context, mock_client
-            )
+        result = await HederaParameterNormaliser.normalise_create_topic_params(
+            params, mock_context, mock_client
+        )
+
+        assert isinstance(result.submit_key, PublicKey)
+        assert result.submit_key.to_string_der() == custom_public_key_str
+        assert result.memo == "custom key test"
+        # Admin key should still default to operator key
+        assert (
+            result.admin_key.to_string_der()
+            == operator_keypair.public_key().to_string_der()
+        )
+
+
+@pytest.mark.asyncio
+async def test_accepts_false_to_disable_admin_key():
+    """Should set admin_key to None when admin_key is False."""
+    mock_context = Context(account_id="0.0.1001")
+    mock_client = MagicMock(spec=Client)
+    mock_client.network = Network(network="testnet")
+
+    keypair = PrivateKey.generate_ed25519()
+
+    # Unified AccountResolver mock
+    mock_account_resolver = MagicMock()
+    mock_account_resolver.get_default_account.return_value = "0.0.1001"
+    mock_account_resolver.get_default_public_key = AsyncMock(
+        return_value=keypair.public_key()
+    )
+
+    with patch(
+        "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver",
+        mock_account_resolver,
+    ):
+        params = CreateTopicParameters(admin_key=False)
+
+        result = await HederaParameterNormaliser.normalise_create_topic_params(
+            params, mock_context, mock_client
+        )
+
+        assert result.admin_key is None
+        assert result.submit_key is None
 
 
 @pytest.mark.asyncio

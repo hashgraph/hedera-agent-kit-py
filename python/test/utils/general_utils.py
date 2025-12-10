@@ -22,10 +22,10 @@ def from_evm_address(evm_address: str) -> ContractId:
             f"Invalid EVM address length: expected 20 bytes, got {len(evm_bytes)}"
         )
 
-    # Parse bytes back to integers
-    shard = int.from_bytes(evm_bytes[0:4], "big")
-    realm = int.from_bytes(evm_bytes[4:12], "big")
-    contract = int.from_bytes(evm_bytes[12:20], "big")
+    # Parse bytes back to integers (signed to match protobuf int64 fields)
+    shard = int.from_bytes(evm_bytes[0:4], "big", signed=True)
+    realm = int.from_bytes(evm_bytes[4:12], "big", signed=True)
+    contract = int.from_bytes(evm_bytes[12:20], "big", signed=True)
 
     return ContractId(
         shard=shard, realm=realm, contract=contract, evm_address=evm_bytes

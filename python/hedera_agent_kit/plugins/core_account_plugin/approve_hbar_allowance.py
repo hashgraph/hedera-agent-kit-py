@@ -42,6 +42,8 @@ Parameters:
 - amount (number, required): Amount of HBAR to approve (can be decimal, cannot be negative)
 - transaction_memo (string, optional): Optional memo for the transaction
 {usage_instructions}
+
+Note: Use ONLY for HBAR allowances!
 """
 
 
