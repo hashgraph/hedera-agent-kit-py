@@ -10,27 +10,27 @@ from typing import cast
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import (
+from hedera_agent_kit.plugins.core_evm_plugin import (
     MintERC721Tool,
     CreateERC721Tool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import AccountResponse
-from hedera_agent_kit_py.shared.models import ToolResponse, ExecutedTransactionToolResponse
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import AccountResponse
+from hedera_agent_kit.shared.models import ToolResponse, ExecutedTransactionToolResponse
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateERC721Parameters,
     MintERC721Parameters,
     SchedulingParams,
 )
 from test import HederaOperationsWrapper
+from test.utils import wait
 from test.utils.setup import (
     get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
-from test.utils import wait
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
@@ -56,14 +56,18 @@ async def setup_mint_erc721():
 
     # Deploy ERC721 contract using the dedicated tool
     create_tool = CreateERC721Tool(context)
-    create_params = CreateERC721Parameters(token_name="MintableNFT", token_symbol="MNFT")
+    create_params = CreateERC721Parameters(
+        token_name="MintableNFT", token_symbol="MNFT"
+    )
     create_result: ToolResponse = await create_tool.execute(
         executor_client, context, create_params
     )
     create_exec = cast(ExecutedTransactionToolResponse, create_result)
 
     assert create_exec.error is None, f"ERC721 deployment failed: {create_exec.error}"
-    assert "erc721_address" in create_exec.extra, "Missing erc721_address in result.extra"
+    assert (
+        "erc721_address" in create_exec.extra
+    ), "Missing erc721_address in result.extra"
     erc721_address = create_exec.extra["erc721_address"]
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -91,7 +95,8 @@ async def create_recipient_account(wrapper: HederaOperationsWrapper):
     """Helper to create a recipient account."""
     resp = await wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=wrapper.client.operator_private_key.public_key(), initial_balance=Hbar(5)
+            key=wrapper.client.operator_private_key.public_key(),
+            initial_balance=Hbar(5),
         )
     )
     return resp.account_id
@@ -142,8 +147,8 @@ async def test_mint_erc721_to_evm_address(setup_mint_erc721):
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # Resolve EVM address from mirror node
-    recipient_info: AccountResponse = await executor_wrapper.get_account_info_mirrornode(
-        str(recipient_account_id)
+    recipient_info: AccountResponse = (
+        await executor_wrapper.get_account_info_mirrornode(str(recipient_account_id))
     )
     recipient_evm = recipient_info.get("evm_address", None)
     assert recipient_evm is not None, "Failed to get EVM address for recipient"

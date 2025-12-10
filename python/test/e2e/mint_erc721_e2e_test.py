@@ -6,18 +6,19 @@ tools up to on-chain execution for ERC721 minting.
 """
 
 from typing import Any
+
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.plugins.core_evm_plugin import CreateERC721Tool
-from hedera_agent_kit_py.shared.configuration import Context, AgentMode
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.plugins.core_evm_plugin import CreateERC721Tool
+from hedera_agent_kit.shared.configuration import Context, AgentMode
+from hedera_agent_kit.shared.models import ExecutedTransactionToolResponse
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateERC721Parameters,
 )
-from hedera_agent_kit_py.shared.models import ExecutedTransactionToolResponse
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
@@ -67,9 +68,15 @@ async def setup_environment():
     # Deploy ERC721 contract via the dedicated tool (wrapper does not provide create_erc721)
     context = Context(mode=AgentMode.AUTONOMOUS, account_id=str(executor_account_id))
     create_tool = CreateERC721Tool(context)
-    create_params = CreateERC721Parameters(token_name="TestMintNFT", token_symbol="TMNFT")
+    create_params = CreateERC721Parameters(
+        token_name="TestMintNFT", token_symbol="TMNFT"
+    )
     create_result = await create_tool.execute(executor_client, context, create_params)
-    create_exec = create_result if isinstance(create_result, ExecutedTransactionToolResponse) else None
+    create_exec = (
+        create_result
+        if isinstance(create_result, ExecutedTransactionToolResponse)
+        else None
+    )
 
     # Some test environments may return ToolResponse; cast defensively
     if create_exec is None:
@@ -82,7 +89,9 @@ async def setup_environment():
 
     assert create_exec.error is None, f"ERC721 deployment failed: {create_exec.error}"
     assert isinstance(create_exec.extra, dict), "Result.extra must be a dict"
-    assert "erc721_address" in create_exec.extra, "Missing erc721_address in result.extra"
+    assert (
+        "erc721_address" in create_exec.extra
+    ), "Missing erc721_address in result.extra"
     erc721_address = create_exec.extra["erc721_address"]
 
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -116,7 +125,9 @@ async def setup_environment():
 # ============================================================================
 
 
-async def execute_agent_request(agent_executor, input_text: str, config: RunnableConfig):
+async def execute_agent_request(
+    agent_executor, input_text: str, config: RunnableConfig
+):
     """Execute an agent request with the given input text."""
     return await agent_executor.ainvoke(
         {"messages": [{"role": "user", "content": input_text}]}, config=config

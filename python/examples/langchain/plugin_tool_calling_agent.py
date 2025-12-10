@@ -22,8 +22,8 @@ from hedera_agent_kit.plugins import (
     core_transaction_query_plugin,
     core_token_query_plugin,
     core_token_plugin,
+    core_evm_query_plugin,
 )
-
 from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -56,6 +56,7 @@ async def bootstrap():
             core_token_plugin,
             core_transaction_query_plugin,
             core_token_query_plugin,
+            core_evm_query_plugin,
         ],
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
