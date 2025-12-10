@@ -51,6 +51,22 @@ Parameters:
 - transaction_memo (string, optional): Optional memo for the transaction
 {usage_instructions}
 
+Example:
+Approve allowance of 50.1 tokens for token **0.0.7777** from **0.0.1001** to spender **0.0.3003** with memo "demo"
+
+{{
+    'owner_account_id': '0.0.1001',
+    'spender_account_id': '0.0.3003',
+    'token_approvals': [
+        {{
+            'token_id': '0.0.7777',
+            'amount': 50.1
+        }}
+    ],
+    'transaction_memo': 'demo'
+}}
+
+
 Note: Make sure token_approvals was passed - it is mandatory!
 """
 
@@ -65,7 +81,6 @@ async def approve_fungible_token_allowance(
     params: ApproveTokenAllowanceParameters,
 ) -> ToolResponse:
     try:
-        pprint(params)
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )

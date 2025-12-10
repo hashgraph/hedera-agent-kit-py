@@ -66,7 +66,7 @@ Do NOT use this tool for:
 - Transferring tokens "on behalf of" another account (use the Allowance tool instead).
 
 Parameters:
-- contract_id (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
+- contract_id (str, required): The id of the ERC20 contract. This can be the EVM address (0x???) or the Hedera account id (0.0.????).
 - recipient_address (str, required): The EVM or Hedera address to which the tokens will be transferred.
 - amount (number, required): The amount to be transferred. Given in base units!
 - {scheduled_desc}

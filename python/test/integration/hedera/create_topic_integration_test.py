@@ -81,7 +81,8 @@ async def test_create_topic_with_default_params(setup_environment):
     topic_info = wrapper.get_topic_info(str(exec_result.raw.topic_id))
     assert topic_info is not None
     assert topic_info.memo is ""
-    assert topic_info.admin_key is None
+    # Admin key should be set by default (defaults to True)
+    assert topic_info.admin_key is not None
     assert topic_info.submit_key is None
 
 
@@ -92,9 +93,7 @@ async def test_create_topic_with_memo_and_submit_key(setup_environment):
     wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
     context: Context = setup_environment["context"]
 
-    params = CreateTopicParameters(
-        topic_memo="Integration test topic", is_submit_key=True
-    )
+    params = CreateTopicParameters(topic_memo="Integration test topic", submit_key=True)
     tool = CreateTopicTool(context)
 
     result: ToolResponse = await tool.execute(client, context, params)
@@ -105,7 +104,8 @@ async def test_create_topic_with_memo_and_submit_key(setup_environment):
 
     assert topic_info is not None
     assert topic_info.memo == "Integration test topic"
-    assert topic_info.admin_key is None
+    # Admin key should be set by default
+    assert topic_info.admin_key is not None
     assert (
         topic_info.submit_key.ECDSA_secp256k1
         == client.operator_private_key.public_key().to_bytes_raw()
@@ -119,7 +119,7 @@ async def test_create_topic_with_empty_memo(setup_environment):
     wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
     context: Context = setup_environment["context"]
 
-    params = CreateTopicParameters(topic_memo="", is_submit_key=False)
+    params = CreateTopicParameters(topic_memo="", submit_key=False, admin_key=False)
     tool = CreateTopicTool(context)
 
     result: ToolResponse = await tool.execute(client, context, params)
@@ -130,3 +130,36 @@ async def test_create_topic_with_empty_memo(setup_environment):
 
     assert topic_info.memo == ""
     assert topic_info.submit_key is None
+    assert topic_info.admin_key is None
+
+
+@pytest.mark.asyncio
+async def test_create_topic_with_custom_public_key(setup_environment):
+    """Test creating a topic with a custom public key string."""
+    client: Client = setup_environment["executor_client"]
+    wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
+    context: Context = setup_environment["context"]
+
+    # Generate a custom key pair
+    custom_key = PrivateKey.generate_ecdsa()
+    custom_public_key_str = custom_key.public_key().to_string_der()
+
+    params = CreateTopicParameters(
+        topic_memo="Custom key topic",
+        submit_key=custom_public_key_str,
+        admin_key=False,
+    )
+    tool = CreateTopicTool(context)
+
+    result: ToolResponse = await tool.execute(client, context, params)
+    exec_result = cast(ExecutedTransactionToolResponse, result)
+
+    assert "Topic created successfully" in result.human_message
+    topic_info = wrapper.get_topic_info(str(exec_result.raw.topic_id))
+
+    assert topic_info.memo == "Custom key topic"
+    assert topic_info.admin_key is None
+    assert topic_info.submit_key is not None
+    assert (
+        topic_info.submit_key.ECDSA_secp256k1 == custom_key.public_key().to_bytes_raw()
+    )
