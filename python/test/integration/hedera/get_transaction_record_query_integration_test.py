@@ -1,6 +1,5 @@
 import pytest
 from hiero_sdk_python import TopicId, PublicKey, PrivateKey, Hbar
-from typing import Dict, Any  # <-- Added import for clarity
 
 from hedera_agent_kit.plugins.core_consensus_query_plugin import (
     GetTopicInfoQueryTool,

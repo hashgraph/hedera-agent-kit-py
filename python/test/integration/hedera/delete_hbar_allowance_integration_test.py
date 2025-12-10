@@ -6,7 +6,6 @@ from hiero_sdk_python import (
     PrivateKey,
     Hbar,
     AccountId,
-    AccountAllowanceApproveTransaction,
 )
 
 from hedera_agent_kit.plugins.core_account_plugin import (

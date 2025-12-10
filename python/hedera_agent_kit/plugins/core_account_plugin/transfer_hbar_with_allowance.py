@@ -49,15 +49,28 @@ def transfer_hbar_with_allowance_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 
-This tool will transfer HBAR using an existing allowance.
+This tool transfers HBAR **on behalf of another account** using a pre-approved **Allowance**.
+
+Use this tool ONLY when:
+- The request involves spending from a "source account" that is NOT the current signer.
+- The user explicitly mentions "allowance", "delegated transfer", or "spending limit".
+- You are moving HBAR *from* a specific owner *to* a recipient using previously granted permissions.
+
+Do NOT use this tool for:
+- Standard direct transfers of HBAR where the signer owns the HBAR.
 
 Parameters:
-- sourceAccountId (string, required): Account ID of the HBAR owner (the allowance granter)
+- source_account_id (string, required): Account ID of the HBAR owner (the allowance granter)
 - transfers (array of objects, required): List of HBAR transfers. Each object should contain:
-  - accountId (string): Recipient account ID
+  - account_id (string): Recipient account ID
   - amount (number): Amount of HBAR to transfer
-- transactionMemo (string, optional): Optional memo for the transfer HBAR with allowance transaction
+- transaction_memo (string, optional): Optional memo for the transfer HBAR with allowance transaction
+{PromptGenerator.get_scheduled_transaction_params_description(context)}
+
 {usage_instructions}
+
+Example: "Transfer 2 HBAR from 0.0.1002 to 0.0.2002 using allowance"
+Example: "Spend allowance from account 0.0.1002 to send 5 HBAR to 0.0.2002"
 """
 
 
@@ -95,7 +108,7 @@ async def transfer_hbar_with_allowance(
             )
         )
 
-        # Assuming HederaBuilder has a corresponding method that accepts the normalised dict
+        # Assuming HederaBuilder has a corresponding method that accepts the normalized dict
         tx: TransferTransaction = HederaBuilder.transfer_hbar_with_allowance(
             normalised_params
         )

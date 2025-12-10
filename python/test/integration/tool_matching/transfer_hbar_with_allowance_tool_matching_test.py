@@ -43,7 +43,7 @@ async def toolkit(test_setup):
 
 @pytest.mark.asyncio
 async def test_match_simple_allowance_transfer(agent_executor, toolkit, monkeypatch):
-    """Test matching transfer HBAR with allowance tool for simple allowance transfer."""
+    """Test matching transfer HBAR with an allowance tool for simple allowance transfer."""
     input_text = "Transfer 2 HBAR from 0.0.1002 to 0.0.2002 using allowance"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 

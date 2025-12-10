@@ -63,7 +63,7 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ecdsa()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(20)
+            key=spender_key.public_key(), initial_balance=Hbar(50)
         )
     )
     spender_account_id = spender_resp.account_id
