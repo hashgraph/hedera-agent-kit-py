@@ -59,6 +59,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     TransferERC20Parameters,
     TransferERC721Parameters,
     CreateERC721Parameters,
+    MintERC721Parameters,
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
     CreateFungibleTokenParametersNormalised,
@@ -105,6 +106,14 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
 )
 
+from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
+from hedera_agent_kit.shared.constants.contracts import (
+    ERC721_MINT_FUNCTION_ABI,
+    ERC721_MINT_FUNCTION_NAME,
+)
+from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_service
+from hedera_agent_kit.shared.utils import ledger_id_from_network
+from hedera_agent_kit.shared.utils.ledger_id import LedgerId
 from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 
 
@@ -586,6 +595,75 @@ class HederaParameterNormaliser:
             contract_id=ContractId.from_string(factory_address),
             function_parameters=function_parameters,
             gas=3_000_000,  # TODO: make configurable
+            scheduling_params=scheduling_params,
+        )
+
+
+    @staticmethod
+    async def normalise_mint_erc721_params(
+        params: MintERC721Parameters,
+        context: Context,
+        mirrornode_service: IHederaMirrornodeService,
+        client: Client,
+    ) -> ContractExecuteTransactionParametersNormalised:
+        """Normalise parameters for minting an ERC721 token via ContractExecuteTransaction.
+
+        Encodes a call to the ERC721 `safeMint(address to)` function on the target contract.
+        The `to_address` parameter is optional and will default to the context's default
+        account (operator or provided user account) if not supplied.
+        """
+        # Parse and validate with schema
+        parsed_params: MintERC721Parameters = cast(
+            MintERC721Parameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, MintERC721Parameters
+            ),
+        )
+
+        # Resolve recipient address (Hedera account ID or EVM) -> EVM address string
+        to_address_input = getattr(parsed_params, "to_address", None)
+        target_address = (
+            to_address_input
+            if to_address_input
+            else AccountResolver.get_default_account(context, client)
+        )
+
+        if AccountResolver.is_hedera_address(target_address):
+            resolved_to_evm = await AccountResolver.get_hedera_evm_address(
+                target_address, mirrornode_service
+            )
+        else:
+            resolved_to_evm = target_address
+
+        # Encode function call data for safeMint(address)
+        w3 = Web3()
+        # Ensure EVM address is in checksum format as required by web3.py
+        checksummed_to = w3.to_checksum_address(resolved_to_evm)
+        contract = w3.eth.contract(abi=ERC721_MINT_FUNCTION_ABI)
+        encoded_data = contract.encode_abi(
+            abi_element_identifier=ERC721_MINT_FUNCTION_NAME, args=[checksummed_to]
+        )
+        function_parameters = bytes.fromhex(encoded_data[2:])
+
+        # Scheduling (optional)
+        scheduling_params: ScheduleCreateParams | None = None
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        # Resolve contract to Hedera ContractId from either 0x address or 0.0.x
+        if AccountResolver.is_hedera_address(parsed_params.contract_id):
+            contract_id_str = parsed_params.contract_id
+        else:
+            contract_id_str = await AccountResolver.get_hedera_account_id(
+                parsed_params.contract_id, mirrornode_service
+            )
+        return ContractExecuteTransactionParametersNormalised(
+            contract_id=ContractId.from_string(contract_id_str),
+            function_parameters=function_parameters,
+            gas=3_000_000,  # TODO: consider configurability
             scheduling_params=scheduling_params,
         )
 
@@ -1358,7 +1436,7 @@ class HederaParameterNormaliser:
         initial_supply = int((parsed_params.initial_supply or 0) * (10**decimals))
 
         if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
-            raise ValueError(f"Cannot set max supply and INFINITE supply type")
+            raise ValueError("Cannot set max supply and INFINITE supply type")
 
         # Resolve Supply Type
         if parsed_params.supply_type is None:
@@ -1763,7 +1841,7 @@ class HederaParameterNormaliser:
             mirrornode: The Mirrornode service instance.
 
         Returns:
-            The normalized parameters ready for transaction building.
+            The normalized parameters are ready for transaction building.
         """
         parsed_params: CreateNonFungibleTokenParameters = cast(
             CreateNonFungibleTokenParameters,
@@ -1773,20 +1851,35 @@ class HederaParameterNormaliser:
         )
 
         # Treasury Resolution
-        default_account_id = (
-            str(client.operator_account_id) if client.operator_account_id else None
-        )
+        default_account_id = AccountResolver.get_default_account(context, client)
         treasury_account_id = parsed_params.treasury_account_id or default_account_id
 
         if not treasury_account_id:
             raise ValueError("Must include treasury account ID")
 
-        # Resolve Supply Type and Max Supply based solely on max_supply presence
-        if parsed_params.max_supply is not None:
-            supply_type = SupplyType.FINITE
-            max_supply = int(parsed_params.max_supply)
+        # Validate max_supply with an INFINITE supply type
+        if parsed_params.max_supply is not None and parsed_params.supply_type == 0:
+            raise ValueError("Cannot set max supply and INFINITE supply type")
+
+        # Resolve Supply Type
+        if parsed_params.supply_type is None:
+            supply_type = SupplyType.FINITE  # SPEC DEFAULT
         else:
-            supply_type = SupplyType.INFINITE
+            if parsed_params.supply_type in (0, SupplyType.INFINITE, "infinite"):
+                supply_type = SupplyType.INFINITE
+            elif parsed_params.supply_type in (1, SupplyType.FINITE, "finite"):
+                supply_type = SupplyType.FINITE
+            else:
+                raise ValueError("Invalid supply_type; must be finite or infinite.")
+
+        # Resolve Max Supply
+        max_supply = None
+        if supply_type == SupplyType.FINITE:
+            if parsed_params.max_supply is not None:
+                max_supply = int(parsed_params.max_supply)
+            else:
+                max_supply = 100  # Default max supply for FINITE NFTs
+        else:
             max_supply = 0  # Python SDK uses 0 to denote infinite supply
 
         # Supply Key Resolution (MANDATORY for NFTs)
@@ -1811,7 +1904,7 @@ class HederaParameterNormaliser:
         if public_key_str:
             supply_key = PublicKey.from_string(public_key_str)
         else:
-            # Explicitly raise an error as Supply Key is mandatory
+            # Explicitly raise an error as Supply Key is mandatory for NFTs
             raise ValueError(
                 "Could not resolve a Supply Key (required for NFTs). Ensure Treasury has a public key or Operator is configured."
             )

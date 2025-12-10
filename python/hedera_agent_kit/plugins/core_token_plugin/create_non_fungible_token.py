@@ -57,11 +57,13 @@ def create_non_fungible_token_prompt(context: Context = {}) -> str:
 {context_snippet}
 
 This tool creates a non-fungible token (NFT) on Hedera.
+*NOTE*: Supply key is always set for NFTs (required for minting operations).
 
 Parameters:
 - token_name (str, required): Name of the token
 - token_symbol (str, required): Symbol of the token
-- max_supply (int, optional): Maximum NFT supply. If not specified, the supply is infinite.
+- supply_type (int, optional): Supply type of the token. Can be finite = 1 or infinite = 0. Defaults to finite = 1
+- max_supply (int, optional): Maximum NFT supply. Only applicable if supplyType is "finite". If not specified with finite supply, defaults to 100.
 - {treasury_account_desc}
 {scheduled_params_desc}
 

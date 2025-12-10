@@ -4,11 +4,10 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-from pprint import pprint
 from typing import AsyncGenerator, Any
 
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType
+from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType, SupplyType
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -178,7 +177,6 @@ async def test_create_nft_minimal_params(
     input_text = "Create a non-fungible token named MyNFT with symbol MNFT"
 
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
-    pprint(result)
 
     token_id_str = extract_token_id(
         result, response_parser, "create_non_fungible_token_tool"
@@ -216,6 +214,32 @@ async def test_create_nft_with_max_supply(
     assert token_info.name == "ArtCollection"
     assert token_info.symbol == "ART"
     assert token_info.max_supply == 500
+
+
+@pytest.mark.asyncio
+async def test_create_nft_with_explicit_finite_supply(
+    agent_executor,
+    executor_wrapper: HederaOperationsWrapper,
+    langchain_config: RunnableConfig,
+    response_parser: ResponseParserService,
+):
+    """Test creating an NFT with explicit finite supply type."""
+    input_text = (
+        "Create a non-fungible token LimitedEdition with symbol LTD, "
+        "with finite supply and max supply 300"
+    )
+
+    result = await execute_agent_request(agent_executor, input_text, langchain_config)
+    token_id_str = extract_token_id(
+        result, response_parser, "create_non_fungible_token_tool"
+    )
+
+    # Verify on-chain
+    token_info = executor_wrapper.get_token_info(token_id_str)
+    assert token_info.name == "LimitedEdition"
+    assert token_info.symbol == "LTD"
+    assert token_info.supply_type == SupplyType.FINITE
+    assert token_info.max_supply == 300
 
 
 @pytest.mark.asyncio
