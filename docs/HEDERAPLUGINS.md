@@ -129,6 +129,16 @@ and ERC-721 tokens via on-chain factory contracts.
 
 ---
 
+### Core EVM Query Plugin Tools (`core_evm_query_plugin`)
+
+This plugin provides tools for querying EVM-related data on Hedera via the Mirror Node.
+
+| Tool Name | Description | Details |
+|-----------|-------------|---------|
+| [`GET_CONTRACT_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_contract_info_query_tool) | Returns contract information | [View Parameters & Examples](./HEDERATOOLS.md#get_contract_info_query_tool) |
+
+---
+
 ### Core Transaction Query Plugin Tools (`core_transaction_query_plugin`)
 
 Tools for **transaction-related queries** on Hedera.

@@ -49,6 +49,8 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
   - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
   - [CREATE_ERC721_TOOL](#create_erc721_tool)
   - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
+- [EVM Query Tools](#evm-query-tools)
+  - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
 - [Transaction Query Tools](#transaction-query-tools)
   - [GET_TRANSACTION_RECORD_QUERY_TOOL](#get_transaction_record_query_tool)
 - [Misc Query Tools](#misc-query-tools)
@@ -793,6 +795,28 @@ Transfer an ERC-721 NFT.
 ```
 Transfer ERC721 token 1 from contract 0.0.12345 to 0.0.67890
 Send NFT #5 from 0x1234... to 0x5678...
+```
+
+---
+
+## EVM Query Tools
+
+### GET_CONTRACT_INFO_QUERY_TOOL
+
+Get information about an EVM contract on Hedera.
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `contract_id` | `str` | ✅ | The contract ID or EVM address to query. |
+
+#### Example Prompts
+
+```
+Get contract info for 0.0.12345
+What is the contract information for 0x1234...?
+Show details of contract 0.0.12345
 ```
 
 ---
