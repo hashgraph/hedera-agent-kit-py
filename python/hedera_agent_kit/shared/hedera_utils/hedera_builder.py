@@ -168,6 +168,7 @@ class HederaBuilder:
             tx.set_transaction_memo(params.transaction_memo)
         return tx
 
+    @staticmethod
     def transfer_non_fungible_token_with_allowance(
         params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
     ):
