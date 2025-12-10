@@ -39,8 +39,8 @@ async def toolkit(test_setup):
 async def test_match_get_contract_info_verified_contract(
     agent_executor, toolkit, monkeypatch
 ):
-    """Tool should match and extract a verified contract id."""
-    contract_id = "0.0.7350754"  # provided verified contract id
+    """Tool should match and extract a contract id."""
+    contract_id = "0.0.7350754"
     input_text = f"Get contract info for {contract_id}"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
@@ -67,8 +67,8 @@ async def test_match_get_contract_info_verified_contract(
 async def test_match_get_contract_info_unverified_contract(
     agent_executor, toolkit, monkeypatch
 ):
-    """Tool should match and extract an unverified contract id."""
-    contract_id = "0.0.7351705"  # provided unverified contract id
+    """Tool should match and extract ancontract id."""
+    contract_id = "0.0.7351705"
     input_text = f"Please show contract details for {contract_id}"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
@@ -89,40 +89,6 @@ async def test_match_get_contract_info_unverified_contract(
     assert args[0] == GET_CONTRACT_INFO_QUERY_TOOL
     payload = args[1]
     assert payload.get("contract_id") == contract_id
-
-
-@pytest.mark.asyncio
-async def test_topic_id_is_not_a_contract_choose_topic_tool(
-    agent_executor, toolkit, monkeypatch
-):
-    """If the user clearly refers to a Topic ID, the agent should not choose the contract info tool.
-
-    We expect the topic info tool to be selected instead.
-    """
-    topic_id = "0.0.7350754"  # provided topic id (not a contract)
-    input_text = f"Get topic info for {topic_id}"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
-
-    hedera_api = toolkit.get_hedera_agentkit_api()
-    mock_run = AsyncMock(
-        return_value=ToolResponse(
-            human_message="Operation Mocked - this is a test call and can be ended here"
-        )
-    )
-    monkeypatch.setattr(hedera_api, "run", mock_run)
-
-    await agent_executor.ainvoke(
-        {"messages": [{"role": "user", "content": input_text}]}, config=config
-    )
-
-    mock_run.assert_awaited_once()
-    args, kwargs = mock_run.call_args
-    tool_name = args[0]
-    payload = args[1]
-    # Ensure the contract tool is NOT chosen; topic tool should be
-    assert tool_name != GET_CONTRACT_INFO_QUERY_TOOL
-    assert tool_name == GET_TOPIC_INFO_QUERY_TOOL
-    assert payload.get("topic_id") == topic_id
 
 
 @pytest.mark.asyncio

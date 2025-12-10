@@ -122,7 +122,6 @@ async def get_contract_info_query(
         # validate/parse params using schema — pydantic will validate on creation
         parsed = params
 
-        ledger_id = ledger_id_from_network(client.network)
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )

@@ -4,10 +4,10 @@ This module validates querying contract information through the agent executor
 and verifies error handling for invalid identifiers.
 """
 
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey
+from hiero_sdk_python import Hbar, PrivateKey, TopicId
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import (
@@ -15,11 +15,14 @@ from hedera_agent_kit.langchain.response_parser_service import (
 )
 from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
+    CreateERC20Parameters,
+    CreateTopicParametersNormalised,
 )
-from test import HederaOperationsWrapper
+from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
     get_operator_client_for_tests,
     get_custom_client,
+    MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
@@ -83,6 +86,41 @@ async def executor_wrapper(executor_account):
     return wrapper
 
 
+@pytest.fixture(scope="module")
+async def setup_environment():
+    operator_client = get_operator_client_for_tests()
+    operator_wrapper = HederaOperationsWrapper(operator_client)
+
+    # Executor account (Agent performing transfers)
+    executor_key = PrivateKey.generate_ed25519()
+    executor_resp = await operator_wrapper.create_account(
+        CreateAccountParametersNormalised(
+            key=executor_key.public_key(), initial_balance=Hbar(50)
+        )
+    )
+    executor_account_id = executor_resp.account_id
+    executor_client = get_custom_client(executor_account_id, executor_key)
+    executor_wrapper = HederaOperationsWrapper(executor_client)
+
+    params = CreateERC20Parameters(
+        token_name="E2EInfoToken",
+        token_symbol="EIT",
+        decimals=18,
+        initial_supply=1000,
+    )
+
+    create_result = await executor_wrapper.create_erc20(params)
+
+    erc20_address = create_result.get("erc20_address")
+    if not erc20_address:
+        raise Exception("Failed to create ERC20 for get_contract_info_e2e tests")
+
+    # Wait for mirror node to index the new contract
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    return erc20_address
+
+
 @pytest.fixture
 def langchain_config():
     """Provide standard RunnableConfig."""
@@ -123,17 +161,44 @@ async def execute_get_contract_info_query(
     return tool_call.parsedData
 
 
+async def create_test_topic(
+    executor_wrapper: HederaOperationsWrapper,
+) -> TopicId:
+    """Helper function to create a topic for message submission tests.
+
+    Creates a topic with no submit key, so the executor (as creator) can
+    submit messages freely.
+    """
+    resp = await executor_wrapper.create_topic(
+        CreateTopicParametersNormalised(submit_key=None)
+    )
+    assert resp.topic_id is not None
+    # Wait for topic creation to propagate to mirror node
+    await wait(MIRROR_NODE_WAITING_TIME)
+    return resp.topic_id
+
+
+@pytest.fixture
+async def pre_created_topic(
+    executor_wrapper: HederaOperationsWrapper,
+) -> AsyncGenerator[TopicId, None]:
+    """Provides a pre-created topic ID for tests."""
+    topic_id = await create_test_topic(executor_wrapper)
+    yield topic_id
+
+
 @pytest.mark.asyncio
 async def test_get_contract_info_via_agent_success(
     agent_executor,
     langchain_config,
     response_parser: ResponseParserService,
+    setup_environment: str,
 ):
-    """Fetch info for a known public contract id and verify success content."""
-    # Known publicly available contract on testnet (used elsewhere in tests)
-    contract_id = "0.0.7350754"
+    """Fetch info for a newly deployed ERC20 contract and verify success content."""
+    # Use freshly deployed ERC20 EVM address
+    contract_identifier = setup_environment
 
-    input_text = f"Get contract info for {contract_id}"
+    input_text = f"Get contract info for {contract_identifier}"
     parsed_data = await execute_get_contract_info_query(
         agent_executor, input_text, langchain_config, response_parser
     )
@@ -141,7 +206,8 @@ async def test_get_contract_info_via_agent_success(
     human_message = parsed_data.get("humanMessage", "")
     assert parsed_data.get("error") in (None, "", False)
     assert "Contract Info Query Result:" in human_message
-    assert f"- Contract ID: {contract_id}" in human_message
+    # We passed an EVM address; ensure it is reflected in the output
+    assert f"- EVM Address: {contract_identifier.lower()}" in human_message
 
 
 @pytest.mark.asyncio
@@ -149,9 +215,10 @@ async def test_get_contract_info_with_topic_id_should_error(
     agent_executor,
     langchain_config,
     response_parser: ResponseParserService,
+    pre_created_topic: TopicId,
 ):
     """Using a Topic ID instead of Contract ID should yield an error from the tool."""
-    topic_id = "0.0.7352574"  # Provided Topic ID; not a contract ID
+    topic_id = str(pre_created_topic)  # Provided Topic ID; not a contract ID
     input_text = f"Get contract info for {topic_id}"
 
     parsed_data = await execute_get_contract_info_query(
