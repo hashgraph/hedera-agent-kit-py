@@ -148,7 +148,10 @@ async def test_accepts_custom_public_key_string():
         assert result.submit_key.to_string_der() == custom_public_key_str
         assert result.memo == "custom key test"
         # Admin key should still default to operator key
-        assert result.admin_key.to_string_der() == operator_keypair.public_key().to_string_der()
+        assert (
+            result.admin_key.to_string_der()
+            == operator_keypair.public_key().to_string_der()
+        )
 
 
 @pytest.mark.asyncio

@@ -93,9 +93,7 @@ async def test_create_topic_with_memo_and_submit_key(setup_environment):
     wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
     context: Context = setup_environment["context"]
 
-    params = CreateTopicParameters(
-        topic_memo="Integration test topic", submit_key=True
-    )
+    params = CreateTopicParameters(topic_memo="Integration test topic", submit_key=True)
     tool = CreateTopicTool(context)
 
     result: ToolResponse = await tool.execute(client, context, params)
@@ -163,6 +161,5 @@ async def test_create_topic_with_custom_public_key(setup_environment):
     assert topic_info.admin_key is None
     assert topic_info.submit_key is not None
     assert (
-        topic_info.submit_key.ECDSA_secp256k1
-        == custom_key.public_key().to_bytes_raw()
+        topic_info.submit_key.ECDSA_secp256k1 == custom_key.public_key().to_bytes_raw()
     )

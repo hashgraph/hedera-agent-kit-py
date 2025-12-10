@@ -40,6 +40,6 @@ def load_test_env():
 def slow_down_tests():
     """Add a delay between tests to avoid rate limiting."""
     yield
-    delay_ms = float(os.getenv('TEST_DELAY_MS', '0'))
+    delay_ms = float(os.getenv("TEST_DELAY_MS", "0"))
     if delay_ms > 0:
         time.sleep(delay_ms / 1000)
