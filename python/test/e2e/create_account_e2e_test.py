@@ -173,7 +173,6 @@ async def test_create_account_with_default_operator_public_key(
     input_text = "Create a new Hedera account"
 
     result = await execute_create_account(agent_executor, input_text, langchain_config)
-    print(result)
     new_account_id = extract_account_id(result, response_parser, "create_account_tool")
 
     info = executor_wrapper.get_account_info(new_account_id)

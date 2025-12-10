@@ -108,7 +108,6 @@ async def test_deploy_erc721_with_base_uri(setup_environment):
     assert "ERC721 token created successfully" in result.human_message
     assert "erc721_address" in exec_result.extra
     assert exec_result.extra["erc721_address"].startswith("0x")
-    print(exec_result.extra["erc721_address"])
 
     contract_info = await wrapper.get_contract_info(exec_result.extra["erc721_address"])
     assert contract_info is not None
