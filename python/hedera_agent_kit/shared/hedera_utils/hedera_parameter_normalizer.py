@@ -598,7 +598,6 @@ class HederaParameterNormaliser:
             scheduling_params=scheduling_params,
         )
 
-
     @staticmethod
     async def normalise_mint_erc721_params(
         params: MintERC721Parameters,
@@ -1577,17 +1576,17 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_hbar_with_allowance(
-            params: TransferHbarWithAllowanceParameters,
-            context: Context,
-            client: Client,
+        params: TransferHbarWithAllowanceParameters,
+        context: Context,
+        client: Client,
     ) -> TransferHbarWithAllowanceParametersNormalised:
         """Normalize parameters for transferring HBAR with allowance.
-    
+
         Args:
             params: The raw input parameters for the HBAR transfer with allowance.
             context: Application context for resolving defaults and configuration.
             client: Hedera Client instance used for transaction execution and resolution.
-    
+
         Returns:
             The normalized parameters are ready for transaction building.
         """
@@ -2088,13 +2087,13 @@ class HederaParameterNormaliser:
 
     @staticmethod
     async def normalise_transfer_fungible_token_with_allowance(
-            params: TransferFungibleTokenWithAllowanceParameters,
-            context: Context,
-            client: Client,
-            mirrornode: IHederaMirrornodeService,
+        params: TransferFungibleTokenWithAllowanceParameters,
+        context: Context,
+        client: Client,
+        mirrornode: IHederaMirrornodeService,
     ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
         """Normalize parameters for transferring fungible tokens with allowance.
-    
+
         Args:
             params: The raw input parameters containing token transfer details including:
                 - token_id: ID of the token to transfer
@@ -2105,13 +2104,13 @@ class HederaParameterNormaliser:
             context: The runtime context for configuration and defaults.
             client: The Hedera client used for transaction execution.
             mirrornode: The Mirrornode service used to fetch token information.
-    
+
         Returns:
             TransferFungibleTokenWithAllowanceParametersNormalised: Normalized parameters containing:
                 - ft_approved_transfer: Dictionary mapping token IDs to account transfer amounts
                 - transaction_memo: Optional transaction memo
                 - scheduling_params: Optional normalized scheduling parameters
-            
+
         Raises:
             ValueError: If token decimals cannot be determined or transfer amounts are invalid.
         """

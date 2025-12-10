@@ -69,6 +69,7 @@ def post_process(response: RawTransactionResponse, topic_id: str) -> str:
     """
     return f"Topic with id {topic_id} deleted successfully. Transaction id {response.transaction_id}"
 
+
 async def delete_topic(
     client: Client,
     context: Context,

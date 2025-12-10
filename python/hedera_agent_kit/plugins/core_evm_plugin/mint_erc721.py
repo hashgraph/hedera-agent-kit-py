@@ -12,7 +12,9 @@ from typing import cast
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit.plugins.core_token_plugin.mint_fungible_token import mint_fungible_token
+from hedera_agent_kit.plugins.core_token_plugin.mint_fungible_token import (
+    mint_fungible_token,
+)
 from hedera_agent_kit.shared.configuration import Context, AgentMode
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -74,7 +76,9 @@ def post_process(response: RawTransactionResponse) -> str:
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    return f"ERC721 token minted successfully.\nTransaction ID: {response.transaction_id}"
+    return (
+        f"ERC721 token minted successfully.\nTransaction ID: {response.transaction_id}"
+    )
 
 
 async def mint_erc721(
