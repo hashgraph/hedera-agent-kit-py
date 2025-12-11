@@ -39,8 +39,8 @@ Parameters:
 - source_account_id (string, required): The token owner (allowance granter)
 - token_id (string, required): The NFT token ID to transfer (e.g. "0.0.12345")
 - recipients (array, required): List of objects specifying recipients and serial numbers
-  - recipientId (string): Account to transfer to
-  - serialNumber (string): NFT serial number to transfer
+  - recipient_id (string): Account to transfer to
+  - serial_number (string): NFT serial number to transfer
 - transaction_memo (string, optional): Optional memo for the transaction
 
 {usage_instructions}
@@ -57,7 +57,6 @@ async def transfer_nft_with_allowance(
     params: TransferNonFungibleTokenWithAllowanceParameters,
 ) -> ToolResponse:
     try:
-        pprint(params)
         normalised_params: TransferNonFungibleTokenWithAllowanceParametersNormalised = (
             HederaParameterNormaliser.normalise_transfer_non_fungible_token_with_allowance(
                 params, context

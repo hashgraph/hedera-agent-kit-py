@@ -48,8 +48,8 @@ This tool deletes an HBAR allowance from the owner to the spender.
 
 Parameters:
 - {owner_account_desc}
-- spenderAccountId (string, required): Spender account ID
-- transactionMemo (string, optional): Optional memo for the transaction
+- spender_account_d (string, required): Spender account ID
+- transaction_memo (string, optional): Optional memo for the transaction
 {usage_instructions}
 
 Example: "Delete HBAR allowance from 0.0.123 to 0.0.456". Spender account ID is 0.0.456 and the owner account ID is 0.0.789.

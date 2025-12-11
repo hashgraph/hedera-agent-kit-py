@@ -52,11 +52,11 @@ def transfer_hbar_with_allowance_prompt(context: Context = {}) -> str:
 This tool will transfer HBAR using an existing allowance.
 
 Parameters:
-- sourceAccountId (string, required): Account ID of the HBAR owner (the allowance granter)
+- source_account_id (string, required): Account ID of the HBAR owner (the allowance granter)
 - transfers (array of objects, required): List of HBAR transfers. Each object should contain:
-  - accountId (string): Recipient account ID
+  - account_id (string): Recipient account ID
   - amount (number): Amount of HBAR to transfer
-- transactionMemo (string, optional): Optional memo for the transfer HBAR with allowance transaction
+- transaction_memo (string, optional): Optional memo for the transfer HBAR with allowance transaction
 {usage_instructions}
 """
 
