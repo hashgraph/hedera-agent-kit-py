@@ -38,7 +38,7 @@ async def setup_environment():
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(20, in_tinybars=False),  # 20 Hbar for EVM operations
+            initial_balance=Hbar(50, in_tinybars=False),  # 50 Hbar for EVM operations
             key=executor_key_pair.public_key(),
         )
     )

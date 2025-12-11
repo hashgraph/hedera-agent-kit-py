@@ -41,7 +41,7 @@ async def setup_accounts():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(20)
+            key=executor_key.public_key(), initial_balance=Hbar(50)
         )
     )
     executor_account_id = executor_resp.account_id
@@ -52,7 +52,7 @@ async def setup_accounts():
     token_executor_key = PrivateKey.generate_ed25519()
     token_executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=token_executor_key.public_key(), initial_balance=Hbar(20)
+            key=token_executor_key.public_key(), initial_balance=Hbar(50)
         )
     )
     token_executor_account_id = token_executor_resp.account_id
