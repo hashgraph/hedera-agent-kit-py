@@ -27,7 +27,6 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
 from hedera_agent_kit.shared.parameter_schemas import (
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit.shared.utils import LedgerId
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
     get_operator_client_for_tests,

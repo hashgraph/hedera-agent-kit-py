@@ -95,7 +95,7 @@ async def transfer_hbar_with_allowance(
             )
         )
 
-        # Assuming HederaBuilder has a corresponding method that accepts the normalised dict
+        # Assuming HederaBuilder has a corresponding method that accepts the normalized dict
         tx: TransferTransaction = HederaBuilder.transfer_hbar_with_allowance(
             normalised_params
         )
