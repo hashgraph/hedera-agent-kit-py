@@ -38,8 +38,8 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_OWNER_BALANCE = Hbar(100)
-DEFAULT_SPENDER_BALANCE = Hbar(50)
+DEFAULT_OWNER_BALANCE = Hbar(150)
+DEFAULT_SPENDER_BALANCE = Hbar(100)
 TOOL_NAME = "transfer_non_fungible_token_with_allowance_tool"
 
 

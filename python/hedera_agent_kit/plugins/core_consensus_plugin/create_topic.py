@@ -52,7 +52,7 @@ Parameters:
 - topic_memo (str, optional): A memo for the topic.
 - transaction_memo (str, optional): An optional memo to include on the submitted transaction.
 - submit_key (bool or str, optional): Submit key for the topic. Pass boolean `true` to use the operator/user key,
-  or provide a Hedera-compatible public key string. Defaults to None (no submit key). If set, restricts who can submit messages to the topic.
+  or provide a Hedera-compatible public key string. Defaults to false (no submit key). If set, restricts who can submit messages to the topic.
 - admin_key (bool or str, optional): Admin key for the topic. Pass boolean `true` to use the operator/user key,
   or provide a Hedera-compatible public key string. Defaults to true (operator key).
 
