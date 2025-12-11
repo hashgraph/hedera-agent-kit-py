@@ -57,9 +57,9 @@ def create_erc721_prompt(context: Context = {}) -> str:
 This tool creates an ERC721 token on Hedera by calling the BaseERC721Factory contract. ERC721 is an EVM compatible non fungible token (NFT).
 
 Parameters:
-- tokenName (str, required): The name of the token
-- tokenSymbol (str, required): The symbol of the token
-- baseURI (str, required): The base URI for token metadata
+- token_name (str, required): The name of the token
+- token_symbol (str, required): The symbol of the token
+- base_uri (str, required): The base URI for token metadata
 {scheduled_desc}
 
 {usage_instructions}

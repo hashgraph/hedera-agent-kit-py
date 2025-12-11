@@ -14,7 +14,6 @@ from hedera_agent_kit.plugins.core_evm_plugin.transfer_erc20 import (
     TransferERC20Tool,
     TRANSFER_ERC20_TOOL,
 )
-from hedera_agent_kit.shared.plugin import Plugin
 from hedera_agent_kit.plugins.core_evm_plugin.transfer_erc20 import (
     TransferERC20Tool,
     TRANSFER_ERC20_TOOL,
@@ -23,7 +22,6 @@ from hedera_agent_kit.plugins.core_evm_plugin.create_erc721 import (
     CreateERC721Tool,
     CREATE_ERC721_TOOL,
 )
-from hedera_agent_kit.shared.plugin import Plugin
 from hedera_agent_kit.plugins.core_evm_plugin.transfer_erc721 import (
     TransferERC721Tool,
     TRANSFER_ERC721_TOOL,

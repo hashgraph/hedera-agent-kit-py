@@ -5,8 +5,8 @@ from hiero_sdk_python import Network
 
 from hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query import (
     post_process,
-    _format_timestamp,
-    _format_key,
+    format_timestamp,
+    format_key,
     get_contract_info_query,
 )
 from hedera_agent_kit.shared.configuration import Context
@@ -34,9 +34,9 @@ def test_post_process_with_full_data():
         f"- EVM Address: {contract['evm_address']}\n"
         f"- Memo: {contract['memo']}\n"
         f"- Deleted: No\n"
-        f"- Created: {_format_timestamp(contract['created_timestamp'])}\n"
-        f"- Expiration: {_format_timestamp(contract['expiration_timestamp'])}\n"
-        f"- Admin Key: {_format_key(contract['admin_key'])}\n"
+        f"- Created: {format_timestamp(contract['created_timestamp'])}\n"
+        f"- Expiration: {format_timestamp(contract['expiration_timestamp'])}\n"
+        f"- Admin Key: {format_key(contract['admin_key'])}\n"
         f"- Auto Renew Account: {contract['auto_renew_account']}\n"
         f"- Auto Renew Period (s): {contract['auto_renew_period']}\n"
         f"- Max Auto Token Associations: {contract['max_automatic_token_associations']}\n"

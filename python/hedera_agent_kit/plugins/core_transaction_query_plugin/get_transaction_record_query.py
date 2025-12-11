@@ -8,7 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Dict, Any
 
 from hiero_sdk_python import Client
 

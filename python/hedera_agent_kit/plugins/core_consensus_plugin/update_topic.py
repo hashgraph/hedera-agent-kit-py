@@ -58,7 +58,7 @@ def update_topic_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 This tool will update an existing Hedera Consensus Topic. Only the fields provided will be updated.
-Key fields (adminKey, submitKey) must contain **Hedera-compatible public keys (as strings) or boolean (true/false)**. You can provide these in one of three ways:
+Key fields (admin_key, submit_key) must contain **Hedera-compatible public keys (as strings) or boolean (true/false)**. You can provide these in one of three ways:
 1. **Boolean true** – Set this field to use user/operator key. Injecting of the key will be handled automatically.
 2. **Not provided** – The field will not be updated.
 3. **String** – Provide a Hedera-compatible public key string to set a field explicitly.

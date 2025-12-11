@@ -4,7 +4,6 @@ This module tests the account creation tool by calling it directly with paramete
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
 
-from os import waitid
 from typing import cast
 
 import pytest

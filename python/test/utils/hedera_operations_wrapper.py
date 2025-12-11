@@ -385,7 +385,6 @@ class HederaOperationsWrapper:
         from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
             HederaParameterNormaliser,
         )
-        from hedera_agent_kit.shared.utils import ledger_id_from_network
 
         from hedera_agent_kit.shared.utils import ledger_id_from_network
 

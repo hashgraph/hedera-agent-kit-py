@@ -55,7 +55,7 @@ Parameters:
 """
 
 
-def _format_key(key: Optional[MirrornodeKeyInfo]) -> str:
+def format_key(key: Optional[MirrornodeKeyInfo]) -> str:
     """Format a mirrornode key info object for display."""
     if not key:
         return "Not Set"
@@ -64,7 +64,7 @@ def _format_key(key: Optional[MirrornodeKeyInfo]) -> str:
     return "Present"
 
 
-def _format_timestamp(ts: Optional[str]) -> str:
+def format_timestamp(ts: Optional[str]) -> str:
     """Format a timestamp string (seconds.nanos) to ISO 8601, or N/A."""
     if not ts:
         return "N/A"
@@ -83,9 +83,9 @@ def post_process(contract: ContractInfo) -> str:
     evm_address = contract.get("evm_address", "N/A")
     memo = contract.get("memo", "N/A")
     deleted = "Yes" if contract.get("deleted") else "No"
-    created_timestamp = _format_timestamp(contract.get("created_timestamp"))
-    expiration_timestamp = _format_timestamp(contract.get("expiration_timestamp"))
-    admin_key = _format_key(contract.get("admin_key"))
+    created_timestamp = format_timestamp(contract.get("created_timestamp"))
+    expiration_timestamp = format_timestamp(contract.get("expiration_timestamp"))
+    admin_key = format_key(contract.get("admin_key"))
     auto_renew_account = contract.get("auto_renew_account", "N/A")
     auto_renew_period = contract.get("auto_renew_period")
     auto_renew_period_str = (
