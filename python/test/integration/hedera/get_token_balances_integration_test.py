@@ -42,7 +42,7 @@ async def setup_environment():
     executor_key = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(10, in_tinybars=False)
+            key=executor_key.public_key(), initial_balance=Hbar(50, in_tinybars=False)
         )
     )
     executor_account_id = executor_resp.account_id
