@@ -337,7 +337,7 @@ async def test_tool_available(toolkit):
 async def test_missing_amount(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer ERC20 tokens from contract 0.0.1234 to 0.0.5678"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "2"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -362,7 +362,7 @@ async def test_missing_amount(agent_executor, toolkit, monkeypatch):
 async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer 1243 ERC20 tokens from contract 0.0.1234"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "3"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -387,7 +387,7 @@ async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
 async def test_missing_erc20_address(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer 1243 ERC20 tokens to account 0.0.5678"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "4"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()
