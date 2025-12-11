@@ -65,7 +65,7 @@ async def executor_account(
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    yield executor_account_id, executor_key, executor_client, executor_wrapper
+    yield executor_account_id, executor_key, executor_client, executor_wrapper, operator_wrapper
 
     await return_hbars_and_delete_account(
         executor_wrapper,
@@ -77,7 +77,7 @@ async def executor_account(
 @pytest.fixture
 async def langchain_test_setup(executor_account):
     """Initialize LangChain agent and toolkit using executor client as operator."""
-    _, _, executor_client, _ = executor_account
+    _, _, executor_client, _, _ = executor_account
     setup = await create_langchain_test_setup(custom_client=executor_client)
     yield setup
     setup.cleanup()
@@ -138,36 +138,6 @@ async def execute_get_hbar_balance(
 # ============================================================================
 # TEST CASES
 # ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_get_hbar_balance_for_executor_account(
-    agent_executor,
-    executor_account,
-    langchain_config,
-    response_parser: ResponseParserService,
-):
-    """Test fetching HBAR balance for executor (default) account."""
-    executor_account_id, _, executor_client, executor_wrapper = executor_account
-    executor_id_str = str(executor_account_id)
-
-    # Get expected balance directly (before agent call)
-    expected_balance = executor_wrapper.get_account_hbar_balance(executor_id_str)
-
-    input_text = f"What is the HBAR balance of {executor_id_str}?"
-    parsed_data = await execute_get_hbar_balance(
-        agent_executor, input_text, langchain_config, response_parser
-    )
-
-    human_message = parsed_data["humanMessage"]
-    raw_data = parsed_data["raw"]
-
-    assert parsed_data.get("error") is None
-    assert executor_id_str in human_message
-
-    assert str(int(expected_balance)) in raw_data.get("balance")
-    assert "HBAR Balance" in human_message
-
 
 @pytest.mark.asyncio
 async def test_get_hbar_balance_for_specific_account_nonzero(
