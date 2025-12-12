@@ -127,25 +127,28 @@ Add the following code:
 
 ```python
 # main.py
+import asyncio
 import os
-from dotenv import load_dotenv
-from hiero_sdk_python import Client, Network, AccountId, PrivateKey
-from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
 
+from dotenv import load_dotenv
 from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit.shared.configuration import Configuration, Context, AgentMode
 from hedera_agent_kit.plugins import (
     core_account_plugin,
     core_account_query_plugin,
     core_token_plugin,
     core_consensus_plugin,
 )
+from hedera_agent_kit.shared.configuration import Configuration, Context, AgentMode
+from hiero_sdk_python import Client, Network, AccountId, PrivateKey
+from langchain.agents import create_agent
+from langchain_core.runnables import RunnableConfig
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import MemorySaver
 
 load_dotenv()
 
-def main():
+
+async def main():
     # Hedera client setup (Testnet by default)
     account_id = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     private_key = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
@@ -170,7 +173,6 @@ def main():
         ),
     )
 
-    # Fetch tools from toolkit
     tools = hedera_toolkit.get_tools()
 
     llm = ChatOpenAI(
@@ -178,23 +180,28 @@ def main():
         api_key=os.getenv("OPENAI_API_KEY"),
     )
 
-    agent = create_react_agent(
+    agent = create_agent(
         model=llm,
         tools=tools,
         checkpointer=MemorySaver(),
+        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and plugin tools",
     )
 
     print("Sending a message to the agent...")
 
-    response = agent.invoke(
+    response = await agent.ainvoke(
         {"messages": [{"role": "user", "content": "what's my balance?"}]},
         config={"configurable": {"thread_id": "1"}},
     )
 
-    print(response["messages"][-1].content)
+    final_message_content = response["messages"][-1].content
+    print("\n--- Agent Response ---")
+    print(final_message_content)
+    print("----------------------")
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
 ```
 
 ### 4 – Run Your "Hello Hedera Agent Kit" Example
@@ -209,25 +216,25 @@ If you would like, try adding in other prompts to the agent to see what it can d
 
 ```python
 # original
-response = agent.invoke(
+response = await agent.ainvoke(
     {"messages": [{"role": "user", "content": "what's my balance?"}]},
     config={"configurable": {"thread_id": "1"}},
 )
 
 # or
-response = agent.invoke(
+response = await agent.ainvoke(
     {"messages": [{"role": "user", "content": "create a new token called 'TestToken' with symbol 'TEST'"}]},
     config={"configurable": {"thread_id": "1"}},
 )
 
 # or
-response = agent.invoke(
+response = await agent.ainvoke(
     {"messages": [{"role": "user", "content": "transfer 5 HBAR to account 0.0.1234"}]},
     config={"configurable": {"thread_id": "1"}},
 )
 
 # or
-response = agent.invoke(
+response = await agent.ainvoke(
     {"messages": [{"role": "user", "content": "create a new topic for project updates"}]},
     config={"configurable": {"thread_id": "1"}},
 )
