@@ -1,5 +1,7 @@
 import pytest
 from hiero_sdk_python import PrivateKey, SupplyType, Hbar
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 
 from hedera_agent_kit.plugins.core_token_plugin import AirdropFungibleTokenTool
@@ -33,7 +35,7 @@ async def setup_airdrop():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(50)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
         )
     )
     executor_account_id = executor_resp.account_id

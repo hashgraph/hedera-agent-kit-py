@@ -9,6 +9,8 @@ from typing import AsyncGenerator, Any
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.plugins.core_account_plugin import (
@@ -27,7 +29,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
-DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 DEFAULT_RECIPIENT_BALANCE = 0
 
 

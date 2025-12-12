@@ -14,6 +14,8 @@ from hiero_sdk_python import (
     Client,
     TopicId,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -31,7 +33,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(50, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 
 
 # ============================================================================
@@ -309,7 +311,7 @@ async def test_update_autorenew_account(
     secondary_key = executor_client.operator_private_key
     secondary_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(50), key=secondary_key.public_key()
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)), key=secondary_key.public_key()
         )
     )
     secondary_account_id = str(secondary_resp.account_id)

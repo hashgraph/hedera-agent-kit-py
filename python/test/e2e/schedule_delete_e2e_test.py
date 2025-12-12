@@ -8,6 +8,8 @@ from hiero_sdk_python import (
     AccountId,
     Timestamp,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -26,7 +28,7 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 
 
 # ============================================================================

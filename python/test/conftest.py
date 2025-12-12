@@ -5,6 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import pytest
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 
 @pytest.fixture(scope="session", autouse=True)
 def load_test_env():
@@ -34,6 +36,16 @@ def load_test_env():
     print(f"ACCOUNT_ID={os.getenv('ACCOUNT_ID')}")
     print(f"PRIVATE_KEY={'***' if os.getenv('PRIVATE_KEY') else None}")
     print(f"OPENAI_API_KEY={'***' if os.getenv('OPENAI_API_KEY') else None}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def init_hbar_service():
+    """
+    Initialize the UsdToHbarService once per test session. Fetches the live price via the service logic.
+    """
+    print("\nInitializing HBAR Price Service...")
+    await UsdToHbarService.initialize()
+    print(f"HBAR Rate set to: ${UsdToHbarService._exchange_rate}")
 
 
 @pytest.fixture(autouse=True)

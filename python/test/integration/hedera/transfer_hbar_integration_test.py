@@ -3,6 +3,8 @@ from decimal import Decimal
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 from hedera_agent_kit.plugins.core_account_plugin import TransferHbarTool
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.configuration import Context
@@ -27,7 +29,7 @@ async def setup_accounts():
     executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
             key=executor_key_pair.public_key(),
         )
     )
