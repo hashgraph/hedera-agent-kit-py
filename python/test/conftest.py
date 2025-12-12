@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+import asyncio
 
 from dotenv import load_dotenv
 import pytest
@@ -8,17 +9,15 @@ import pytest
 from test.utils.usd_to_hbar_service import UsdToHbarService
 
 
-@pytest.fixture(scope="session", autouse=True)
-def load_test_env():
+def pytest_configure(config):
     """
-    Automatically load environment variables for all tests.
+    Called before PyTest collects tests.
 
-    Priority:
-        1. .env.test.local  (for test-specific config)
-        2. .env             (fallback)
-
-    This fixture runs automatically before any test session.
+    1. Load environment variables from `.env.test.local` (preferred) or fall back to `.env`.
+    2. Synchronously initialize `UsdToHbarService` using `asyncio.run` so module-level
+       constants that rely on the HBAR/USD exchange rate are available before imports.
     """
+    # 1. Load Env Vars
     project_root = Path(__file__).resolve().parent.parent
     env_test_local = project_root / ".env.test.local"
     env_default = project_root / ".env"
@@ -32,20 +31,15 @@ def load_test_env():
     else:
         print("⚠️  No .env.test.local or .env found at project root.")
 
-    # Optionally verify key vars for visibility
-    print(f"ACCOUNT_ID={os.getenv('ACCOUNT_ID')}")
-    print(f"PRIVATE_KEY={'***' if os.getenv('PRIVATE_KEY') else None}")
-    print(f"OPENAI_API_KEY={'***' if os.getenv('OPENAI_API_KEY') else None}")
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def init_hbar_service():
-    """
-    Initialize the UsdToHbarService once per test session. Fetches the live price via the service logic.
-    """
-    print("\nInitializing HBAR Price Service...")
-    await UsdToHbarService.initialize()
-    print(f"HBAR Rate set to: ${UsdToHbarService._exchange_rate}")
+    # 2. Initialize HBAR Service
+    print("\nInitializing HBAR Price Service (Pre-Collection)...")
+    try:
+        # We use asyncio.run because this hook is synchronous, but the service is async.
+        # This ensures the service is ready before any test modules are imported.
+        asyncio.run(UsdToHbarService.initialize())
+        print(f"HBAR Rate set to: ${UsdToHbarService._exchange_rate}")
+    except Exception as e:
+        print(f"❌ Failed to initialize HBAR Service: {e}")
 
 
 @pytest.fixture(autouse=True)
