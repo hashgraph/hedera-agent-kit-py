@@ -54,7 +54,7 @@ async def setup_environment():
     # Recipient account
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(5)
+            key=executor_key.public_key(), initial_balance=Hbar(20)
         )
     )
     recipient_account_id = recipient_resp.account_id

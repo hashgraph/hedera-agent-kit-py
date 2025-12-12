@@ -57,6 +57,8 @@ def create_account_prompt(context: Context = {}) -> str:
 
 This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operator's public key.
 
+IMPORTANT: All parameters are optional. If the user does not explicitly provide optional parameters, proceed immediately using the default values. Do NOT ask the user for optional parameters.
+
 Parameters:
 - public_key (str, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
 - account_memo (str, optional): Optional memo for the account. Can be up to 100 characters long. Too long memos will be truncated in params normalization

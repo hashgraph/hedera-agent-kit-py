@@ -32,7 +32,7 @@ class CreateTopicParameters(BaseModelWithArbitraryTypes):
                 "or provide a Hedera-compatible public key string (optional). If set, restricts who can submit messages to the topic."
             ),
         ),
-    ] = None
+    ] = False
 
     admin_key: Annotated[
         Optional[Union[bool, str]],

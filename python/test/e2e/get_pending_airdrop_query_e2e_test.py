@@ -81,7 +81,7 @@ async def setup_environment():
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),  # Using an executor key for simplicity in test control
-            initial_balance=Hbar(0),
+            initial_balance=Hbar(20),
             max_automatic_token_associations=0,
         )
     )
