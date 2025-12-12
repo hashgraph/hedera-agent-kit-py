@@ -33,7 +33,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
 
 
 # ============================================================================
@@ -311,7 +311,7 @@ async def test_update_autorenew_account(
     secondary_key = executor_client.operator_private_key
     secondary_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)), key=secondary_key.public_key()
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)), key=secondary_key.public_key()
         )
     )
     secondary_account_id = str(secondary_resp.account_id)

@@ -18,7 +18,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
 
 
 # ============================================================================
@@ -227,7 +227,7 @@ async def test_delete_account_with_natural_language_variations(
     resp = await create_test_account(
         executor_wrapper,
         executor_client,
-        initial_balance_in_hbar=Hbar(5, in_tinybars=False),
+        initial_balance_in_hbar=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
     )
     target_account_id = str(resp.account_id)
 
