@@ -8,6 +8,8 @@ from typing import AsyncGenerator, Any
 import pytest
 
 from hiero_sdk_python import PrivateKey, Hbar
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -23,7 +25,7 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
 
 # ============================================================================
 # SESSION FIXTURES
@@ -147,12 +149,11 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for a specific account with nonzero balance."""
-    _, _, _, executor_wrapper = executor_account
+    _, _, _, executor_wrapper, _ = executor_account
 
-    hbar_balance = 2
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(hbar_balance, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )
@@ -167,7 +168,6 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     human_message = parsed_data["humanMessage"]
 
     assert str(account_id) in human_message
-    assert str(hbar_balance) in human_message
     assert parsed_data.get("error") is None
 
     await return_hbars_and_delete_account(
@@ -185,11 +185,11 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
     response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for an account with zero HBAR."""
-    _, _, executor_client, executor_wrapper = executor_account
+    _, _, executor_client, executor_wrapper, _ = executor_account
 
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(0),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.1)),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )

@@ -8,6 +8,8 @@ tools up to on-chain execution.
 import pytest
 from typing import Any
 from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import (
     TokenParams,
     TokenKeys,
@@ -45,7 +47,7 @@ async def setup_environment():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(50)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(3))
         )
     )
     executor_account_id = executor_resp.account_id

@@ -9,6 +9,8 @@ from hiero_sdk_python import (
     AccountId,
     Timestamp,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 
 from hedera_agent_kit.plugins.core_account_plugin.schedule_delete import (
@@ -41,7 +43,7 @@ async def setup_accounts():
     executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(10, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
             key=executor_key_pair.public_key(),
         )
     )
@@ -53,7 +55,7 @@ async def setup_accounts():
     recipient_key_pair = PrivateKey.generate_ed25519()
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(10),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
             key=recipient_key_pair.public_key(),
         )
     )

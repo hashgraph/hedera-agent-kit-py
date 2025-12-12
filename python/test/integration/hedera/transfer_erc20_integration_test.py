@@ -4,6 +4,8 @@ import pytest
 from typing import cast
 from hiero_sdk_python import PrivateKey, Hbar
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 from hedera_agent_kit.plugins.core_evm_plugin import TransferERC20Tool
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.configuration import Context
@@ -38,7 +40,7 @@ async def setup_transfer_erc20():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(50)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
         )
     )
     executor_account_id = executor_resp.account_id
@@ -91,7 +93,7 @@ async def create_recipient_account(wrapper: HederaOperationsWrapper):
     resp = await wrapper.create_account(
         CreateAccountParametersNormalised(
             key=wrapper.client.operator_private_key.public_key(),
-            initial_balance=Hbar(5),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     return resp.account_id
