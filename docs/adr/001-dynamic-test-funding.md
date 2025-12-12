@@ -2,7 +2,8 @@
 
 **Date:** 2025-12-12  
 **Status:** Accepted  
-**Context:** Python test suite for Hedera Agent Kit requires reliable test account funding that remains stable across HBAR price fluctuations.
+**Context:** Python test suite for Hedera Agent Kit requires reliable test account funding that remains stable across
+HBAR price fluctuations.
 
 ---
 
@@ -10,7 +11,8 @@
 
 ### **The Problem**
 
-Hedera network transaction fees are **fixed in USD**, not HBAR. When the price of HBAR fluctuates, the number of HBARs required to pay for the same transaction changes:
+Hedera network transaction fees are **fixed in USD**, not HBAR. When the price of HBAR fluctuates, the number of HBARs
+required to pay for the same transaction changes:
 
 - **HBAR price increase**: Tests fail because hardcoded HBAR amounts are insufficient
 - **HBAR price decrease**: Tests waste funds by over-allocating HBAR
@@ -40,11 +42,13 @@ Implement a **dynamic funding system** that:
 **Implementation:** [`python/test/utils/usd_to_hbar_service.py`](file:///python/test/utils/usd_to_hbar_service.py)
 
 The service:
+
 - Fetches the current HBAR/USD exchange rate from the Hedera Mirror Node at test session start
 - Provides a `usd_to_hbar(usd_amount)` method for runtime conversion
 - Caches the rate to avoid repeated API calls during test execution
 
 **Usage Pattern:**
+
 ```python
 from test.utils.usd_to_hbar_service import UsdToHbarService
 
@@ -60,34 +64,17 @@ initial_balance = Hbar(UsdToHbarService.usd_to_hbar(1.75))
 
 **Implementation:** [`python/test/utils/OPERATION_FEES.md`](file:///python/test/utils/OPERATION_FEES.md)
 
-A centralized reference document listing USD costs for all Hedera operations:
+A centralized reference document listing USD costs for all Hedera operations used by the Hedera Agent Kit SDK (state for
+12.12.2025):
 
-| Service | Operation | USD Cost |
-|---------|-----------|----------|
-| Crypto | CryptoCreate | $0.05 |
-| Crypto | CryptoTransfer | $0.0001 |
-| Token | TokenCreate | $1.00 |
-| Token | TokenMint (NFT) | $0.02 |
-| Consensus | ConsensusCreateTopic | $0.01 |
-| Contract | ContractCreate | $1.00 |
-
----
-
-### **2.3 Standardized Funding Tiers**
-
-**Decision:** ✅ **Use consistent USD amounts across test types**
-
-Based on operation costs and test complexity, the following funding tiers are applied:
-
-| USD Amount | Use Case | Operations Covered |
-|------------|----------|-------------------|
-| **$1.75** | Token/ERC20/ERC721/NFT creation | TokenCreate ($1.00) + mints + queries |
-| **$0.50** | HBAR allowance owners with transfers | CryptoApproveAllowance ($0.05) + multiple transfers |
-| **$0.25** | Basic operations | Topics, account updates, queries, spender accounts |
-
-**Special Cases (Unchanged):**
-- `Hbar(0)` — Zero-balance test scenarios
-- `Hbar(1)` / `Hbar(2)` — Receiver accounts in allowance tests
+| Service   | Operation            | USD Cost |
+|-----------|----------------------|----------|
+| Crypto    | CryptoCreate         | $0.05    |
+| Crypto    | CryptoTransfer       | $0.0001  |
+| Token     | TokenCreate          | $1.00    |
+| Token     | TokenMint (NFT)      | $0.02    |
+| Consensus | ConsensusCreateTopic | $0.01    |
+| Contract  | ContractCreate       | $1.00    |
 
 ---
 
@@ -119,36 +106,20 @@ rate = resp["current_rate"]["cent_equivalent"] / resp["current_rate"]["hbar_equi
 All 88 test files (39 integration + 49 E2E) were updated to use the service:
 
 **Before:**
+
 ```python
 DEFAULT_EXECUTOR_BALANCE = Hbar(50, in_tinybars=False)
 ```
 
 **After:**
+
 ```python
 from test.utils.usd_to_hbar_service import UsdToHbarService
 
 DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
 ```
 
----
-
-## **4. Alternatives Considered**
-
-### **4.1 Fixed HBAR Amounts with Large Buffer**
-
-**Rejected:** Wastes testnet funds and doesn't solve the core problem of price volatility.
-
-### **4.2 Environment Variable for Exchange Rate**
-
-**Rejected:** Adds configuration burden and can become stale.
-
-### **4.3 Mocking Exchange Rate in Tests**
-
-**Rejected:** Tests should use realistic funding to catch under-funding issues.
-
----
-
-## **5. Consequences**
+## **4. Consequences**
 
 ### **Positive**
 
@@ -165,11 +136,11 @@ DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
 ### **Mitigations**
 
 - Mirror Node is highly available and rate fetch is resilient
-- Test sessions are typically short (< 30 minutes)
+- Test sessions are typically short enough (< 1h) to avoid stale rates
 
 ---
 
-## **6. References**
+## **5. References**
 
 - [OPERATION_FEES.md](file:///python/test/utils/OPERATION_FEES.md) — Hedera operation USD costs
 - [usd_to_hbar_service.py](file:///python/test/utils/usd_to_hbar_service.py) — Conversion service implementation
