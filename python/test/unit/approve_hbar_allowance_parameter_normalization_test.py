@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hiero_sdk_python import AccountId, Client, Hbar
+from hiero_sdk_python import Client, Hbar
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -10,7 +10,6 @@ from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
 from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParameters,
 )
-from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 
 
 class TestApproveHbarAllowanceParameterNormalization:

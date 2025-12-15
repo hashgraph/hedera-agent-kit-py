@@ -12,9 +12,6 @@ from typing import cast
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit.plugins.core_token_plugin.mint_fungible_token import (
-    mint_fungible_token,
-)
 from hedera_agent_kit.shared.configuration import Context, AgentMode
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -54,7 +51,7 @@ This tool will mint a new ERC721 token on Hedera. ERC721 is an EVM compatible no
 
 Parameters:
 - contract_id (str, required): The id of the ERC721 contract
-- to_address (str, optional): The EVM address or Hedera account ID to receive the minted token. If omitted, defaults to the context account.
+- {to_address_desc}
 {PromptGenerator.get_scheduled_transaction_params_description(context)}
 
 {usage_instructions}

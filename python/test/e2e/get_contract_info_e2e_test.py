@@ -8,6 +8,8 @@ from typing import Any, AsyncGenerator
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TopicId
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import (
@@ -45,7 +47,7 @@ async def executor_account(operator_wrapper, operator_client):
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(20, in_tinybars=False)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
         )
     )
     executor_account_id = executor_resp.account_id
@@ -95,7 +97,7 @@ async def setup_environment():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(50)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
         )
     )
     executor_account_id = executor_resp.account_id

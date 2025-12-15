@@ -9,6 +9,8 @@ from hiero_sdk_python import (
     AccountId,
 )
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 from hedera_agent_kit.plugins.core_account_plugin.approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
 )
@@ -40,7 +42,7 @@ async def setup_accounts():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(10)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
         )
     )
     executor_account_id = executor_resp.account_id
@@ -51,7 +53,7 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(5)
+            key=spender_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
         )
     )
     spender_account_id = spender_resp.account_id

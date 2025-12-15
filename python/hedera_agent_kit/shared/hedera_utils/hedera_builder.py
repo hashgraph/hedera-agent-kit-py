@@ -253,7 +253,6 @@ class HederaBuilder:
         Returns:
             TokenAirdropTransaction: Transaction ready for submission.
         """
-        token_transfers = params.token_transfers
 
         tx = TokenAirdropTransaction(token_transfers=params.token_transfers)
 

@@ -4,11 +4,12 @@ This module tests the account creation tool by calling it directly with paramete
 omitting the LLM and focusing on testing logic and on-chain execution.
 """
 
-from os import waitid
 from typing import cast
 
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar, PublicKey, Client
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 
 from hedera_agent_kit.plugins.core_account_plugin import CreateAccountTool
 from hedera_agent_kit.shared import AgentMode
@@ -41,7 +42,7 @@ async def setup_accounts():
     executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
             key=executor_key_pair.public_key(),
         )
     )

@@ -14,6 +14,8 @@ from hiero_sdk_python import (
     AccountId,
     Client,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -28,7 +30,7 @@ from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(30, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.50))
 MIRROR_NODE_WAITING_TIME_SEC = 10
 
 
@@ -103,7 +105,7 @@ async def spender_account(
     # Executor creates spender funded with a small balance
     spender_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
             key=spender_key.public_key(),
         )
     )

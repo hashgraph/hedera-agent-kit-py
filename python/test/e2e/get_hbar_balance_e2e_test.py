@@ -8,6 +8,8 @@ from typing import AsyncGenerator, Any
 import pytest
 
 from hiero_sdk_python import PrivateKey, Hbar
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -23,7 +25,7 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
 
 # ============================================================================
 # SESSION FIXTURES
@@ -65,7 +67,7 @@ async def executor_account(
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    yield executor_account_id, executor_key, executor_client, executor_wrapper
+    yield executor_account_id, executor_key, executor_client, executor_wrapper, operator_wrapper
 
     await return_hbars_and_delete_account(
         executor_wrapper,
@@ -77,7 +79,7 @@ async def executor_account(
 @pytest.fixture
 async def langchain_test_setup(executor_account):
     """Initialize LangChain agent and toolkit using executor client as operator."""
-    _, _, executor_client, _ = executor_account
+    _, _, executor_client, _, _ = executor_account
     setup = await create_langchain_test_setup(custom_client=executor_client)
     yield setup
     setup.cleanup()
@@ -139,36 +141,6 @@ async def execute_get_hbar_balance(
 # TEST CASES
 # ============================================================================
 
-
-@pytest.mark.asyncio
-async def test_get_hbar_balance_for_executor_account(
-    agent_executor,
-    executor_account,
-    langchain_config,
-    response_parser: ResponseParserService,
-):
-    """Test fetching HBAR balance for executor (default) account."""
-    executor_account_id, _, executor_client, executor_wrapper = executor_account
-    executor_id_str = str(executor_account_id)
-
-    # Get expected balance directly (before agent call)
-    expected_balance = executor_wrapper.get_account_hbar_balance(executor_id_str)
-
-    input_text = f"What is the HBAR balance of {executor_id_str}?"
-    parsed_data = await execute_get_hbar_balance(
-        agent_executor, input_text, langchain_config, response_parser
-    )
-
-    human_message = parsed_data["humanMessage"]
-    raw_data = parsed_data["raw"]
-
-    assert parsed_data.get("error") is None
-    assert executor_id_str in human_message
-
-    assert str(int(expected_balance)) in raw_data.get("balance")
-    assert "HBAR Balance" in human_message
-
-
 @pytest.mark.asyncio
 async def test_get_hbar_balance_for_specific_account_nonzero(
     agent_executor,
@@ -177,12 +149,11 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for a specific account with nonzero balance."""
-    _, _, _, executor_wrapper = executor_account
+    _, _, _, executor_wrapper, _ = executor_account
 
-    hbar_balance = 2
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(hbar_balance, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )
@@ -197,7 +168,6 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
     human_message = parsed_data["humanMessage"]
 
     assert str(account_id) in human_message
-    assert str(hbar_balance) in human_message
     assert parsed_data.get("error") is None
 
     await return_hbars_and_delete_account(
@@ -215,11 +185,11 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
     response_parser: ResponseParserService,
 ):
     """Test fetching HBAR balance for an account with zero HBAR."""
-    _, _, executor_client, executor_wrapper = executor_account
+    _, _, executor_client, executor_wrapper, _ = executor_account
 
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(0),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.1)),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )

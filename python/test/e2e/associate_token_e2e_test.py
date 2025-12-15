@@ -5,7 +5,9 @@ End-to-end tests for associate token tool using the HederaOperationsWrapper appr
 from typing import cast
 
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId
+from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import (
     TokenParams,
     TokenKeys,
@@ -47,7 +49,7 @@ async def setup_environment():
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(20)
+            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(2.5))
         )
     )
     executor_account_id = executor_resp.account_id
@@ -58,7 +60,7 @@ async def setup_environment():
     creator_key = PrivateKey.generate_ed25519()
     creator_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=creator_key.public_key(), initial_balance=Hbar(20)
+            key=creator_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(3.5))
         )
     )
     creator_account_id = creator_resp.account_id

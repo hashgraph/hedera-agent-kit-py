@@ -1,5 +1,7 @@
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -16,7 +18,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
 
 
 # ============================================================================
@@ -225,7 +227,7 @@ async def test_delete_account_with_natural_language_variations(
     resp = await create_test_account(
         executor_wrapper,
         executor_client,
-        initial_balance_in_hbar=Hbar(5, in_tinybars=False),
+        initial_balance_in_hbar=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
     )
     target_account_id = str(resp.account_id)
 
