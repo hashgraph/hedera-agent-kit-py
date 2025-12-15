@@ -72,6 +72,8 @@ from .token_schema import (
     DissociateTokenParametersNormalised,
     UpdateTokenParameters,
     UpdateTokenParametersNormalised,
+    TokenUpdateKeys,
+    TokenUpdateParams,
     CreateNonFungibleTokenParameters,
     CreateNonFungibleTokenParametersNormalised,
     AssociateTokenParameters,
