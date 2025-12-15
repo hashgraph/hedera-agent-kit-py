@@ -17,6 +17,8 @@ from hiero_sdk_python import (
     TokenType,
     TokenNftInfo,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
 
@@ -40,9 +42,9 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_OWNER_BALANCE = Hbar(50)
-DEFAULT_SPENDER_BALANCE = Hbar(15)
-DEFAULT_RECIPIENT_BALANCE = Hbar(15)
+DEFAULT_OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
+DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_RECIPIENT_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 TOOL_NAME = "approve_nft_allowance_tool"
 
 

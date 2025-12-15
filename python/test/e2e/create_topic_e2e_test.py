@@ -7,6 +7,8 @@ tools up to on-chain execution.
 from typing import AsyncGenerator, Any
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -23,7 +25,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(10, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 
 
 # ============================================================================

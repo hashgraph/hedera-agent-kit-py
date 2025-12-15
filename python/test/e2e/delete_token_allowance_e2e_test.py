@@ -24,6 +24,8 @@ from hiero_sdk_python import (
     TokenAllowance,
     SupplyType,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
 
@@ -39,7 +41,7 @@ from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(100, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
 MIRROR_NODE_WAITING_TIME_SEC = 10
 
 
@@ -153,7 +155,7 @@ async def spender_account(
     # Executor creates spender funded with a small balance
     spender_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(100),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
             key=spender_key.public_key(),
         )
     )

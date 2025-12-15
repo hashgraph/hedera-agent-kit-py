@@ -1,6 +1,8 @@
 import pytest
 from hiero_sdk_python import TopicId, PublicKey, PrivateKey, Hbar
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 from hedera_agent_kit.plugins.core_consensus_query_plugin import (
     GetTopicInfoQueryTool,
 )
@@ -31,7 +33,7 @@ async def setup_accounts():
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key_pair.public_key(),
-            initial_balance=Hbar(50, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     executor_account_id = executor_resp.account_id

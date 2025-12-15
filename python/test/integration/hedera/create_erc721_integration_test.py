@@ -10,6 +10,8 @@ from typing import cast
 import pytest
 from hiero_sdk_python import PrivateKey, Hbar, Client
 
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
 from hedera_agent_kit.plugins.core_evm_plugin import CreateERC721Tool
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.configuration import Context
@@ -37,7 +39,7 @@ async def setup_environment():
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(50, in_tinybars=False),  # 50 Hbar for EVM operations
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
             key=executor_key_pair.public_key(),
         )
     )

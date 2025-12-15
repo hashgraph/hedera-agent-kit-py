@@ -1,5 +1,7 @@
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.shared.parameter_schemas import (
@@ -11,7 +13,7 @@ from test.utils.setup import get_operator_client_for_tests, get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.verification import extract_tool_response
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
 
 
 @pytest.fixture(scope="session")

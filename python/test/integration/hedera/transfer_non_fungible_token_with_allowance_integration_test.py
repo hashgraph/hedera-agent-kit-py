@@ -11,6 +11,8 @@ from hiero_sdk_python import (
     TokenType,
     TokenNftAllowance,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
 from hedera_agent_kit.plugins.core_token_plugin.transfer_non_fungible_token_with_allowance import (
@@ -52,7 +54,7 @@ async def setup_accounts():
     owner_key = PrivateKey.generate_ed25519()
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=owner_key.public_key(), initial_balance=Hbar(35)
+            key=owner_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
         )
     )
     owner_account_id = owner_resp.account_id
@@ -63,7 +65,7 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ecdsa()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(50)
+            key=spender_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
         )
     )
     spender_account_id = spender_resp.account_id
