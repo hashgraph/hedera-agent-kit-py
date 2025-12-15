@@ -41,6 +41,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
   - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
   - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
   - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+  - [UPDATE_TOKEN_TOOL](#update_token_tool)
 - [Token Query Tools](#token-query-tools)
   - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
   - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
@@ -666,6 +667,44 @@ Delete fungible token allowances.
 ```
 Delete token allowance for token 0.0.12345 from spender 0.0.67890
 Remove all token allowances for spender 0.0.67890
+```
+
+---
+
+### UPDATE_TOKEN_TOOL
+
+Update token properties such as name, symbol, memo, keys, treasury, and metadata.
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `token_id` | `str` | ✅ | Token ID to update. |
+| `token_name` | `str` | ❌ | New token name. |
+| `token_symbol` | `str` | ❌ | New token symbol. |
+| `token_memo` | `str` | ❌ | New token memo. |
+| `metadata` | `str\|bytes` | ❌ | New token metadata. |
+| `treasury_account_id` | `str` | ❌ | New treasury account ID. |
+| `auto_renew_account_id` | `str` | ❌ | New auto-renew account ID. |
+| `admin_key` | `bool\|str` | ❌ | New admin key (`True` = use operator key, or provide public key string). |
+| `supply_key` | `bool\|str` | ❌ | New supply key. |
+| `wipe_key` | `bool\|str` | ❌ | New wipe key. |
+| `freeze_key` | `bool\|str` | ❌ | New freeze key. |
+| `kyc_key` | `bool\|str` | ❌ | New KYC key. |
+| `fee_schedule_key` | `bool\|str` | ❌ | New fee schedule key. |
+| `pause_key` | `bool\|str` | ❌ | New pause key. |
+| `metadata_key` | `bool\|str` | ❌ | New metadata key. |
+
+> **Note:** To update keys, the token must have been created with the corresponding key set. You cannot add a key that wasn't present at token creation. You must have the admin key to update any token properties.
+
+#### Example Prompts
+
+```
+Update token 0.0.12345 name to "NewTokenName"
+Change the symbol of token 0.0.12345 to "NEWSYM"
+Update token 0.0.12345 memo to "Updated memo"
+For token 0.0.12345, change the supply key to my key
+Update token 0.0.12345 name to "Multi" and symbol to "MLT" and memo to "Combined"
 ```
 
 ---
