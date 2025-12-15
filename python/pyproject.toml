@@ -16,7 +16,7 @@ langchain-groq = "=1.0.0"
 python-dotenv = ">=1,<2"
 aiohttp = ">=3.13.1,<4.0.0"
 pydantic = "^2.12.3"
-hiero-sdk-python = "0.1.9"
+hiero-sdk-python = "0.1.10"
 web3 = "==7.14.0"
 
 [tool.poetry.group.dev.dependencies]
