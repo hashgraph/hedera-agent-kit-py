@@ -311,7 +311,8 @@ async def test_update_autorenew_account(
     secondary_key = executor_client.operator_private_key
     secondary_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)), key=secondary_key.public_key()
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
+            key=secondary_key.public_key(),
         )
     )
     secondary_account_id = str(secondary_resp.account_id)

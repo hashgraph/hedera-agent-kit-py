@@ -456,12 +456,12 @@ Get messages from an HCS topic.
 
 #### Parameters
 
-| Parameter    | Type       | Required | Description                                                                         |
-|--------------|------------|----------|-------------------------------------------------------------------------------------|
-| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                                  |
-| `start_time` | `datetime` | ❌        | Start datetime filter. Messages after this time are returned. _(not supported yet)_ |
-| `end_time`   | `datetime` | ❌        | End datetime filter. Messages before this time are returned. _(not supported yet)_  |
-| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100.                              |
+| Parameter    | Type       | Required | Description                                                          |
+|--------------|------------|----------|----------------------------------------------------------------------|
+| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                   |
+| `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format.  |
+| `end_time`   | `datetime` | ❌        | End datetime filter (ISO 8601). Messages before this time are returned.  LLM should handle parsing to correct tool format. |
+| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100.               |
 
 #### Example Prompts
 
@@ -470,6 +470,9 @@ Get messages from topic 0.0.12345
 Show me the last 10 messages from topic 0.0.12345
 What messages were posted to topic 0.0.12345?
 Get messages from topic 0.0.12345 with limit 5
+Get messages from topic 0.0.12345 after 2024-01-01T00:00:00Z
+Fetch messages from topic 0.0.12345 between 2024-01-01 and 2024-06-30
+Get all messages from topic 0.0.12345 posted in the last hour
 ```
 
 ---

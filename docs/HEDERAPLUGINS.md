@@ -79,10 +79,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and management of to
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                                                                             | Description                          | Details                                                                          |
-|---------------------------------------------------------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
-| [`GET_TOPIC_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_info_query_tool)             | Returns information for an HCS topic | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_info_query_tool)         |
-| [`GET_TOPIC_MESSAGES_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_messages_query_tool)     | Returns messages from an HCS topic    | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_messages_query_tool)     |
+| Tool Name                                                                             | Description                                          | Details                                                                          |
+|---------------------------------------------------------------------------------------|------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`GET_TOPIC_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_info_query_tool)             | Returns information for an HCS topic                 | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_info_query_tool)         |
+| [`GET_TOPIC_MESSAGES_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_messages_query_tool)     | Returns messages from an HCS topic with date filters | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_messages_query_tool)     |
 
 ---
 

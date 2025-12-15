@@ -77,18 +77,71 @@ def test_normalises_topic_messages_params_with_dict_input():
     assert result["upperTimestamp"] == ""
 
 
-def test_normalises_topic_messages_params_optional_timestamps_are_empty():
-    """Should set timestamps to empty strings (not None) as per service contract."""
+def test_normalises_topic_messages_params_with_start_time():
+    """Should convert start_time to Hedera Mirror Node timestamp format."""
     params = TopicMessagesQueryParameters(
         topic_id="0.0.1111",
+        start_time="2024-01-01T00:00:00Z",
+    )
+
+    result = HederaParameterNormaliser.normalise_get_topic_messages(params)
+
+    assert result["topic_id"] == "0.0.1111"
+    # 2024-01-01T00:00:00Z = 1704067200 seconds since epoch
+    assert result["lowerTimestamp"] == "1704067200.000000000"
+    assert result["upperTimestamp"] == ""
+
+
+def test_normalises_topic_messages_params_with_end_time():
+    """Should convert end_time to Hedera Mirror Node timestamp format."""
+    params = TopicMessagesQueryParameters(
+        topic_id="0.0.2222",
+        end_time="2024-12-31T23:59:59Z",
+    )
+
+    result = HederaParameterNormaliser.normalise_get_topic_messages(params)
+
+    assert result["topic_id"] == "0.0.2222"
+    assert result["lowerTimestamp"] == ""
+    # 2024-12-31T23:59:59Z = 1735689599 seconds since epoch
+    assert result["upperTimestamp"] == "1735689599.000000000"
+
+
+def test_normalises_topic_messages_params_with_both_timestamps():
+    """Should convert both start_time and end_time to Hedera Mirror Node timestamp format."""
+    params = TopicMessagesQueryParameters(
+        topic_id="0.0.3333",
         start_time="2024-01-01T00:00:00Z",
         end_time="2024-12-31T23:59:59Z",
     )
 
     result = HederaParameterNormaliser.normalise_get_topic_messages(params)
 
-    # Note: Current implementation sets these to empty strings regardless of input
-    # This test documents the current behavior
-    assert result["topic_id"] == "0.0.1111"
+    assert result["topic_id"] == "0.0.3333"
+    assert result["lowerTimestamp"] == "1704067200.000000000"
+    assert result["upperTimestamp"] == "1735689599.000000000"
+
+
+def test_normalises_topic_messages_params_with_timezone_offset():
+    """Should handle ISO 8601 timestamps with timezone offsets."""
+    params = TopicMessagesQueryParameters(
+        topic_id="0.0.4444",
+        start_time="2024-06-15T12:00:00+02:00",  # Noon in UTC+2 = 10:00 UTC
+    )
+
+    result = HederaParameterNormaliser.normalise_get_topic_messages(params)
+
+    assert result["topic_id"] == "0.0.4444"
+    # 2024-06-15T10:00:00Z = 1718445600 seconds since epoch
+    assert result["lowerTimestamp"] == "1718445600.000000000"
+
+
+def test_normalises_topic_messages_params_without_timestamps():
+    """Should set timestamps to empty strings when not provided."""
+    params = TopicMessagesQueryParameters(topic_id="0.0.5555")
+
+    result = HederaParameterNormaliser.normalise_get_topic_messages(params)
+
+    assert result["topic_id"] == "0.0.5555"
     assert result["lowerTimestamp"] == ""
     assert result["upperTimestamp"] == ""

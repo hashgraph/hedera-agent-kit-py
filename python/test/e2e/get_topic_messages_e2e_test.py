@@ -4,6 +4,7 @@ This module validates querying topic messages through the full LLM → tool → 
 """
 
 from typing import Any
+
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 from langchain_core.runnables import RunnableConfig
@@ -20,8 +21,8 @@ from test.utils.setup import (
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
-
 from test.utils.teardown import return_hbars_and_delete_account
+from test.utils.usd_to_hbar_service import UsdToHbarService
 
 
 @pytest.fixture(scope="session")
@@ -42,7 +43,8 @@ async def executor_account(operator_wrapper, operator_client):
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(20, in_tinybars=False)
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -211,3 +213,51 @@ async def test_handle_nonexistent_topic_via_agent(
 
     human_message = parsed_data["humanMessage"]
     assert "No messages found for topic" in human_message
+
+
+@pytest.mark.asyncio
+async def test_get_messages_after_timestamp_via_agent(
+    agent_executor,
+    topic_with_messages,
+    langchain_config,
+    response_parser: ResponseParserService,
+):
+    """Test fetching messages after a specific timestamp through the agent executor."""
+    topic_id = topic_with_messages
+
+    # First, get all messages to obtain timestamps
+    input_text_all = f"Get all messages from topic {topic_id}"
+    parsed_data_all = await execute_get_topic_messages_query(
+        agent_executor, input_text_all, langchain_config, response_parser
+    )
+
+    raw_data_all = parsed_data_all["raw"]
+    messages_all = raw_data_all.get("messages")
+    assert len(messages_all) == 3
+
+    # Messages are returned in descending order, reverse to get oldest first
+    ordered_messages = list(reversed(messages_all))
+    message_2_timestamp = ordered_messages[1]["consensus_timestamp"]
+
+    # Convert consensus_timestamp (e.g., "1234567890.123456789") to ISO format
+    from datetime import datetime, timezone
+
+    timestamp_seconds = int(message_2_timestamp.split(".")[0])
+    start_time = datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc).isoformat()
+
+    # Now query with start_time filter via natural language
+    input_text = f"Get messages from topic {topic_id} after {start_time}"
+    parsed_data = await execute_get_topic_messages_query(
+        agent_executor, input_text, langchain_config, response_parser
+    )
+
+    raw_data = parsed_data["raw"]
+    messages = raw_data.get("messages")
+
+    assert parsed_data.get("error") is None
+    # Should return 2 messages: E2E Message 2 and E2E Message 3
+    assert len(messages) == 2
+
+    # Messages returned in descending order, reverse for assertion
+    messages_text = [m["message"] for m in reversed(messages)]
+    assert messages_text == ["E2E Message 2", "E2E Message 3"]

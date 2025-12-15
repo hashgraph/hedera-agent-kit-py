@@ -54,7 +54,8 @@ async def setup_accounts():
     owner_key = PrivateKey.generate_ed25519()
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=owner_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
+            key=owner_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
         )
     )
     owner_account_id = owner_resp.account_id
@@ -65,7 +66,8 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ecdsa()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
+            key=spender_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     spender_account_id = spender_resp.account_id

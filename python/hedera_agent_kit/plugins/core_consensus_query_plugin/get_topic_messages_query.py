@@ -50,9 +50,9 @@ def get_topic_messages_query_prompt(context: Context = {}) -> str:
 This tool will return the messages for a given Hedera topic.  
 
 Parameters:  
-- topicId (str, required): The topic ID to query  
-- startTime (datetime, optional): The start datetime to query. If set, the messages will be returned after this datetime  
-- endTime (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime  
+- topic_id (str, required): The topic ID to query  
+- start_time (datetime, optional): The start datetime to query. If set, the messages will be returned after this datetime  
+- end_time (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime  
 - limit (int, optional): The limit of messages to query. If set, the number of messages to return  
 {usage_instructions}  
 """

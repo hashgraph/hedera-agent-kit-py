@@ -24,6 +24,7 @@ from test.utils.setup import (
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
+from test.utils.usd_to_hbar_service import UsdToHbarService
 
 
 @pytest.fixture(scope="module")
@@ -37,7 +38,7 @@ async def setup_accounts():
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key_pair.public_key(),
-            initial_balance=Hbar(30, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -152,6 +153,59 @@ async def test_fetch_messages_with_limit(setup_accounts, setup_topic_with_messag
     assert result.extra is not None
     # Should return at most 2 messages
     assert len(result.extra["messages"]) <= 2
+
+
+@pytest.mark.asyncio
+async def test_fetch_messages_between_specific_timestamps(
+    setup_accounts, setup_topic_with_messages
+):
+    """Should fetch messages between specific timestamps."""
+    executor_client = setup_accounts["executor_client"]
+    context = setup_accounts["context"]
+    created_topic_id = setup_topic_with_messages["created_topic_id"]
+
+    tool = GetTopicMessagesQueryTool(context)
+
+    # Fetch all messages first to get timestamps
+    all_messages_result = await tool.execute(
+        executor_client,
+        context,
+        TopicMessagesQueryParameters(topic_id=str(created_topic_id)),
+    )
+
+    assert all_messages_result.error is None
+    assert all_messages_result.extra is not None
+    messages = all_messages_result.extra["messages"]
+    assert len(messages) == 3
+
+    # Get the second message's timestamp (messages are returned in descending order)
+    # Reverse to get oldest first: [Message 1, Message 2, Message 3]
+    ordered_messages = list(reversed(messages))
+    message_2_timestamp = ordered_messages[1]["consensus_timestamp"]
+
+    # Convert consensus_timestamp (e.g., "1234567890.123456789") to ISO format
+    from datetime import datetime, timezone
+
+    timestamp_seconds = int(message_2_timestamp.split(".")[0])
+    start_time = datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc).isoformat()
+
+    # Now query with start_time filter
+    result = await tool.execute(
+        executor_client,
+        context,
+        TopicMessagesQueryParameters(
+            topic_id=str(created_topic_id), start_time=start_time
+        ),
+    )
+
+    assert result.error is None
+    assert result.extra is not None
+    # Should return 2 messages: Message 2 and Message 3
+    assert len(result.extra["messages"]) == 2
+
+    # Messages returned in descending order, reverse for assertion
+    messages_text = [m["message"] for m in reversed(result.extra["messages"])]
+    assert messages_text == ["Message 2", "Message 3"]
 
 
 @pytest.mark.asyncio

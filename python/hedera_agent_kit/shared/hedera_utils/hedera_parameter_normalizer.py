@@ -2242,10 +2242,26 @@ class HederaParameterNormaliser:
         )
 
         limit: int = parsed_params.limit or 100
+
+        # Convert start_time and end_time to Hedera Mirror Node timestamp format
+        lower_timestamp: str = ""
+        if parsed_params.start_time:
+            start_dt = datetime.fromisoformat(
+                parsed_params.start_time.replace("Z", "+00:00")
+            )
+            lower_timestamp = f"{int(start_dt.timestamp())}.000000000"
+
+        upper_timestamp: str = ""
+        if parsed_params.end_time:
+            end_dt = datetime.fromisoformat(
+                parsed_params.end_time.replace("Z", "+00:00")
+            )
+            upper_timestamp = f"{int(end_dt.timestamp())}.000000000"
+
         query_params: TopicMessagesQueryParams = {
             "topic_id": parsed_params.topic_id,
             "limit": limit,
-            "lowerTimestamp": "",
-            "upperTimestamp": "",
+            "lowerTimestamp": lower_timestamp,
+            "upperTimestamp": upper_timestamp,
         }
         return query_params
