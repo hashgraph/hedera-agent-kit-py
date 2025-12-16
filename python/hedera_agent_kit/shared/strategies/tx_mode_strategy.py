@@ -108,6 +108,9 @@ class ExecuteStrategy(TxModeStrategy):
             transaction_id=getattr(receipt, "transaction_id", None),
             topic_id=getattr(receipt, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
+            factory_contract_id=None,
+            # In the case of tools like create_erc20 or create_er721, the sdk returns the id of factory contract.
+            # in those situations we rely on the tool to inject the correct contract id and set the factory contract id before returning the response
             contract_id=getattr(receipt, "contract_id", None),
         )
 
