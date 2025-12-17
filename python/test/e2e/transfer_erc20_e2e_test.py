@@ -174,6 +174,12 @@ async def test_handle_various_natural_language_variations(setup_environment):
     config = env["langchain_config"]
     test_token_address = env["test_token_address"]
     recipient_account_id = env["recipient_account_id"]
+    executor_wrapper = env["executor_wrapper"]
+
+    # Get the balance BEFORE this test runs to handle parallel execution
+    initial_balance = await executor_wrapper.get_erc20_balance(
+        test_token_address, str(recipient_account_id)
+    )
 
     variations = [
         f"Transfer 1 ERC20 token {test_token_address} to {recipient_account_id}",
@@ -197,13 +203,12 @@ async def test_handle_various_natural_language_variations(setup_environment):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    # Verify the cumulative balance after all transfers
-    executor_wrapper = env["executor_wrapper"]
+    # Verify the cumulative balance after all transfers in THIS test only
     recipient_balance = await executor_wrapper.get_erc20_balance(
         test_token_address, str(recipient_account_id)
     )
-    # Total transferred: 1 + 5 + 2 = 8 tokens, plus 10 from the first test = 18 base units
-    expected_balance = 18
+    # Total transferred in THIS test: 1 + 5 + 2 = 8 tokens
+    expected_balance = initial_balance + total_transferred
     assert (
         recipient_balance == expected_balance
     ), f"Expected balance {expected_balance}, got {recipient_balance}"

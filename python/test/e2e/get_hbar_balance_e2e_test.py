@@ -189,7 +189,7 @@ async def test_get_hbar_balance_for_specific_account_zero_balance(
 
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.1)),
+            initial_balance=Hbar(0),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )
