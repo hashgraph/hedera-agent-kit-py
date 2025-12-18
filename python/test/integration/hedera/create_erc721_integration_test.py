@@ -26,14 +26,13 @@ from hedera_agent_kit.shared.parameter_schemas import (
     SchedulingParams,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """Set up Hedera operator client and context for tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Create an executor account
     executor_key_pair = PrivateKey.generate_ecdsa()
@@ -64,7 +63,6 @@ async def setup_environment():
         )
     )
     executor_client.close()
-    operator_client.close()
 
 
 @pytest.mark.asyncio

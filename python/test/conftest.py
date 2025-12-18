@@ -49,3 +49,45 @@ def slow_down_tests():
     delay_ms = float(os.getenv("TEST_DELAY_MS", "0"))
     if delay_ms > 0:
         time.sleep(delay_ms / 1000)
+
+
+# =============================================================================
+# SESSION-SCOPED FIXTURES (Run once for entire test session)
+# =============================================================================
+
+
+@pytest.fixture(scope="session")
+def operator_client():
+    """
+    Session-level operator client - created once for entire test run.
+
+    This fixture follows the TypeScript pattern of `beforeAll` at the global level.
+    The operator account (from env variables) is used to fund executor accounts
+    which perform the actual test operations.
+
+    Yields:
+        Client: A configured Hedera testnet client using operator credentials.
+    """
+    from test.utils.setup import get_operator_client_for_tests
+
+    client = get_operator_client_for_tests()
+    yield client
+    client.close()
+
+
+@pytest.fixture(scope="session")
+def operator_wrapper(operator_client):
+    """
+    Session-level operator wrapper - created once for entire test run.
+
+    Provides convenience methods for Hedera operations using the operator account.
+
+    Args:
+        operator_client: The session-scoped operator client fixture.
+
+    Returns:
+        HederaOperationsWrapper: A wrapper for common Hedera operations.
+    """
+    from test import HederaOperationsWrapper
+
+    return HederaOperationsWrapper(operator_client)

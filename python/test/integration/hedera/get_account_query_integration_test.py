@@ -10,7 +10,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -18,11 +17,9 @@ from hedera_agent_kit.shared.models import ToolResponse
 
 
 @pytest.fixture(scope="module")
-async def setup_operator():
-    client = get_operator_client_for_tests()
-    wrapper = HederaOperationsWrapper(client)
-    yield {"client": client, "wrapper": wrapper}
-    client.close()
+async def setup_operator(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
+    yield {"client": operator_client, "wrapper": operator_wrapper}
 
 
 @pytest.mark.asyncio
