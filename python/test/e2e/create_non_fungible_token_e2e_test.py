@@ -191,7 +191,7 @@ async def test_create_nft_minimal_params(
     assert token_info.token_type == TokenType.NON_FUNGIBLE_UNIQUE
     # Default supply type is finite
     assert token_info.supply_type == SupplyType.FINITE
-    assert token_info.max_supply == 100 # the default max supply is 100
+    assert token_info.max_supply == 100  # the default max supply is 100
 
 
 @pytest.mark.asyncio

@@ -301,7 +301,9 @@ async def test_signs_schedule_with_add_signature_wording(
     )
 
     # Act: Using "add signature" wording
-    input_text = f"I want to add my signature to the pending scheduled transaction {schedule_id}"
+    input_text = (
+        f"I want to add my signature to the pending scheduled transaction {schedule_id}"
+    )
     result = await agent_executor.ainvoke(
         {"messages": [HumanMessage(content=input_text)]},
         config=langchain_config,

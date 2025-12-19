@@ -108,11 +108,11 @@ async def create_signable_scheduled_transaction(
 ) -> str:
     """
     Creates a scheduled transaction that requires signature from executor.
-    
+
     The OPERATOR creates the schedule, but the EXECUTOR is the one whose
     account is being debited. This ensures the executor's signature is
     required and not already present.
-    
+
     The schedule is created with wait_for_expiry=True so it won't auto-execute
     when signed.
     """
@@ -154,7 +154,7 @@ async def create_signable_scheduled_transaction_no_wait(
     """
     Creates a scheduled transaction that will execute immediately after all required
     signatures are collected (wait_for_expiry=False).
-    
+
     The OPERATOR creates the schedule, but the EXECUTOR is debited.
     """
     # Calculate expiration time (1 hour from now)

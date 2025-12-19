@@ -46,7 +46,8 @@ async def setup_executor(setup_operator):
     executor_key = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     executor_account_id = executor_resp.account_id

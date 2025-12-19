@@ -61,7 +61,9 @@ async def test_simple_sign_schedule(agent_executor, toolkit, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_sign_schedule_with_explicit_wording(agent_executor, toolkit, monkeypatch):
+async def test_sign_schedule_with_explicit_wording(
+    agent_executor, toolkit, monkeypatch
+):
     """Test signing with explicit 'schedule ID' wording."""
     input_text = "Please sign schedule ID 0.0.67890"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
@@ -87,7 +89,9 @@ async def test_sign_schedule_with_explicit_wording(agent_executor, toolkit, monk
 @pytest.mark.asyncio
 async def test_sign_schedule_conversational(agent_executor, toolkit, monkeypatch):
     """Test signing with conversational request."""
-    input_text = "I want to add my signature to the pending scheduled transaction 0.0.11111"
+    input_text = (
+        "I want to add my signature to the pending scheduled transaction 0.0.11111"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()

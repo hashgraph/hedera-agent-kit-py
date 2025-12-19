@@ -149,9 +149,7 @@ class AccountTokenBalancesQueryParametersNormalised(BaseModelWithArbitraryTypes)
 class SignScheduleTransactionToolParameters(BaseModelWithArbitraryTypes):
     """Tool input parameters for signing a scheduled transaction (LLM-facing)."""
 
-    schedule_id: str = Field(
-        description="The ID of the scheduled transaction to sign."
-    )
+    schedule_id: str = Field(description="The ID of the scheduled transaction to sign.")
 
 
 class SignScheduleTransactionParametersNormalised(BaseModelWithArbitraryTypes):
