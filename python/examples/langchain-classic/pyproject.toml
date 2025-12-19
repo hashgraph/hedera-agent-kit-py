@@ -8,7 +8,7 @@ package-mode = false
 python = ">=3.10,<3.14"
 hedera-agent-kit = { path = "../../", develop = true }
 langchain-classic = "1.0.0"
-python-dotenv = "^1.2.1"
+python-dotenv = "1.2.1"
 
 [build-system]
 requires = ["poetry-core"]
