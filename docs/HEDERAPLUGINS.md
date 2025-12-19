@@ -45,6 +45,7 @@ This plugin provides tools for Hedera **Account Service operations**:
 | [`UPDATE_ACCOUNT_TOOL`](./HEDERATOOLS.md#update_account_tool)                                     | Update an account's metadata       | [View Parameters & Examples](./HEDERATOOLS.md#update_account_tool)                   |
 | [`DELETE_ACCOUNT_TOOL`](./HEDERATOOLS.md#delete_account_tool)                                     | Delete an account                  | [View Parameters & Examples](./HEDERATOOLS.md#delete_account_tool)                   |
 | [`SCHEDULE_DELETE_TOOL`](./HEDERATOOLS.md#schedule_delete_tool)                                   | Delete a scheduled transaction     | [View Parameters & Examples](./HEDERATOOLS.md#schedule_delete_tool)                  |
+| [`SIGN_SCHEDULE_TRANSACTION_TOOL`](./HEDERATOOLS.md#sign_schedule_transaction_tool)               | Sign a scheduled transaction       | [View Parameters & Examples](./HEDERATOOLS.md#sign_schedule_transaction_tool)        |
 | [`APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL`](./HEDERATOOLS.md#approve_fungible_token_allowance_tool) | Approve token spending allowances  | [View Parameters & Examples](./HEDERATOOLS.md#approve_fungible_token_allowance_tool) |
 | [`APPROVE_NFT_ALLOWANCE_TOOL`](./HEDERATOOLS.md#approve_nft_allowance_tool)                       | Approve NFT allowances             | [View Parameters & Examples](./HEDERATOOLS.md#approve_nft_allowance_tool)            |
 
@@ -134,8 +135,8 @@ and ERC-721 tokens via on-chain factory contracts.
 
 This plugin provides tools for querying EVM-related data on Hedera via the Mirror Node.
 
-| Tool Name | Description | Details |
-|-----------|-------------|---------|
+| Tool Name                                                                       | Description                  | Details                                                                     |
+|---------------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
 | [`GET_CONTRACT_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_contract_info_query_tool) | Returns contract information | [View Parameters & Examples](./HEDERATOOLS.md#get_contract_info_query_tool) |
 
 ---

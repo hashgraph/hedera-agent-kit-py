@@ -19,6 +19,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
   - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
   - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
   - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
+  - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
 - [Account Query Tools](#account-query-tools)
   - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
   - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
@@ -67,11 +68,11 @@ Transfer HBAR between accounts.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `transfers` | `List[dict]` | ✅ | Array of transfers. Each transfer has `account_id` (str) and `amount` (float, in HBAR). |
-| `source_account_id` | `str` | ❌ | Account ID of the HBAR owner (defaults to operator). |
-| `transaction_memo` | `str` | ❌ | Memo to include with the transaction. |
+| Parameter           | Type         | Required | Description                                                                             |
+|---------------------|--------------|----------|-----------------------------------------------------------------------------------------|
+| `transfers`         | `List[dict]` | ✅        | Array of transfers. Each transfer has `account_id` (str) and `amount` (float, in HBAR). |
+| `source_account_id` | `str`        | ❌        | Account ID of the HBAR owner (defaults to operator).                                    |
+| `transaction_memo`  | `str`        | ❌        | Memo to include with the transaction.                                                   |
 
 #### Example Prompts
 
@@ -89,12 +90,12 @@ Creates a new Hedera account.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `public_key` | `str` | ❌ | operator key | Account public key. |
-| `account_memo` | `str` | ❌ | `None` | Memo for the account (max 100 chars). |
-| `initial_balance` | `float` | ❌ | `0` | Initial HBAR balance. |
-| `max_automatic_token_associations` | `int` | ❌ | `-1` | Max automatic token associations (-1 for unlimited). |
+| Parameter                          | Type    | Required | Default      | Description                                          |
+|------------------------------------|---------|----------|--------------|------------------------------------------------------|
+| `public_key`                       | `str`   | ❌        | operator key | Account public key.                                  |
+| `account_memo`                     | `str`   | ❌        | `None`       | Memo for the account (max 100 chars).                |
+| `initial_balance`                  | `float` | ❌        | `0`          | Initial HBAR balance.                                |
+| `max_automatic_token_associations` | `int`   | ❌        | `-1`         | Max automatic token associations (-1 for unlimited). |
 
 #### Example Prompts
 
@@ -112,13 +113,13 @@ Update an account's metadata.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ❌ | Account ID to update (defaults to operator). |
-| `max_automatic_token_associations` | `int` | ❌ | Max automatic token associations. |
-| `staked_account_id` | `str` | ❌ | Account to stake to. |
-| `account_memo` | `str` | ❌ | New account memo. |
-| `decline_staking_reward` | `bool` | ❌ | Whether to decline staking rewards. |
+| Parameter                          | Type   | Required | Description                                  |
+|------------------------------------|--------|----------|----------------------------------------------|
+| `account_id`                       | `str`  | ❌        | Account ID to update (defaults to operator). |
+| `max_automatic_token_associations` | `int`  | ❌        | Max automatic token associations.            |
+| `staked_account_id`                | `str`  | ❌        | Account to stake to.                         |
+| `account_memo`                     | `str`  | ❌        | New account memo.                            |
+| `decline_staking_reward`           | `bool` | ❌        | Whether to decline staking rewards.          |
 
 #### Example Prompts
 
@@ -135,10 +136,10 @@ Delete an account and transfer its assets.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ✅ | The account ID to delete. |
-| `transfer_account_id` | `str` | ❌ | Account to transfer remaining funds to (defaults to operator). |
+| Parameter             | Type  | Required | Description                                                    |
+|-----------------------|-------|----------|----------------------------------------------------------------|
+| `account_id`          | `str` | ✅        | The account ID to delete.                                      |
+| `transfer_account_id` | `str` | ❌        | Account to transfer remaining funds to (defaults to operator). |
 
 #### Example Prompts
 
@@ -155,12 +156,12 @@ Approve an HBAR spending allowance for a spender account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner_account_id` | `str` | ❌ | Owner account ID (defaults to operator). |
-| `spender_account_id` | `str` | ✅ | Spender account ID. |
-| `amount` | `float` | ✅ | Amount of HBAR to approve (must be ≥ 0). |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter            | Type    | Required | Description                              |
+|----------------------|---------|----------|------------------------------------------|
+| `owner_account_id`   | `str`   | ❌        | Owner account ID (defaults to operator). |
+| `spender_account_id` | `str`   | ✅        | Spender account ID.                      |
+| `amount`             | `float` | ✅        | Amount of HBAR to approve (must be ≥ 0). |
+| `transaction_memo`   | `str`   | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -177,11 +178,11 @@ Delete an HBAR allowance from an owner to a spender.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner_account_id` | `str` | ❌ | Owner account ID (defaults to operator). |
-| `spender_account_id` | `str` | ✅ | Spender account ID. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter            | Type  | Required | Description                              |
+|----------------------|-------|----------|------------------------------------------|
+| `owner_account_id`   | `str` | ❌        | Owner account ID (defaults to operator). |
+| `spender_account_id` | `str` | ✅        | Spender account ID.                      |
+| `transaction_memo`   | `str` | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -198,11 +199,11 @@ Transfer HBAR using an existing allowance.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `transfers` | `List[dict]` | ✅ | Array of transfers. Each has `account_id` (str) and `amount` (float). |
-| `source_account_id` | `str` | ✅ | Account ID of the allowance granter. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter           | Type         | Required | Description                                                           |
+|---------------------|--------------|----------|-----------------------------------------------------------------------|
+| `transfers`         | `List[dict]` | ✅        | Array of transfers. Each has `account_id` (str) and `amount` (float). |
+| `source_account_id` | `str`        | ✅        | Account ID of the allowance granter.                                  |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                             |
 
 #### Example Prompts
 
@@ -219,12 +220,12 @@ Approve fungible token spending allowances.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner_account_id` | `str` | ❌ | Owner account ID (defaults to operator). |
-| `spender_account_id` | `str` | ✅ | Spender account ID. |
-| `token_approvals` | `List[dict]` | ✅ | List of `{token_id, amount}` objects. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter            | Type         | Required | Description                              |
+|----------------------|--------------|----------|------------------------------------------|
+| `owner_account_id`   | `str`        | ❌        | Owner account ID (defaults to operator). |
+| `spender_account_id` | `str`        | ✅        | Spender account ID.                      |
+| `token_approvals`    | `List[dict]` | ✅        | List of `{token_id, amount}` objects.    |
+| `transaction_memo`   | `str`        | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -241,14 +242,14 @@ Approve an NFT allowance for specific serials or all serials.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner_account_id` | `str` | ❌ | Owner account ID (defaults to operator). |
-| `spender_account_id` | `str` | ✅ | Spender account ID. |
-| `token_id` | `str` | ✅ | NFT token ID. |
-| `all_serials` | `bool` | ❌ | Approve all serials (default: `False`). |
-| `serial_numbers` | `List[int]` | ❌ | Specific serial numbers to approve. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter            | Type        | Required | Description                              |
+|----------------------|-------------|----------|------------------------------------------|
+| `owner_account_id`   | `str`       | ❌        | Owner account ID (defaults to operator). |
+| `spender_account_id` | `str`       | ✅        | Spender account ID.                      |
+| `token_id`           | `str`       | ✅        | NFT token ID.                            |
+| `all_serials`        | `bool`      | ❌        | Approve all serials (default: `False`).  |
+| `serial_numbers`     | `List[int]` | ❌        | Specific serial numbers to approve.      |
+| `transaction_memo`   | `str`       | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -265,15 +266,34 @@ Delete a scheduled transaction.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `schedule_id` | `str` | ✅ | The schedule ID of the scheduled transaction to delete. |
+| Parameter     | Type  | Required | Description                                             |
+|---------------|-------|----------|---------------------------------------------------------|
+| `schedule_id` | `str` | ✅        | The schedule ID of the scheduled transaction to delete. |
 
 #### Example Prompts
 
 ```
 Delete scheduled transaction 0.0.12345
 Cancel schedule 0.0.12345
+```
+
+---
+
+### SIGN_SCHEDULE_TRANSACTION_TOOL
+
+Sign a scheduled transaction to add your signature to an existing schedule.
+
+#### Parameters
+
+| Parameter     | Type  | Required | Description                                           |
+|---------------|-------|----------|-------------------------------------------------------|
+| `schedule_id` | `str` | ✅        | The schedule ID of the scheduled transaction to sign. |
+
+#### Example Prompts
+
+```
+Sign scheduled transaction 0.0.12345
+Add my signature to schedule 0.0.12345
 ```
 
 ---
@@ -286,9 +306,9 @@ Get the HBAR balance of an account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ❌ | Account ID to query (defaults to operator). |
+| Parameter    | Type  | Required | Description                                 |
+|--------------|-------|----------|---------------------------------------------|
+| `account_id` | `str` | ❌        | Account ID to query (defaults to operator). |
 
 #### Example Prompts
 
@@ -306,9 +326,9 @@ Get comprehensive account information.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ✅ | Account ID to query. |
+| Parameter    | Type  | Required | Description          |
+|--------------|-------|----------|----------------------|
+| `account_id` | `str` | ✅        | Account ID to query. |
 
 #### Example Prompts
 
@@ -325,10 +345,10 @@ Get token balances for an account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ❌ | Account ID to query (defaults to operator). |
-| `token_id` | `str` | ❌ | Token ID to filter by. |
+| Parameter    | Type  | Required | Description                                 |
+|--------------|-------|----------|---------------------------------------------|
+| `account_id` | `str` | ❌        | Account ID to query (defaults to operator). |
+| `token_id`   | `str` | ❌        | Token ID to filter by.                      |
 
 #### Example Prompts
 
@@ -348,11 +368,11 @@ Create a new HCS topic.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `is_submit_key` | `bool` | ❌ | `False` | Whether to set a submit key. |
-| `topic_memo` | `str` | ❌ | `None` | Memo for the topic. |
-| `transaction_memo` | `str` | ❌ | `None` | Memo for the transaction. |
+| Parameter          | Type   | Required | Default | Description                  |
+|--------------------|--------|----------|---------|------------------------------|
+| `is_submit_key`    | `bool` | ❌        | `False` | Whether to set a submit key. |
+| `topic_memo`       | `str`  | ❌        | `None`  | Memo for the topic.          |
+| `transaction_memo` | `str`  | ❌        | `None`  | Memo for the transaction.    |
 
 #### Example Prompts
 
@@ -370,11 +390,11 @@ Submit a message to an HCS topic.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `topic_id` | `str` | ✅ | Topic ID to submit to. |
-| `message` | `str` | ✅ | Message content. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter          | Type  | Required | Description               |
+|--------------------|-------|----------|---------------------------|
+| `topic_id`         | `str` | ✅        | Topic ID to submit to.    |
+| `message`          | `str` | ✅        | Message content.          |
+| `transaction_memo` | `str` | ❌        | Memo for the transaction. |
 
 #### Example Prompts
 
@@ -391,9 +411,9 @@ Delete an HCS topic.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `topic_id` | `str` | ✅ | Topic ID to delete. |
+| Parameter  | Type  | Required | Description         |
+|------------|-------|----------|---------------------|
+| `topic_id` | `str` | ✅        | Topic ID to delete. |
 
 #### Example Prompts
 
@@ -410,15 +430,15 @@ Update an HCS topic.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `topic_id` | `str` | ✅ | Topic ID to update. |
-| `topic_memo` | `str` | ❌ | New topic memo. |
-| `admin_key` | `bool\|str` | ❌ | New admin key (`True` = use operator key, or provide public key string). |
-| `submit_key` | `bool\|str` | ❌ | New submit key. |
-| `auto_renew_account_id` | `str` | ❌ | Auto-renew account ID. |
-| `auto_renew_period` | `int` | ❌ | Auto-renew period in seconds. |
-| `expiration_time` | `str\|datetime` | ❌ | New expiration time (ISO 8601). |
+| Parameter               | Type            | Required | Description                                                              |
+|-------------------------|-----------------|----------|--------------------------------------------------------------------------|
+| `topic_id`              | `str`           | ✅        | Topic ID to update.                                                      |
+| `topic_memo`            | `str`           | ❌        | New topic memo.                                                          |
+| `admin_key`             | `bool\|str`     | ❌        | New admin key (`True` = use operator key, or provide public key string). |
+| `submit_key`            | `bool\|str`     | ❌        | New submit key.                                                          |
+| `auto_renew_account_id` | `str`           | ❌        | Auto-renew account ID.                                                   |
+| `auto_renew_period`     | `int`           | ❌        | Auto-renew period in seconds.                                            |
+| `expiration_time`       | `str\|datetime` | ❌        | New expiration time (ISO 8601).                                          |
 
 #### Example Prompts
 
@@ -437,9 +457,9 @@ Get information about an HCS topic.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `topic_id` | `str` | ✅ | Topic ID to query. |
+| Parameter  | Type  | Required | Description        |
+|------------|-------|----------|--------------------|
+| `topic_id` | `str` | ✅        | Topic ID to query. |
 
 #### Example Prompts
 
@@ -458,16 +478,16 @@ Create a fungible token on Hedera.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `token_name` | `str` | ✅ | - | Token name. |
-| `token_symbol` | `str` | ✅ | - | Token symbol. |
-| `initial_supply` | `int` | ❌ | `0` | Initial supply (display units). |
-| `supply_type` | `int` | ❌ | `1` | `0` = infinite, `1` = finite. |
-| `max_supply` | `int` | ❌ | `1000000` | Maximum supply (display units). |
-| `decimals` | `int` | ❌ | `0` | Number of decimals. |
-| `treasury_account_id` | `str` | ❌ | operator | Treasury account. |
-| `is_supply_key` | `bool` | ❌ | `None` | Whether to set supply key. |
+| Parameter             | Type   | Required | Default   | Description                     |
+|-----------------------|--------|----------|-----------|---------------------------------|
+| `token_name`          | `str`  | ✅        | -         | Token name.                     |
+| `token_symbol`        | `str`  | ✅        | -         | Token symbol.                   |
+| `initial_supply`      | `int`  | ❌        | `0`       | Initial supply (display units). |
+| `supply_type`         | `int`  | ❌        | `1`       | `0` = infinite, `1` = finite.   |
+| `max_supply`          | `int`  | ❌        | `1000000` | Maximum supply (display units). |
+| `decimals`            | `int`  | ❌        | `0`       | Number of decimals.             |
+| `treasury_account_id` | `str`  | ❌        | operator  | Treasury account.               |
+| `is_supply_key`       | `bool` | ❌        | `None`    | Whether to set supply key.      |
 
 #### Example Prompts
 
@@ -485,13 +505,13 @@ Create a non-fungible token (NFT) on Hedera.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `token_name` | `str` | ✅ | - | Token name. |
-| `token_symbol` | `str` | ✅ | - | Token symbol. |
-| `supply_type` | `int` | ❌ | `1` | `0` = infinite, `1` = finite. |
-| `max_supply` | `int` | ❌ | `100` (if finite) | Maximum supply. |
-| `treasury_account_id` | `str` | ❌ | operator | Treasury account. |
+| Parameter             | Type  | Required | Default           | Description                   |
+|-----------------------|-------|----------|-------------------|-------------------------------|
+| `token_name`          | `str` | ✅        | -                 | Token name.                   |
+| `token_symbol`        | `str` | ✅        | -                 | Token symbol.                 |
+| `supply_type`         | `int` | ❌        | `1`               | `0` = infinite, `1` = finite. |
+| `max_supply`          | `int` | ❌        | `100` (if finite) | Maximum supply.               |
+| `treasury_account_id` | `str` | ❌        | operator          | Treasury account.             |
 
 #### Example Prompts
 
@@ -508,10 +528,10 @@ Mint additional supply of a fungible token.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_id` | `str` | ✅ | Token ID to mint. |
-| `amount` | `float` | ✅ | Amount to mint (display units). |
+| Parameter  | Type    | Required | Description                     |
+|------------|---------|----------|---------------------------------|
+| `token_id` | `str`   | ✅        | Token ID to mint.               |
+| `amount`   | `float` | ✅        | Amount to mint (display units). |
 
 #### Example Prompts
 
@@ -528,10 +548,10 @@ Mint NFTs with metadata.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_id` | `str` | ✅ | NFT token ID. |
-| `uris` | `List[str]` | ✅ | Array of metadata URIs (max 10). |
+| Parameter  | Type        | Required | Description                      |
+|------------|-------------|----------|----------------------------------|
+| `token_id` | `str`       | ✅        | NFT token ID.                    |
+| `uris`     | `List[str]` | ✅        | Array of metadata URIs (max 10). |
 
 #### Example Prompts
 
@@ -548,10 +568,10 @@ Associate tokens with an account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_ids` | `List[str]` | ✅ | Token IDs to associate. |
-| `account_id` | `str` | ❌ | Account to associate (defaults to operator). |
+| Parameter    | Type        | Required | Description                                  |
+|--------------|-------------|----------|----------------------------------------------|
+| `token_ids`  | `List[str]` | ✅        | Token IDs to associate.                      |
+| `account_id` | `str`       | ❌        | Account to associate (defaults to operator). |
 
 #### Example Prompts
 
@@ -568,11 +588,11 @@ Dissociate tokens from an account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_ids` | `List[str]` | ✅ | Token IDs to dissociate. |
-| `account_id` | `str` | ❌ | Account to dissociate from (defaults to operator). |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter          | Type        | Required | Description                                        |
+|--------------------|-------------|----------|----------------------------------------------------|
+| `token_ids`        | `List[str]` | ✅        | Token IDs to dissociate.                           |
+| `account_id`       | `str`       | ❌        | Account to dissociate from (defaults to operator). |
+| `transaction_memo` | `str`       | ❌        | Memo for the transaction.                          |
 
 #### Example Prompts
 
@@ -589,12 +609,12 @@ Airdrop fungible tokens to multiple recipients.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_id` | `str` | ✅ | Token ID to airdrop. |
-| `recipients` | `List[dict]` | ✅ | Array of `{account_id, amount}` objects. |
-| `source_account_id` | `str` | ❌ | Source account (defaults to operator). |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter           | Type         | Required | Description                              |
+|---------------------|--------------|----------|------------------------------------------|
+| `token_id`          | `str`        | ✅        | Token ID to airdrop.                     |
+| `recipients`        | `List[dict]` | ✅        | Array of `{account_id, amount}` objects. |
+| `source_account_id` | `str`        | ❌        | Source account (defaults to operator).   |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -611,12 +631,12 @@ Transfer fungible tokens using an allowance.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_id` | `str` | ✅ | Token ID to transfer. |
-| `source_account_id` | `str` | ✅ | Token owner account ID. |
-| `transfers` | `List[dict]` | ✅ | Array of `{account_id, amount}` objects. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter           | Type         | Required | Description                              |
+|---------------------|--------------|----------|------------------------------------------|
+| `token_id`          | `str`        | ✅        | Token ID to transfer.                    |
+| `source_account_id` | `str`        | ✅        | Token owner account ID.                  |
+| `transfers`         | `List[dict]` | ✅        | Array of `{account_id, amount}` objects. |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -633,12 +653,12 @@ Transfer NFTs using an allowance.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `source_account_id` | `str` | ✅ | NFT owner account ID. |
-| `token_id` | `str` | ✅ | NFT token ID. |
-| `recipients` | `List[dict]` | ✅ | Array of `{recipient, serial_number}` objects. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter           | Type         | Required | Description                                    |
+|---------------------|--------------|----------|------------------------------------------------|
+| `source_account_id` | `str`        | ✅        | NFT owner account ID.                          |
+| `token_id`          | `str`        | ✅        | NFT token ID.                                  |
+| `recipients`        | `List[dict]` | ✅        | Array of `{recipient, serial_number}` objects. |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                      |
 
 #### Example Prompts
 
@@ -655,12 +675,12 @@ Delete fungible token allowances.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner_account_id` | `str` | ❌ | Owner account ID (defaults to operator). |
-| `spender_account_id` | `str` | ✅ | Spender account ID. |
-| `token_ids` | `List[str]` | ✅ | Token IDs to remove allowances for. |
-| `transaction_memo` | `str` | ❌ | Memo for the transaction. |
+| Parameter            | Type        | Required | Description                              |
+|----------------------|-------------|----------|------------------------------------------|
+| `owner_account_id`   | `str`       | ❌        | Owner account ID (defaults to operator). |
+| `spender_account_id` | `str`       | ✅        | Spender account ID.                      |
+| `token_ids`          | `List[str]` | ✅        | Token IDs to remove allowances for.      |
+| `transaction_memo`   | `str`       | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -679,9 +699,9 @@ Get information about a token.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token_id` | `str` | ✅ | Token ID to query. |
+| Parameter  | Type  | Required | Description        |
+|------------|-------|----------|--------------------|
+| `token_id` | `str` | ✅        | Token ID to query. |
 
 #### Example Prompts
 
@@ -698,9 +718,9 @@ Get pending airdrops for an account.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `account_id` | `str` | ❌ | Account ID to query (defaults to operator). |
+| Parameter    | Type  | Required | Description                                 |
+|--------------|-------|----------|---------------------------------------------|
+| `account_id` | `str` | ❌        | Account ID to query (defaults to operator). |
 
 #### Example Prompts
 
@@ -719,12 +739,12 @@ Deploy an ERC-20 token via factory contract.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `token_name` | `str` | ✅ | - | Token name. |
-| `token_symbol` | `str` | ✅ | - | Token symbol. |
-| `decimals` | `int` | ❌ | `18` | Number of decimals. |
-| `initial_supply` | `int` | ❌ | `0` | Initial supply (base units). |
+| Parameter        | Type  | Required | Default | Description                  |
+|------------------|-------|----------|---------|------------------------------|
+| `token_name`     | `str` | ✅        | -       | Token name.                  |
+| `token_symbol`   | `str` | ✅        | -       | Token symbol.                |
+| `decimals`       | `int` | ❌        | `18`    | Number of decimals.          |
+| `initial_supply` | `int` | ❌        | `0`     | Initial supply (base units). |
 
 #### Example Prompts
 
@@ -742,11 +762,11 @@ Transfer ERC-20 tokens.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|--------------|
-| `contract_id` | `str` | ✅ | ERC-20 contract ID (EVM address or Hedera ID). |
-| `recipient_address` | `str` | ✅ | Recipient address (EVM or Hedera ID). |
-| `amount` | `int` | ✅ | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
+| Parameter           | Type  | Required | Description                                                                                                      |
+|---------------------|-------|----------|------------------------------------------------------------------------------------------------------------------|
+| `contract_id`       | `str` | ✅        | ERC-20 contract ID (EVM address or Hedera ID).                                                                   |
+| `recipient_address` | `str` | ✅        | Recipient address (EVM or Hedera ID).                                                                            |
+| `amount`            | `int` | ✅        | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
 
 > [!IMPORTANT]
 > The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
@@ -766,11 +786,11 @@ Deploy an ERC-721 (NFT) token via factory contract.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `token_name` | `str` | ✅ | - | Token name. |
-| `token_symbol` | `str` | ✅ | - | Token symbol. |
-| `base_uri` | `str` | ❌ | `""` | Base URI for token metadata. |
+| Parameter      | Type  | Required | Default | Description                  |
+|----------------|-------|----------|---------|------------------------------|
+| `token_name`   | `str` | ✅        | -       | Token name.                  |
+| `token_symbol` | `str` | ✅        | -       | Token symbol.                |
+| `base_uri`     | `str` | ❌        | `""`    | Base URI for token metadata. |
 
 #### Example Prompts
 
@@ -787,10 +807,10 @@ Mint a new ERC-721 NFT by calling the `safeMint(to)` function on the contract.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `contract_id` | `str` | ✅ | - | The ID of the ERC-721 contract (EVM address or Hedera ID). |
-| `to_address` | `str` | ❌ | operator | Address to which the token will be minted. |
+| Parameter     | Type  | Required | Default  | Description                                                |
+|---------------|-------|----------|----------|------------------------------------------------------------|
+| `contract_id` | `str` | ✅        | -        | The ID of the ERC-721 contract (EVM address or Hedera ID). |
+| `to_address`  | `str` | ❌        | operator | Address to which the token will be minted.                 |
 
 #### Example Prompts
 
@@ -808,12 +828,12 @@ Transfer an ERC-721 NFT.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|--------------|
-| `contract_id` | `str` | ✅ | ERC-721 contract ID (EVM address or Hedera ID). |
-| `from_address` | `str` | ❌ | Sender address (defaults to operator). |
-| `to_address` | `str` | ✅ | Recipient address (EVM or Hedera ID). |
-| `token_id` | `int` | ✅ | The ID of the specific NFT within the ERC-721 collection to transfer. |
+| Parameter      | Type  | Required | Description                                                           |
+|----------------|-------|----------|-----------------------------------------------------------------------|
+| `contract_id`  | `str` | ✅        | ERC-721 contract ID (EVM address or Hedera ID).                       |
+| `from_address` | `str` | ❌        | Sender address (defaults to operator).                                |
+| `to_address`   | `str` | ✅        | Recipient address (EVM or Hedera ID).                                 |
+| `token_id`     | `int` | ✅        | The ID of the specific NFT within the ERC-721 collection to transfer. |
 
 > [!NOTE]
 > In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The first minted NFT is usually token ID 0.
@@ -835,9 +855,9 @@ Get information about an EVM contract on Hedera.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `contract_id` | `str` | ✅ | The contract ID or EVM address to query. |
+| Parameter     | Type  | Required | Description                              |
+|---------------|-------|----------|------------------------------------------|
+| `contract_id` | `str` | ✅        | The contract ID or EVM address to query. |
 
 #### Example Prompts
 
@@ -857,10 +877,10 @@ Get details for a transaction.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `transaction_id` | `str` | ✅ | Transaction ID to query. |
-| `transaction_nonce` | `int` | ❌ | Transaction nonce. |
+| Parameter           | Type  | Required | Description              |
+|---------------------|-------|----------|--------------------------|
+| `transaction_id`    | `str` | ✅        | Transaction ID to query. |
+| `transaction_nonce` | `int` | ❌        | Transaction nonce.       |
 
 #### Example Prompts
 
@@ -879,9 +899,9 @@ Get the HBAR exchange rate.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `timestamp` | `int` | ❌ | Timestamp (seconds or nanos since epoch) for historical rate. |
+| Parameter   | Type  | Required | Description                                                   |
+|-------------|-------|----------|---------------------------------------------------------------|
+| `timestamp` | `int` | ❌        | Timestamp (seconds or nanos since epoch) for historical rate. |
 
 #### Example Prompts
 
