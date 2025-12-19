@@ -41,7 +41,7 @@ def mint_erc721_prompt(context: Context = {}) -> str:
     context_snippet = PromptGenerator.get_context_snippet(context)
     usage_instructions = PromptGenerator.get_parameter_usage_instructions()
     to_address_desc = PromptGenerator.get_any_address_parameter_description(
-        "toAddress", context, is_required=False
+        "to_address", context, is_required=False
     )
 
     return f"""
