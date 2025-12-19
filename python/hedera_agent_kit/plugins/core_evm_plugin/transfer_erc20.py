@@ -65,16 +65,22 @@ Do NOT use this tool for:
 - Native Hedera Token Service (HTS) transfers.
 - Transferring tokens "on behalf of" another account (use the Allowance tool instead).
 
+**Address Format Rules**:
+- **EVM addresses** start with "0x" followed by 40 hexadecimal characters (e.g., "0x1111111111111111111111111111111111111111"). Keep them exactly as given.
+- **Hedera account IDs** use the format "0.0.XXXXX" with dots (e.g., "0.0.1234"). Keep them exactly as given.
+- NEVER convert between formats. Pass addresses exactly as the user provides them.
+
 Parameters:
-- contract_id (str, required): The id of the ERC20 contract. This can be the EVM address (0x???) or the Hedera account id (0.0.????).
-- recipient_address (str, required): The EVM or Hedera address to which the tokens will be transferred.
+- contract_id (str, required): The ERC20 contract identifier. Can be an EVM address (0x...) or Hedera account ID (0.0.XXXX). Pass exactly as provided.
+- recipient_address (str, required): The recipient's address. Can be an EVM address (0x...) or Hedera account ID (0.0.XXXX). Pass exactly as provided.
 - amount (number, required): The amount to be transferred. Given in base units!
 - {scheduled_desc}
 
 {usage_instructions}
 
-Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94..."
-Example: "Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678"
+Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94..." → contract_id="0.0.6473135", recipient_address="0xd94..."
+Example: "Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678" → contract_id="0.0.1234", recipient_address="0.0.5678"
+Example: "Transfer 10 from EVM contract 0x1111111111111111111111111111111111111111 to Hedera account 0.0.5678" → contract_id="0x1111111111111111111111111111111111111111", recipient_address="0.0.5678"
 """
 
 

@@ -172,8 +172,10 @@ async def test_match_and_extract_params_for_scheduled_creation(
 
 
 @pytest.mark.asyncio
-async def test_parse_infinite_supply(agent_executor, toolkit, monkeypatch):
-    """Test parsing for infinite supply type."""
+async def test_incomplete_params_may_ask_for_clarification(
+    agent_executor, toolkit, monkeypatch
+):
+    """Test that with missing required params, the LLM may ask for clarification or make reasonable defaults."""
     input_text = "Create a token with 2 decimals and 1000 initial balance"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
