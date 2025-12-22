@@ -9,6 +9,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TopicId
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 import base64
 
@@ -27,7 +28,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
 DEFAULT_EXECUTOR_BALANCE = Hbar(
-    UsdToHbarService.usd_to_hbar(0.25)
+    UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
 )  # Needs to cover account + topic ops
 
 

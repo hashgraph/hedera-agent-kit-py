@@ -9,6 +9,7 @@ from typing import Any
 from hiero_sdk_python import PrivateKey, Hbar, SupplyType
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
 from langchain_core.runnables import RunnableConfig
@@ -47,7 +48,7 @@ async def setup_environment(operator_client, operator_wrapper):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -84,7 +85,7 @@ async def setup_environment(operator_client, operator_wrapper):
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),  # Using an executor key for simplicity in test control
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             max_automatic_token_associations=0,
         )
     )

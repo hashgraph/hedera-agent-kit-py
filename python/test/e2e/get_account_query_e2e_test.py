@@ -9,6 +9,7 @@ import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -24,7 +25,7 @@ from test.utils.setup import (
 )
 
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================

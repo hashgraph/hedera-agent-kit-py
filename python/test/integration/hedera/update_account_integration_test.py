@@ -10,6 +10,7 @@ import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 
 from hedera_agent_kit.plugins.core_account_plugin import UpdateAccountTool
 from hedera_agent_kit.shared import AgentMode
@@ -45,7 +46,7 @@ async def setup_executor(setup_operator):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     executor_account_id = executor_resp.account_id

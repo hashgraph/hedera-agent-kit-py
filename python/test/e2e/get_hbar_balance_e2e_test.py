@@ -10,6 +10,7 @@ import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -24,7 +25,7 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
 
 # ============================================================================
 # MODULE-LEVEL FIXTURES
@@ -154,7 +155,7 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
 
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.5)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )

@@ -16,6 +16,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -38,7 +39,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 SIGN_SCHEDULE_TRANSACTION_TOOL = core_account_plugin_tool_names[
     "SIGN_SCHEDULE_TRANSACTION_TOOL"
 ]
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================

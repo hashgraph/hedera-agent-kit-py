@@ -11,6 +11,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.plugins.core_account_plugin import (
@@ -29,7 +30,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 DEFAULT_RECIPIENT_BALANCE = 0
 
 
@@ -254,10 +255,11 @@ async def test_invalid_params(
 ):
     """Test that invalid parameters result in proper error handling."""
     amount = Decimal("0.05")
-    # Using an intentionally invalid account ID (0.0.0)
-    input_text = f"Can you move {amount} HBARs to account with ID 0.0.0?"
+    # Using an intentionally invalid account ID that looks plausible but likely doesn't exist
+    input_text = f"Can you move {amount} HBARs to account with ID 0.0.999999999?"
 
     # We don't assert execution success, only that the agent attempts to call the tool
+
     parsed_data = await execute_transfer(
         agent_executor, input_text, langchain_config, response_parser
     )
@@ -274,6 +276,6 @@ async def test_invalid_params(
         for err in [
             "INVALID_ACCOUNT_ID",
             "Account ID",
-            "0.0.0",
+            "0.0.999999999",
         ]
     )
