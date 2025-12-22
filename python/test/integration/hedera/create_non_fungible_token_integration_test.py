@@ -18,23 +18,18 @@ from hedera_agent_kit.shared.parameter_schemas import (
     SchedulingParams,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests
 
 
 @pytest.fixture(scope="module")
-async def setup_client():
+async def setup_client(operator_client, operator_wrapper):
     """Setup operator client and context for tests."""
-    client = get_operator_client_for_tests()
-    hedera_operations_wrapper = HederaOperationsWrapper(client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     context = Context(
-        mode=AgentMode.AUTONOMOUS, account_id=str(client.operator_account_id)
+        mode=AgentMode.AUTONOMOUS, account_id=str(operator_client.operator_account_id)
     )
 
-    yield client, hedera_operations_wrapper, context
-
-    if client:
-        client.close()
+    yield operator_client, operator_wrapper, context
 
 
 @pytest.mark.asyncio

@@ -37,7 +37,6 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -45,10 +44,9 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
+async def setup_accounts(operator_client, operator_wrapper):
     """Setup accounts and NFT token for integration tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Setup owner account (NFT treasury)
     owner_key = PrivateKey.generate_ed25519()
@@ -151,7 +149,6 @@ async def setup_accounts():
         print(f"Warning: Failed to cleanup owner account: {e}")
 
     owner_client.close()
-    operator_client.close()
 
 
 @pytest.mark.asyncio

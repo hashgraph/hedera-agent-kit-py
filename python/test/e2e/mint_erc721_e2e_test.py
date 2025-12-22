@@ -24,7 +24,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -32,15 +31,16 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 # ============================================================================
-# FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """Setup test environment with ERC721 contract and accounts."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Executor account (Agent performing minting)
     executor_key = PrivateKey.generate_ed25519()
@@ -121,7 +121,6 @@ async def setup_environment():
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
-    operator_client.close()
 
 
 # ============================================================================

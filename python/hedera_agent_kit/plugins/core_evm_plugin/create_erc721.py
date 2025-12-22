@@ -11,9 +11,7 @@ from __future__ import annotations
 from typing import cast
 
 from hiero_sdk_python import Client
-from hiero_sdk_python.query.transaction_record_query import TransactionRecordQuery
 from hiero_sdk_python.transaction.transaction import Transaction
-
 from hedera_agent_kit.shared.configuration import Context, AgentMode
 from hedera_agent_kit.shared.constants.contracts import (
     get_erc721_factory_address,
@@ -36,7 +34,10 @@ from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit.shared.tool import Tool
-from hedera_agent_kit.shared.utils import ledger_id_from_network
+from hedera_agent_kit.shared.utils import (
+    ledger_id_from_network,
+    get_deployed_contract_address,
+)
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -81,38 +82,6 @@ def post_process(evm_contract_id: str, response: RawTransactionResponse) -> str:
     )
 
 
-async def _get_erc721_address(
-    client: Client, raw: RawTransactionResponse
-) -> str | None:
-    """Minimal helper to resolve the deployed ERC721 EVM address via SDK."""
-
-    record = (
-        TransactionRecordQuery().set_transaction_id(raw.transaction_id).execute(client)
-    )
-
-    contract_call_result = getattr(record, "call_result", None)
-
-    if contract_call_result is None:
-        return None
-
-    # Access the raw ABI-encoded return bytes from the function result
-    result_bytes = getattr(contract_call_result, "contract_call_result", None)
-
-    if not result_bytes or not isinstance(result_bytes, (bytes, bytearray)):
-        return None
-
-    # The factory returns an EVM address as the first return value.
-    # In Solidity ABI, an address is encoded as a 32-byte word left-padded with zeros.
-    # We need to take the last 20 bytes of the first 32-byte word.
-    if len(result_bytes) < 32:
-        return None
-
-    first_word = bytes(result_bytes[:32])
-    addr_last_20 = first_word[-20:]
-    evm_addr = "0x" + addr_last_20.hex()
-    return evm_addr
-
-
 async def create_erc721(
     client: Client,
     context: Context,
@@ -142,12 +111,19 @@ async def create_erc721(
             return result
 
         raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
+
+        # move the returned contract ID to the factory contract ID field
+        # sdk for factory calls returns the factory contract ID
+        raw_tx_data.factory_contract_id = raw_tx_data.contract_id
+
         evm_contract_id: str | None = None
 
         # If transaction is scheduled we can't know the created address yet.
         is_scheduled = getattr(params, "is_scheduled", False)
         if not is_scheduled:
-            evm_contract_id = await _get_erc721_address(client, raw_tx_data)
+            evm_contract_id = await get_deployed_contract_address(client, raw_tx_data)
+            # inject the correct contract ID into raw response
+            raw_tx_data.contract_id = evm_contract_id
 
         human_message = post_process(evm_contract_id, raw_tx_data)
 

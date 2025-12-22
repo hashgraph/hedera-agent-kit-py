@@ -31,7 +31,10 @@ from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
 from hedera_agent_kit.shared.tool import Tool
-from hedera_agent_kit.shared.utils import ledger_id_from_network
+from hedera_agent_kit.shared.utils import (
+    ledger_id_from_network,
+    get_deployed_contract_address,
+)
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -110,12 +113,19 @@ async def create_erc20(
             return result
 
         raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
+
+        # move the returned contract ID to the factory contract ID field
+        # sdk for factory calls returns the factory contract ID
+        raw_tx_data.factory_contract_id = raw_tx_data.contract_id
+
         evm_contract_id: str | None = None
 
+        # If transaction is scheduled we can't know the created address yet.
         is_scheduled = getattr(params, "is_scheduled", False)
-        contract_id = getattr(raw_tx_data, "contract_id", None)
-        if not is_scheduled and contract_id:
-            evm_contract_id = f"0x{str(contract_id.to_evm_address())}"
+        if not is_scheduled:
+            evm_contract_id = await get_deployed_contract_address(client, raw_tx_data)
+            # inject the correct contract ID into raw response
+            raw_tx_data.contract_id = evm_contract_id
 
         human_message = post_process(evm_contract_id, raw_tx_data)
 

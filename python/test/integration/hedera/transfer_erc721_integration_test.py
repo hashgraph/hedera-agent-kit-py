@@ -22,7 +22,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -31,10 +30,9 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_transfer_erc721():
+async def setup_transfer_erc721(operator_client, operator_wrapper):
     """Setup test environment with ERC721 token and accounts."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Create an executor account (token creator and sender)
     executor_key = PrivateKey.generate_ed25519()
@@ -101,7 +99,6 @@ async def setup_transfer_erc721():
         operator_client.operator_account_id,
     )
     executor_client.close()
-    operator_client.close()
 
 
 async def mint_token_for_transfer(setup_env):

@@ -26,7 +26,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -34,9 +33,8 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+async def setup_environment(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # 1. Create Executor Account (The one associating/dissociating)
     executor_key = PrivateKey.generate_ed25519()
@@ -141,8 +139,6 @@ async def setup_environment():
         operator_client.operator_account_id,
     )
     token_creator_client.close()
-
-    operator_client.close()
 
 
 async def associate_tokens(

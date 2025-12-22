@@ -25,16 +25,14 @@ from hedera_agent_kit.shared.parameter_schemas import (
     SchedulingParams,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 
 
 @pytest.fixture(scope="module")
-async def setup_operator():
+async def setup_operator(operator_client, operator_wrapper):
     """Create an operator client and wrapper for account update tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
     yield {"operator_client": operator_client, "operator_wrapper": operator_wrapper}
-    operator_client.close()
 
 
 @pytest.fixture

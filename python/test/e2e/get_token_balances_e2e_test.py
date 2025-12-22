@@ -23,7 +23,6 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -33,16 +32,16 @@ from test.utils.teardown import return_hbars_and_delete_account
 # ============================================================================
 # FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """
     Setup operator, executor (agent), and tokens for balance query tests.
+    Uses session-scoped operator fixtures from conftest.py.
     """
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
-
     # 1. Create an executor account (The Agent)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
@@ -113,7 +112,7 @@ async def setup_environment():
         "langchain_config": langchain_config,
     }
 
-    # Teardown
+    # Teardown - only cleanup module resources, operator is managed by conftest.py
     lc_setup.cleanup()
 
     await return_hbars_and_delete_account(
@@ -123,7 +122,6 @@ async def setup_environment():
     )
 
     executor_client.close()
-    operator_client.close()
 
 
 # ============================================================================

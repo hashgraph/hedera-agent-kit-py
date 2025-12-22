@@ -40,7 +40,7 @@ class ToolResponse:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ToolResponse":
-        """Reconstruct from dictionary, keeping unrecognized fields."""
+        """Reconstruct from the dictionary, keeping unrecognized fields."""
         base_keys = {"human_message", "error"}
         extra = {k: v for k, v in data.items() if k not in base_keys}
         return cls(
@@ -61,6 +61,7 @@ class RawTransactionResponse:
     topic_id: Optional[TopicId] = None
     schedule_id: Optional[ScheduleId] = None
     contract_id: Optional[ContractId] = None
+    factory_contract_id: Optional[ContractId] = None
     error: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -73,6 +74,9 @@ class RawTransactionResponse:
             "topic_id": str(self.topic_id) if self.topic_id else None,
             "schedule_id": str(self.schedule_id) if self.schedule_id else None,
             "contract_id": str(self.contract_id) if self.contract_id else None,
+            "factory_contract_id": (
+                str(self.factory_contract_id) if self.factory_contract_id else None
+            ),
             "error": self.error,
         }
 
@@ -105,6 +109,11 @@ class RawTransactionResponse:
             contract_id=(
                 ContractId.from_string(data["contract_id"])
                 if data.get("contract_id")
+                else None
+            ),
+            factory_contract_id=(
+                ContractId.from_string(data["factory_contract_id"])
+                if data.get("factory_contract_id")
                 else None
             ),
             error=data.get("error"),
