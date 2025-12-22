@@ -19,6 +19,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
     - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
     - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
+  - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
 - [Account Query Tools](#account-query-tools)
     - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
     - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
@@ -275,6 +276,25 @@ Delete a scheduled transaction.
 ```
 Delete scheduled transaction 0.0.12345
 Cancel schedule 0.0.12345
+```
+
+---
+
+### SIGN_SCHEDULE_TRANSACTION_TOOL
+
+Sign a scheduled transaction to add your signature to an existing schedule.
+
+#### Parameters
+
+| Parameter     | Type  | Required | Description                                           |
+|---------------|-------|----------|-------------------------------------------------------|
+| `schedule_id` | `str` | ✅        | The schedule ID of the scheduled transaction to sign. |
+
+#### Example Prompts
+
+```
+Sign scheduled transaction 0.0.12345
+Add my signature to schedule 0.0.12345
 ```
 
 ---
@@ -770,11 +790,11 @@ Transfer ERC-20 tokens.
 
 #### Parameters
 
-| Parameter           | Type  | Required | Description                                    |
-|---------------------|-------|----------|-------------------------------------------------|
-| `contract_id`       | `str` | ✅        | ERC-20 contract ID (EVM address or Hedera ID). |
-| `recipient_address` | `str` | ✅        | Recipient address (EVM or Hedera ID).          |
-| `amount`            | `int` | ✅        | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units).               |
+| Parameter           | Type  | Required | Description                                                                                                      |
+|---------------------|-------|----------|------------------------------------------------------------------------------------------------------------------|
+| `contract_id`       | `str` | ✅        | ERC-20 contract ID (EVM address or Hedera ID).                                                                   |
+| `recipient_address` | `str` | ✅        | Recipient address (EVM or Hedera ID).                                                                            |
+| `amount`            | `int` | ✅        | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
 
 > [!IMPORTANT]
 > The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
@@ -815,10 +835,10 @@ Mint a new ERC-721 NFT by calling the `safeMint(to)` function on the contract.
 
 #### Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `contract_id` | `str` | ✅ | - | The ID of the ERC-721 contract (EVM address or Hedera ID). |
-| `to_address` | `str` | ❌ | operator | Address to which the token will be minted. |
+| Parameter     | Type  | Required | Default  | Description                                                |
+|---------------|-------|----------|----------|------------------------------------------------------------|
+| `contract_id` | `str` | ✅        | -        | The ID of the ERC-721 contract (EVM address or Hedera ID). |
+| `to_address`  | `str` | ❌        | operator | Address to which the token will be minted.                 |
 
 #### Example Prompts
 
@@ -836,12 +856,12 @@ Transfer an ERC-721 NFT.
 
 #### Parameters
 
-| Parameter      | Type  | Required | Description                            |
-|----------------|-------|----------|-----------------------------------------|
-| `contract_id`  | `str` | ✅        | ERC-721 contract ID (EVM address or Hedera ID).                   |
-| `from_address` | `str` | ❌        | Sender address (defaults to operator). |
-| `to_address`   | `str` | ✅        | Recipient address (EVM or Hedera ID).                     |
-| `token_id`     | `int` | ✅        | The ID of the specific NFT within the ERC-721 collection to transfer.                  |
+| Parameter      | Type  | Required | Description                                                           |
+|----------------|-------|----------|-----------------------------------------------------------------------|
+| `contract_id`  | `str` | ✅        | ERC-721 contract ID (EVM address or Hedera ID).                       |
+| `from_address` | `str` | ❌        | Sender address (defaults to operator).                                |
+| `to_address`   | `str` | ✅        | Recipient address (EVM or Hedera ID).                                 |
+| `token_id`     | `int` | ✅        | The ID of the specific NFT within the ERC-721 collection to transfer. |
 
 > [!NOTE]
 > In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The first minted NFT is usually token ID 0.

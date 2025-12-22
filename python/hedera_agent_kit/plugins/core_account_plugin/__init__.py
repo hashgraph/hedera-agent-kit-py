@@ -23,6 +23,10 @@ from .approve_non_fungible_token_allowance import (
     APPROVE_NFT_ALLOWANCE_TOOL,
 )
 from .schedule_delete import ScheduleDeleteTool, SCHEDULE_DELETE_TOOL
+from .sign_schedule_transaction import (
+    SignScheduleTransactionTool,
+    SIGN_SCHEDULE_TRANSACTION_TOOL,
+)
 from .update_account import UpdateAccountTool, UPDATE_ACCOUNT_TOOL
 
 core_account_plugin = Plugin(
@@ -40,6 +44,7 @@ core_account_plugin = Plugin(
         ApproveHbarAllowanceTool(context),
         ApproveFungibleTokenAllowanceTool(context),
         ApproveNftAllowanceTool(context),
+        SignScheduleTransactionTool(context),
     ],
 )
 
@@ -54,6 +59,7 @@ core_account_plugin_tool_names = {
     "APPROVE_HBAR_ALLOWANCE_TOOL": APPROVE_HBAR_ALLOWANCE_TOOL,
     "APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL": APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL,
     "APPROVE_NFT_ALLOWANCE_TOOL": APPROVE_NFT_ALLOWANCE_TOOL,
+    "SIGN_SCHEDULE_TRANSACTION_TOOL": SIGN_SCHEDULE_TRANSACTION_TOOL,
 }
 
 __all__ = [
@@ -69,4 +75,5 @@ __all__ = [
     "ApproveNftAllowanceTool",
     "ScheduleDeleteTool",
     "ApproveFungibleTokenAllowanceTool",
+    "SignScheduleTransactionTool",
 ]
