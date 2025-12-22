@@ -49,6 +49,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
   - [CREATE_ERC20_TOOL](#create_erc20_tool)
   - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
   - [CREATE_ERC721_TOOL](#create_erc721_tool)
+  - [MINT_ERC721_TOOL](#mint_erc721_tool)
   - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
 - [EVM Query Tools](#evm-query-tools)
   - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
@@ -781,10 +782,13 @@ Transfer ERC-20 tokens.
 #### Parameters
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
+|-----------|------|----------|--------------|
 | `contract_id` | `str` | ✅ | ERC-20 contract ID (EVM address or Hedera ID). |
 | `recipient_address` | `str` | ✅ | Recipient address (EVM or Hedera ID). |
-| `amount` | `int` | ✅ | Amount to transfer (base units). |
+| `amount` | `int` | ✅ | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
+
+> [!IMPORTANT]
+> The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
 
 #### Example Prompts
 
@@ -816,6 +820,27 @@ Create an ERC721 collection called ArtDrops with symbol AD and base URI ipfs://Q
 
 ---
 
+### MINT_ERC721_TOOL
+
+Mint a new ERC-721 NFT by calling the `safeMint(to)` function on the contract.
+
+#### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `contract_id` | `str` | ✅ | - | The ID of the ERC-721 contract (EVM address or Hedera ID). |
+| `to_address` | `str` | ❌ | operator | Address to which the token will be minted. |
+
+#### Example Prompts
+
+```
+Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b
+Mint ERC721 token 0.0.6486793 to Hedera account ID 0.0.2222222
+Mint ERC721 token 0.0.9999
+```
+
+---
+
 ### TRANSFER_ERC721_TOOL
 
 Transfer an ERC-721 NFT.
@@ -823,16 +848,19 @@ Transfer an ERC-721 NFT.
 #### Parameters
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `contract_id` | `str` | ✅ | ERC-721 contract ID. |
+|-----------|------|----------|--------------|
+| `contract_id` | `str` | ✅ | ERC-721 contract ID (EVM address or Hedera ID). |
 | `from_address` | `str` | ❌ | Sender address (defaults to operator). |
-| `to_address` | `str` | ✅ | Recipient address. |
-| `token_id` | `int` | ✅ | Token ID to transfer. |
+| `to_address` | `str` | ✅ | Recipient address (EVM or Hedera ID). |
+| `token_id` | `int` | ✅ | The ID of the specific NFT within the ERC-721 collection to transfer. |
+
+> [!NOTE]
+> In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The first minted NFT is usually token ID 0.
 
 #### Example Prompts
 
 ```
-Transfer ERC721 token 1 from contract 0.0.12345 to 0.0.67890
+Transfer ERC721 token 0 from contract 0.0.12345 to 0.0.67890
 Send NFT #5 from 0x1234... to 0x5678...
 ```
 

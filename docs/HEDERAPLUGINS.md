@@ -126,6 +126,7 @@ and ERC-721 tokens via on-chain factory contracts.
 | [`CREATE_ERC20_TOOL`](./HEDERATOOLS.md#create_erc20_tool)       | Deploy an ERC-20 token  | [View Parameters & Examples](./HEDERATOOLS.md#create_erc20_tool)    |
 | [`TRANSFER_ERC20_TOOL`](./HEDERATOOLS.md#transfer_erc20_tool)   | Transfer ERC-20 tokens  | [View Parameters & Examples](./HEDERATOOLS.md#transfer_erc20_tool)  |
 | [`CREATE_ERC721_TOOL`](./HEDERATOOLS.md#create_erc721_tool)     | Deploy an ERC-721 NFT   | [View Parameters & Examples](./HEDERATOOLS.md#create_erc721_tool)   |
+| [`MINT_ERC721_TOOL`](./HEDERATOOLS.md#mint_erc721_tool)         | Mint an ERC-721 NFT     | [View Parameters & Examples](./HEDERATOOLS.md#mint_erc721_tool)     |
 | [`TRANSFER_ERC721_TOOL`](./HEDERATOOLS.md#transfer_erc721_tool) | Transfer an ERC-721 NFT | [View Parameters & Examples](./HEDERATOOLS.md#transfer_erc721_tool) |
 
 ---
