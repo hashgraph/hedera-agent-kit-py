@@ -89,6 +89,8 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ScheduleDeleteTransactionParameters,
     ScheduleDeleteTransactionParametersNormalised,
     ApproveHbarAllowanceParameters,
+    SignScheduleTransactionToolParameters,
+    SignScheduleTransactionParametersNormalised,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     ApproveNftAllowanceParameters,
@@ -246,6 +248,29 @@ class HederaParameterNormaliser:
         )
 
         return ScheduleDeleteTransactionParametersNormalised(
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
+        )
+
+    @staticmethod
+    def normalise_sign_schedule_transaction(
+        params: SignScheduleTransactionToolParameters,
+    ) -> SignScheduleTransactionParametersNormalised:
+        """Normalise sign schedule transaction parameters.
+
+        Args:
+            params: Raw sign schedule transaction parameters.
+
+        Returns:
+            SignScheduleTransactionParametersNormalised: Normalised parameters with ScheduleId.
+        """
+        parsed_params: SignScheduleTransactionToolParameters = cast(
+            SignScheduleTransactionToolParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, SignScheduleTransactionToolParameters
+            ),
+        )
+
+        return SignScheduleTransactionParametersNormalised(
             schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 

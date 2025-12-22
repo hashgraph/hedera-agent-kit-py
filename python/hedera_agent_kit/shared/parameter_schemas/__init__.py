@@ -14,6 +14,8 @@ from .account_schema import (
     AccountTokenBalancesQueryParameters,
     AccountTokenBalancesQueryParametersNormalised,
     SignScheduleTransactionParameters,
+    SignScheduleTransactionToolParameters,
+    SignScheduleTransactionParametersNormalised,
     ScheduleDeleteTransactionParameters,
     ApproveHbarAllowanceParameters,
     ApproveHbarAllowanceParametersNormalised,
