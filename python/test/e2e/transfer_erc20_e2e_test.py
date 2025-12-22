@@ -20,7 +20,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -33,16 +32,16 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """Setup test environment with ERC20 token and accounts."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Executor account (Agent performing transfers)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -52,7 +51,8 @@ async def setup_environment():
     # Recipient account
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     recipient_account_id = recipient_resp.account_id
@@ -100,7 +100,6 @@ async def setup_environment():
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
-    operator_client.close()
 
 
 # ============================================================================
@@ -174,6 +173,12 @@ async def test_handle_various_natural_language_variations(setup_environment):
     config = env["langchain_config"]
     test_token_address = env["test_token_address"]
     recipient_account_id = env["recipient_account_id"]
+    executor_wrapper = env["executor_wrapper"]
+
+    # Get the balance BEFORE this test runs to handle parallel execution
+    initial_balance = await executor_wrapper.get_erc20_balance(
+        test_token_address, str(recipient_account_id)
+    )
 
     variations = [
         f"Transfer 1 ERC20 token {test_token_address} to {recipient_account_id}",
@@ -197,13 +202,12 @@ async def test_handle_various_natural_language_variations(setup_environment):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    # Verify the cumulative balance after all transfers
-    executor_wrapper = env["executor_wrapper"]
+    # Verify the cumulative balance after all transfers in THIS test only
     recipient_balance = await executor_wrapper.get_erc20_balance(
         test_token_address, str(recipient_account_id)
     )
-    # Total transferred: 1 + 5 + 2 = 8 tokens, plus 10 from the first test = 18 base units
-    expected_balance = 18
+    # Total transferred in THIS test: 1 + 5 + 2 = 8 tokens
+    expected_balance = initial_balance + total_transferred
     assert (
         recipient_balance == expected_balance
     ), f"Expected balance {expected_balance}, got {recipient_balance}"

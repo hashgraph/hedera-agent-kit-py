@@ -74,7 +74,9 @@ class RawTransactionResponse:
             "topic_id": str(self.topic_id) if self.topic_id else None,
             "schedule_id": str(self.schedule_id) if self.schedule_id else None,
             "contract_id": str(self.contract_id) if self.contract_id else None,
-            "factory_contract_id": str(self.factory_contract_id) if self.factory_contract_id else None,
+            "factory_contract_id": (
+                str(self.factory_contract_id) if self.factory_contract_id else None
+            ),
             "error": self.error,
         }
 
