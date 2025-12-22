@@ -18,14 +18,13 @@ from hedera_agent_kit.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+async def setup_accounts(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
@@ -52,7 +51,6 @@ async def setup_accounts():
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
-    operator_client.close()
 
 
 async def create_temp_topic(

@@ -14,22 +14,12 @@ from hedera_agent_kit.shared.parameter_schemas import (
     CreateTopicParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
-from test.utils.setup import get_operator_client_for_tests, MIRROR_NODE_WAITING_TIME
-
-
-@pytest.fixture(scope="module")
-def setup_client():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
-
-    yield operator_client, operator_wrapper
-
-    operator_client.close()
+from test.utils.setup import MIRROR_NODE_WAITING_TIME
 
 
 @pytest.fixture(scope="function")
-async def setup_test_topic(setup_client):
-    operator_client, operator_wrapper = setup_client
+async def setup_test_topic(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # create a topic for each test so tests are isolated
     create_params = CreateTopicParametersNormalised(

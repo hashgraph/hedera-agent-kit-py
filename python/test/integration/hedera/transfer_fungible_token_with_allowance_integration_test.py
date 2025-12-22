@@ -29,7 +29,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.parameter_schemas.token_schema import TokenTransferEntry
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -61,9 +60,8 @@ async def create_test_token(
 @pytest.mark.asyncio
 class TestTransferFungibleTokenWithAllowanceIntegration:
     @pytest.fixture(scope="class")
-    async def setup_accounts(self):
-        operator_client = get_operator_client_for_tests()
-        operator_wrapper = HederaOperationsWrapper(operator_client)
+    async def setup_accounts(self, operator_client, operator_wrapper):
+        # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
         # 1. Setup Executor (Token Owner / Treasury)
         executor_key = PrivateKey.generate_ed25519()
@@ -182,7 +180,7 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
             )
         executor_client.close()
 
-        operator_client.close()
+        executor_client.close()
 
     async def test_transfer_to_self_with_allowance(self, setup_accounts):
         spender_client = setup_accounts["spender_client"]

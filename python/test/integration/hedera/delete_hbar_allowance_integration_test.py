@@ -26,19 +26,18 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
+async def setup_accounts(operator_client, operator_wrapper):
     """
     Setup two accounts:
     1. Owner (Grantor): Owns HBAR and grants allowance.
     2. Spender (Executor): Given allowance to spend Owner's HBAR.
     """
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # 1. Create Owner Account
     owner_key = PrivateKey.generate_ed25519()
@@ -86,7 +85,6 @@ async def setup_accounts():
     )
     owner_client.close()
     spender_client.close()
-    operator_client.close()
 
 
 @pytest.mark.asyncio
