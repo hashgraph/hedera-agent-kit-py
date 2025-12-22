@@ -22,13 +22,13 @@ async def test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(test_setup):
     """Provide the agent executor for invoking language queries."""
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     """Provide the toolkit instance."""
     return test_setup.toolkit
@@ -86,8 +86,11 @@ async def test_match_get_token_balances_no_account_id(
     args, kwargs = mock_run.call_args
     assert args[0] == GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL
     payload = args[1]
-    # The LLM may either:
-    # - Omit account_id entirely (relying on tool default)
-    # - Infer the operator's account_id from context (also valid)
-    # Both behaviors are acceptable for "show me MY token balances"
-    assert payload == {} or payload.get("account_id") is None or isinstance(payload.get("account_id"), str)
+    # Can be either None or the operator's account ID
+    # If its None, the tool will inject the operator's account ID automatically
+    assert (
+        payload == {}
+        or payload.get("account_id") is None
+        or payload.get("account_id")
+        == toolkit.get_hedera_agentkit_api().context.account_id
+    )

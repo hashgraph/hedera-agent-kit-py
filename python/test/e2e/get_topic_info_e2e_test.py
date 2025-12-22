@@ -18,7 +18,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, create_langchain_test_setup, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -26,73 +25,83 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client for test session."""
-    return get_operator_client_for_tests()
+# ============================================================================
+# MODULE-LEVEL FIXTURES
+# ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Provide a HederaOperationsWrapper for the operator."""
-    return HederaOperationsWrapper(operator_client)
-
-
-@pytest.fixture
-async def executor_account(operator_wrapper, operator_client):
-    """Create a funded executor account and yield its client + wrapper."""
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a funded executor account and yield resources (Module Scoped)."""
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
         )
     )
     executor_account_id = executor_resp.account_id
     executor_client = get_custom_client(executor_account_id, executor_key)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    yield executor_account_id, executor_key, executor_client, executor_wrapper
+    # Setup LangChain
+    setup = await create_langchain_test_setup(custom_client=executor_client)
 
-    # Cleanup: return balance and delete executor account
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key": executor_key,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    # Cleanup
+    setup.cleanup()
+
     await return_hbars_and_delete_account(
         executor_wrapper,
         executor_account_id,
         operator_client.operator_account_id,
     )
+    executor_client.close()
 
 
-@pytest.fixture
-async def langchain_setup(executor_account):
-    """Initialize LangChain with executor client."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["executor_account_id"],
+        res["executor_key"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
 
 
-@pytest.fixture
-async def agent_executor(langchain_setup):
-    """Provide LangChain agent executor."""
-    return langchain_setup.agent
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
 
 
-@pytest.fixture
-async def executor_wrapper(executor_account):
-    """Provide executor wrapper for creating and querying topics."""
-    _, _, _, wrapper = executor_account
-    return wrapper
+@pytest.fixture(scope="module")
+def executor_wrapper(setup_module_resources):
+    return setup_module_resources["executor_wrapper"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
 
 
 @pytest.fixture
 def langchain_config():
-    """Provide standard RunnableConfig."""
-    return RunnableConfig(configurable={"thread_id": "1"})
-
-
-@pytest.fixture
-async def response_parser(langchain_setup):
-    """Provide the LangChain response parser."""
-    return langchain_setup.response_parser
+    """Provide standard RunnableConfig (Function Scoped)."""
+    return RunnableConfig(configurable={"thread_id": "get_topic_info_e2e"})
 
 
 async def execute_get_topic_info_query(
