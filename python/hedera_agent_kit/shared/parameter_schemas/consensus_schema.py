@@ -98,7 +98,7 @@ class TopicMessagesQueryParameters(BaseModelWithArbitraryTypes):
 
     limit: Annotated[
         Optional[int], Field(description="Limit the number of messages returned.")
-    ] = None
+    ] = 100
 
 
 class UpdateTopicParameters(BaseModelWithArbitraryTypes):

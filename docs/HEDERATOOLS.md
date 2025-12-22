@@ -9,54 +9,55 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 ## Table of Contents
 
 - [Account Tools](#account-tools)
-  - [TRANSFER_HBAR_TOOL](#transfer_hbar_tool)
-  - [CREATE_ACCOUNT_TOOL](#create_account_tool)
-  - [UPDATE_ACCOUNT_TOOL](#update_account_tool)
-  - [DELETE_ACCOUNT_TOOL](#delete_account_tool)
-  - [APPROVE_HBAR_ALLOWANCE_TOOL](#approve_hbar_allowance_tool)
-  - [DELETE_HBAR_ALLOWANCE_TOOL](#delete_hbar_allowance_tool)
-  - [TRANSFER_HBAR_WITH_ALLOWANCE_TOOL](#transfer_hbar_with_allowance_tool)
-  - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
-  - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
-  - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
+    - [TRANSFER_HBAR_TOOL](#transfer_hbar_tool)
+    - [CREATE_ACCOUNT_TOOL](#create_account_tool)
+    - [UPDATE_ACCOUNT_TOOL](#update_account_tool)
+    - [DELETE_ACCOUNT_TOOL](#delete_account_tool)
+    - [APPROVE_HBAR_ALLOWANCE_TOOL](#approve_hbar_allowance_tool)
+    - [DELETE_HBAR_ALLOWANCE_TOOL](#delete_hbar_allowance_tool)
+    - [TRANSFER_HBAR_WITH_ALLOWANCE_TOOL](#transfer_hbar_with_allowance_tool)
+    - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
+    - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
+    - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
   - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
 - [Account Query Tools](#account-query-tools)
-  - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
-  - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
-  - [GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL](#get_account_token_balances_query_tool)
+    - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
+    - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
+    - [GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL](#get_account_token_balances_query_tool)
 - [Consensus Tools](#consensus-tools)
-  - [CREATE_TOPIC_TOOL](#create_topic_tool)
-  - [SUBMIT_TOPIC_MESSAGE_TOOL](#submit_topic_message_tool)
-  - [DELETE_TOPIC_TOOL](#delete_topic_tool)
-  - [UPDATE_TOPIC_TOOL](#update_topic_tool)
+    - [CREATE_TOPIC_TOOL](#create_topic_tool)
+    - [SUBMIT_TOPIC_MESSAGE_TOOL](#submit_topic_message_tool)
+    - [DELETE_TOPIC_TOOL](#delete_topic_tool)
+    - [UPDATE_TOPIC_TOOL](#update_topic_tool)
 - [Consensus Query Tools](#consensus-query-tools)
-  - [GET_TOPIC_INFO_QUERY_TOOL](#get_topic_info_query_tool)
+    - [GET_TOPIC_INFO_QUERY_TOOL](#get_topic_info_query_tool)
+    - [GET_TOPIC_MESSAGES_QUERY_TOOL](#get_topic_messages_query_tool)
 - [Token Tools](#token-tools)
-  - [CREATE_FUNGIBLE_TOKEN_TOOL](#create_fungible_token_tool)
-  - [CREATE_NON_FUNGIBLE_TOKEN_TOOL](#create_non_fungible_token_tool)
-  - [MINT_FUNGIBLE_TOKEN_TOOL](#mint_fungible_token_tool)
-  - [MINT_NON_FUNGIBLE_TOKEN_TOOL](#mint_non_fungible_token_tool)
-  - [ASSOCIATE_TOKEN_TOOL](#associate_token_tool)
-  - [DISSOCIATE_TOKEN_TOOL](#dissociate_token_tool)
-  - [AIRDROP_FUNGIBLE_TOKEN_TOOL](#airdrop_fungible_token_tool)
-  - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
-  - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
-  - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+    - [CREATE_FUNGIBLE_TOKEN_TOOL](#create_fungible_token_tool)
+    - [CREATE_NON_FUNGIBLE_TOKEN_TOOL](#create_non_fungible_token_tool)
+    - [MINT_FUNGIBLE_TOKEN_TOOL](#mint_fungible_token_tool)
+    - [MINT_NON_FUNGIBLE_TOKEN_TOOL](#mint_non_fungible_token_tool)
+    - [ASSOCIATE_TOKEN_TOOL](#associate_token_tool)
+    - [DISSOCIATE_TOKEN_TOOL](#dissociate_token_tool)
+    - [AIRDROP_FUNGIBLE_TOKEN_TOOL](#airdrop_fungible_token_tool)
+    - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
+    - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
+    - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
 - [Token Query Tools](#token-query-tools)
-  - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
-  - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
+    - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
+    - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
 - [EVM Tools](#evm-tools)
-  - [CREATE_ERC20_TOOL](#create_erc20_tool)
-  - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
-  - [CREATE_ERC721_TOOL](#create_erc721_tool)
-  - [MINT_ERC721_TOOL](#mint_erc721_tool)
+    - [CREATE_ERC20_TOOL](#create_erc20_tool)
+    - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
+    - [CREATE_ERC721_TOOL](#create_erc721_tool)
+    - [MINT_ERC721_TOOL](#mint_erc721_tool)
   - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
 - [EVM Query Tools](#evm-query-tools)
-  - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
+    - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
 - [Transaction Query Tools](#transaction-query-tools)
-  - [GET_TRANSACTION_RECORD_QUERY_TOOL](#get_transaction_record_query_tool)
+    - [GET_TRANSACTION_RECORD_QUERY_TOOL](#get_transaction_record_query_tool)
 - [Misc Query Tools](#misc-query-tools)
-  - [GET_EXCHANGE_RATE_TOOL](#get_exchange_rate_tool)
+    - [GET_EXCHANGE_RATE_TOOL](#get_exchange_rate_tool)
 
 ---
 
@@ -466,6 +467,33 @@ Get information about an HCS topic.
 ```
 Get info for topic 0.0.12345
 What is the memo of topic 0.0.12345?
+```
+
+---
+
+### GET_TOPIC_MESSAGES_QUERY_TOOL
+
+Get messages from an HCS topic.
+
+#### Parameters
+
+| Parameter    | Type       | Required | Description                                                          |
+|--------------|------------|----------|----------------------------------------------------------------------|
+| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                   |
+| `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format.  |
+| `end_time`   | `datetime` | ❌        | End datetime filter (ISO 8601). Messages before this time are returned.  LLM should handle parsing to correct tool format. |
+| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100. Max value is 100.             |
+
+#### Example Prompts
+
+```
+Get messages from topic 0.0.12345
+Show me the last 10 messages from topic 0.0.12345
+What messages were posted to topic 0.0.12345?
+Get messages from topic 0.0.12345 with limit 5
+Get messages from topic 0.0.12345 after 2024-01-01T00:00:00Z
+Fetch messages from topic 0.0.12345 between 2024-01-01 and 2024-06-30
+Get all messages from topic 0.0.12345 posted in the last hour
 ```
 
 ---
