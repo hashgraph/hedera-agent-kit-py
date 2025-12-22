@@ -4,6 +4,7 @@ import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar, AccountId
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 
 from hedera_agent_kit.plugins.core_account_plugin import (
     TransferHbarWithAllowanceTool,
@@ -40,7 +41,7 @@ async def setup_accounts(operator_client, operator_wrapper):
     owner_key = PrivateKey.generate_ed25519()
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(5)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
             key=owner_key.public_key(),
         )
     )
@@ -52,7 +53,7 @@ async def setup_accounts(operator_client, operator_wrapper):
     spender_key = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(5)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
             key=spender_key.public_key(),
         )
     )

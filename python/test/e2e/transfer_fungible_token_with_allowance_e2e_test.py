@@ -20,6 +20,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
 
@@ -41,8 +42,8 @@ from test.utils.teardown import return_hbars_and_delete_account
 # CONSTANTS & CONFIG
 # ============================================================================
 
-DEFAULT_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
-OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
+DEFAULT_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
+OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
 
 
 # ============================================================================
