@@ -3,7 +3,7 @@
 This module validates querying topic messages through the full LLM → tool → mirror node flow.
 """
 
-from typing import Any
+from typing import Any, List
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey
@@ -261,3 +261,33 @@ async def test_get_messages_after_timestamp_via_agent(
     # Messages returned in descending order, reverse for assertion
     messages_text = [m["message"] for m in reversed(messages)]
     assert messages_text == ["E2E Message 2", "E2E Message 3"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_50_messages(
+    agent_executor,
+    executor_account,
+    executor_wrapper,
+    langchain_config,
+    response_parser: ResponseParserService,
+):
+    """Should fetch all topic messages from a topic with 50 messages."""
+    _, _, executor_client, _ = executor_account
+    
+    topic_id = (
+        await executor_wrapper.create_topic(CreateTopicParametersNormalised(submit_key=executor_client.operator_private_key.public_key()))
+    ).topic_id
+
+    for batch in range(2):
+        params: List[SubmitTopicMessageParametersNormalised] = [SubmitTopicMessageParametersNormalised(topic_id=topic_id, message=f"Message {index}, Batch {batch}") for index in range(25)]
+        await executor_wrapper.batch_submit_topic_message(params, batch_key=executor_client.operator_private_key)
+
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    input_text = f"Get all messages from topic {topic_id}"
+    parsed_data = await execute_get_topic_messages_query(
+        agent_executor, input_text, langchain_config, response_parser
+    )
+    
+    assert len(parsed_data["raw"]["messages"]) == 50
+

@@ -462,7 +462,7 @@ Get messages from an HCS topic.
 | `topic_id`   | `str`      | ✅        | Topic ID to query.                                                   |
 | `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format.  |
 | `end_time`   | `datetime` | ❌        | End datetime filter (ISO 8601). Messages before this time are returned.  LLM should handle parsing to correct tool format. |
-| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100.               |
+| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100. Max value is 100.             |
 
 #### Example Prompts
 

@@ -132,9 +132,16 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             if query_params.get("upperTimestamp")
             else ""
         )
+        
+        limit = query_params.get("limit", 100)
+        # Request at most 100 messages per page (Mirror Node max)
+        page_limit = min(limit, 100)
+        
         url: str = (
-            f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit=100"
+            f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit={page_limit}"
         )
+
+        print(url)
 
         messages: List[TopicMessage] = []
         fetched_pages: int = 0
@@ -143,7 +150,16 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             data: Dict[str, Any] = await self._fetch_json(
                 url, context=f"topic messages for {query_params['topic_id']}"
             )
-            messages.extend(data.get("messages", []))
+            batch = data.get("messages", [])
+            if not batch:
+                break
+                
+            messages.extend(batch)
+            
+            # effective_limit cancellation
+            if len(messages) >= limit:
+                break
+
             fetched_pages += 1
             if fetched_pages >= 100:
                 break
@@ -155,7 +171,7 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
 
         return {
             "topic_id": query_params["topic_id"],
-            "messages": messages[: query_params.get("limit", 100)],
+            "messages": messages[:limit],
         }
 
     async def get_topic_info(self, topic_id: str) -> TopicInfo:

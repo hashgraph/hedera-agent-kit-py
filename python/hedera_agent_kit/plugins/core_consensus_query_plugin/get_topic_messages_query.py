@@ -53,7 +53,7 @@ Parameters:
 - topic_id (str, required): The topic ID to query  
 - start_time (datetime, optional): The start datetime to query. If set, the messages will be returned after this datetime  
 - end_time (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime  
-- limit (int, optional): The limit of messages to query. If set, the number of messages to return  
+- limit: (Optional) Max number of messages to return. Defaults to 100. Max value is 100.
 {usage_instructions}  
 """
 
