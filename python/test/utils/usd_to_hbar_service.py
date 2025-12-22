@@ -5,9 +5,13 @@ The transaction costs on Hedera are FIXED in USD, which means that when the pric
 The implication of that is that the tests happen to fail if the price of HBAR changes significantly.
 By passing fixed USD amounts and converting them to HBARs, we can ensure that the tests won't be affected by price fluctuations.
 """
-from hedera_agent_kit.shared.hedera_utils.mirrornode import HederaMirrornodeServiceDefaultImpl
+
+from hedera_agent_kit.shared.hedera_utils.mirrornode import (
+    HederaMirrornodeServiceDefaultImpl,
+)
 from hedera_agent_kit.shared.hedera_utils.mirrornode.types import ExchangeRateResponse
 from hedera_agent_kit.shared.utils import LedgerId
+
 
 class UsdToHbarService:
     _exchange_rate = None
@@ -26,7 +30,9 @@ class UsdToHbarService:
     def usd_to_hbar(cls, usd_amount: float) -> float:
         """Convert USD to HBAR using the stored rate."""
         if not cls._is_initialized or cls._exchange_rate is None:
-            raise RuntimeError("UsdToHbarService is not initialized! Ensure the fixture runs before this call.")
+            raise RuntimeError(
+                "UsdToHbarService is not initialized! Ensure the fixture runs before this call."
+            )
 
         hbar_amount = usd_amount / cls._exchange_rate
         return round(hbar_amount, 8)
@@ -38,6 +44,10 @@ class UsdToHbarService:
             mirrornode = HederaMirrornodeServiceDefaultImpl(LedgerId.TESTNET)
             resp: ExchangeRateResponse = await mirrornode.get_exchange_rate()
             current_rate = resp["current_rate"]
-            return current_rate["cent_equivalent"] / current_rate["hbar_equivalent"] / 100
+            return (
+                current_rate["cent_equivalent"] / current_rate["hbar_equivalent"] / 100
+            )
         except Exception as e:
-            raise RuntimeError(f"Couldn't fetch current HBAR price from mirrornode: {e}") from e
+            raise RuntimeError(
+                f"Couldn't fetch current HBAR price from mirrornode: {e}"
+            ) from e
