@@ -51,19 +51,26 @@ Make sure the name and email match the identity you've set in Git. GitHub Action
 
 ## 3. Code Style & Testing
 
-### Linting
+### Linting & Formatting
 
-This project uses **Ruff** for linting and formatting. Run the following to check for issues:
+This project uses **Ruff** for linting and **Black** for code formatting.
+
+To check for linting issues:
 
 ```bash
 poetry run ruff check .
-poetry run ruff format --check .
+```
+
+To check formatting without making changes:
+
+```bash
+poetry run black --check .
 ```
 
 To auto-fix formatting issues:
 
 ```bash
-poetry run ruff format .
+poetry run black .
 ```
 
 ### Testing

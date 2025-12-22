@@ -41,9 +41,16 @@ Add your [Hedera API](https://portal.hedera.com/dashboard) and [OpenAI](https://
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=302e... # DER encoded private key
 OPENAI_API_KEY=sk-proj-...
 ```
+
+> [!NOTE]
+> **Using Hex Encoded Keys (ECDSA/ED25519)?**
+> The `PrivateKey.from_string()` method used in the examples expects a DER encoded key string.
+> If you are using a hex encoded private key, you should update the code to use the specific factory method:
+> - `PrivateKey.from_ed25519(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
+> - `PrivateKey.from_ecdsa(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
 
 ### 3 – Choose an Example
 
