@@ -261,16 +261,23 @@ class HederaBuilder:
         )
 
     @staticmethod
-    def update_token(params: UpdateTokenParametersNormalised) -> TokenUpdateTransaction:
+    def update_token(params: UpdateTokenParametersNormalised) -> Transaction:
         """Build a TokenUpdateTransaction.
 
         Args:
             params: Normalised token update parameters.
 
         Returns:
-            TokenUpdateTransaction: Transaction ready for submission.
+            Transaction: Transaction optionally wrapped in a schedule.
         """
-        return TokenUpdateTransaction(**vars(params))
+        tx: TokenUpdateTransaction = TokenUpdateTransaction(
+            token_id=params.token_id,
+            token_params=params.token_params,
+            token_keys=params.token_keys,
+        )
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def mint_fungible_token(

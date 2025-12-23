@@ -37,6 +37,10 @@ from hedera_agent_kit.plugins.core_token_plugin.transfer_non_fungible_token_with
     TransferNftWithAllowanceTool,
     TRANSFER_NFT_WITH_ALLOWANCE_TOOL,
 )
+from hedera_agent_kit.plugins.core_token_plugin.update_token import (
+    UpdateTokenTool,
+    UPDATE_TOKEN_TOOL,
+)
 from hedera_agent_kit.shared.plugin import Plugin
 
 core_token_plugin = Plugin(
@@ -54,6 +58,7 @@ core_token_plugin = Plugin(
         TransferFungibleTokenWithAllowanceTool(context),
         TransferNftWithAllowanceTool(context),
         DeleteTokenAllowanceTool(context),
+        UpdateTokenTool(context),
     ],
 )
 
@@ -68,6 +73,7 @@ core_token_plugin_tool_names = {
     "AIRDROP_FUNGIBLE_TOKEN_TOOL": AIRDROP_FUNGIBLE_TOKEN_TOOL,
     "DELETE_TOKEN_ALLOWANCE_TOOL": DELETE_TOKEN_ALLOWANCE_TOOL,
     "MINT_NON_FUNGIBLE_TOKEN_TOOL": MINT_NON_FUNGIBLE_TOKEN_TOOL,
+    "UPDATE_TOKEN_TOOL": UPDATE_TOKEN_TOOL,
 }
 
 __all__ = [
@@ -81,6 +87,7 @@ __all__ = [
     "TransferFungibleTokenWithAllowanceTool",
     "TransferNftWithAllowanceTool",
     "DeleteTokenAllowanceTool",
+    "UpdateTokenTool",
     "core_token_plugin",
     "core_token_plugin_tool_names",
 ]
