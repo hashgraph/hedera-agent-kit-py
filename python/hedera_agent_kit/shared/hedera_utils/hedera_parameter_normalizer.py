@@ -106,6 +106,9 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenWithAllowanceParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParameters,
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
+    TransferNonFungibleTokenParameters,
+    TransferNonFungibleTokenParametersNormalised,
+    NftTransferNormalised,
 )
 
 from hedera_agent_kit.shared.constants.contracts import (
@@ -229,6 +232,64 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    async def normalise_transfer_non_fungible_token(
+        params: TransferNonFungibleTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> TransferNonFungibleTokenParametersNormalised:
+        """Normalise NFT transfer parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw NFT transfer parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            TransferNonFungibleTokenParametersNormalised: Normalised NFT transfer parameters.
+        """
+        parsed_params: TransferNonFungibleTokenParameters = cast(
+            TransferNonFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferNonFungibleTokenParameters
+            ),
+        )
+
+        source_account_id = AccountResolver.resolve_account(
+            parsed_params.source_account_id, context, client
+        )
+        sender_id = AccountId.from_string(source_account_id)
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        nft_transfers: List[NftTransferNormalised] = []
+
+        for recipient in parsed_params.recipients:
+            receiver_id_str = AccountResolver.resolve_account(
+                recipient.recipient, context, client
+            )
+            nft_transfers.append(
+                NftTransferNormalised(
+                    sender_id=sender_id,
+                    receiver_id=AccountId.from_string(receiver_id_str),
+                    serial_number=recipient.serial_number,
+                )
+            )
+
+        # Handle optional scheduling
+        scheduling_params = None
+        if getattr(parsed_params, "scheduling_params", None):
+            scheduling_params = (
+                await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+            )
+
+        return TransferNonFungibleTokenParametersNormalised(
+            nft_transfers={token_id: nft_transfers},
+            scheduling_params=scheduling_params,
+            transaction_memo=getattr(parsed_params, "transaction_memo", None),
+        )
+
+    @staticmethod
     def normalise_schedule_delete_transaction(
         params: ScheduleDeleteTransactionParameters,
     ) -> ScheduleDeleteTransactionParametersNormalised:
@@ -310,11 +371,14 @@ class HederaParameterNormaliser:
         )
 
         # Resolve expiration time
-        expiration_time: Optional[Timestamp] = (
-            Timestamp.from_date(scheduling.expiration_time)
-            if scheduling.expiration_time
-            else None
-        )
+        expiration_time: Optional[Timestamp] = None
+        if scheduling.expiration_time:
+            dt = (
+                datetime.fromisoformat(scheduling.expiration_time)
+                if isinstance(scheduling.expiration_time, str)
+                else scheduling.expiration_time
+            )
+            expiration_time = Timestamp.from_date(dt)
 
         return ScheduleCreateParams(
             admin_key=admin_key,
