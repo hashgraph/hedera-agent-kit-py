@@ -106,6 +106,10 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenWithAllowanceParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParameters,
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
+    UpdateTokenParameters,
+    UpdateTokenParametersNormalised,
+    TokenUpdateKeys,
+    TokenUpdateParams,
 )
 
 from hedera_agent_kit.shared.constants.contracts import (
@@ -2236,3 +2240,94 @@ class HederaParameterNormaliser:
             nft_approved_transfer=nft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
         )
+
+    @staticmethod
+    async def normalise_update_token(
+        params: UpdateTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> UpdateTokenParametersNormalised:
+        """Normalise token update parameters.
+
+        This handles:
+        - Parsing and validation of input parameters.
+        - Resolution of the token ID.
+        - Resolution of keys (handling boolean/string inputs).
+        - Mapping of optional fields (name, symbol, memo, etc.).
+        - Normalization of scheduling parameters.
+
+        Args:
+            params: Raw token update parameters.
+            context: Application context.
+            client: Hedera client.
+
+        Returns:
+            UpdateTokenParametersNormalised: Normalised parameters ready for transaction building.
+        """
+        parsed_params: UpdateTokenParameters = cast(
+            UpdateTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, UpdateTokenParameters
+            ),
+        )
+
+        token_id = TokenId.from_string(parsed_params.token_id)
+        user_public_key = await AccountResolver.get_default_public_key(context, client)
+
+        normalised = UpdateTokenParametersNormalised(token_id=token_id)
+
+        # Resolve keys
+        key_fields = {
+            "admin_key": parsed_params.admin_key,
+            "supply_key": parsed_params.supply_key,
+            "wipe_key": parsed_params.wipe_key,
+            "freeze_key": parsed_params.freeze_key,
+            "kyc_key": parsed_params.kyc_key,
+            "fee_schedule_key": parsed_params.fee_schedule_key,
+            "pause_key": parsed_params.pause_key,
+            "metadata_key": parsed_params.metadata_key,
+        }
+
+        resolved_keys = {}
+        for field, raw_val in key_fields.items():
+            resolved = HederaParameterNormaliser.resolve_key(raw_val, user_public_key)
+            if resolved:
+                resolved_keys[field] = resolved
+
+        if resolved_keys:
+            normalised.token_keys = TokenUpdateKeys(**resolved_keys)
+
+        # Other optional props
+        token_params_kwargs = {}
+        if parsed_params.token_name:
+            token_params_kwargs["token_name"] = parsed_params.token_name
+        if parsed_params.token_symbol:
+            token_params_kwargs["token_symbol"] = parsed_params.token_symbol
+        if parsed_params.token_memo:
+            token_params_kwargs["token_memo"] = parsed_params.token_memo
+        if parsed_params.treasury_account_id:
+            token_params_kwargs["treasury_account_id"] = AccountId.from_string(
+                parsed_params.treasury_account_id
+            )
+        if parsed_params.auto_renew_account_id:
+            token_params_kwargs["auto_renew_account_id"] = AccountId.from_string(
+                parsed_params.auto_renew_account_id
+            )
+        if parsed_params.metadata:
+            token_params_kwargs["metadata"] = (
+                parsed_params.metadata.encode("utf-8")
+                if isinstance(parsed_params.metadata, str)
+                else parsed_params.metadata
+            )
+
+        if token_params_kwargs:
+            normalised.token_params = TokenUpdateParams(**token_params_kwargs)
+
+        # Normalize scheduling parameters (if present and is_scheduled = True)
+        if getattr(parsed_params, "scheduling_params", None):
+            if parsed_params.scheduling_params.is_scheduled:
+                normalised.scheduling_params = await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+
+        return normalised
