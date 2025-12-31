@@ -11,6 +11,7 @@ import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 
 from hedera_agent_kit.plugins.core_evm_plugin import (
     MintERC721Tool,
@@ -45,7 +46,7 @@ async def setup_mint_erc721(operator_client, operator_wrapper):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -96,7 +97,7 @@ async def create_recipient_account(wrapper: HederaOperationsWrapper):
     resp = await wrapper.create_account(
         CreateAccountParametersNormalised(
             key=wrapper.client.operator_private_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     return resp.account_id
