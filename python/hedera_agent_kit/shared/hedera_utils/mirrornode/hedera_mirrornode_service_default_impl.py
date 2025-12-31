@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from decimal import Decimal
 from typing import Optional, Any, Dict, List, Coroutine
 
@@ -12,6 +13,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TopicMessage,
 )
 from hedera_agent_kit.shared.utils.ledger_id import LedgerId
+from .hedera_mirrornode_decoders import decode_messages
 from .types import (
     AccountResponse,
     TokenBalancesResponse,
@@ -134,6 +136,7 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
         )
         
         limit = query_params.get("limit", 100)
+        encoding = query_params.get("encoding", "utf-8")
         # Request at most 100 messages per page (Mirror Node max)
         page_limit = min(limit, 100)
         
@@ -169,9 +172,12 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
                 else None
             )
 
+        # Decode messages based on encoding parameter
+        decoded_messages = decode_messages(messages[:limit], encoding)
+
         return {
             "topic_id": query_params["topic_id"],
-            "messages": messages[:limit],
+            "messages": decoded_messages,
         }
 
     async def get_topic_info(self, topic_id: str) -> TopicInfo:

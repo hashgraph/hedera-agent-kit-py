@@ -8,7 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-import base64
 from typing import Any, Dict, List
 
 from hiero_sdk_python import Client
@@ -19,7 +18,6 @@ from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
 )
 from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
-    TopicMessage,
     TopicMessagesQueryParams,
     TopicMessagesResponse,
 )
@@ -58,11 +56,11 @@ Parameters:
 """
 
 
-def post_process(messages: List[TopicMessage], topic_id: str) -> str:
+def post_process(messages: List[Dict[str, Any]], topic_id: str) -> str:
     """Produce a human-readable summary for a list of topic messages.
 
     Args:
-        messages: List of message dictionaries returned by the mirrornode service.
+        messages: List of message dictionaries returned by the mirrornode service (already decoded).
         topic_id: The topic ID that was queried.
     Returns:
          A formatted string displaying the messages."""
@@ -71,12 +69,10 @@ def post_process(messages: List[TopicMessage], topic_id: str) -> str:
 
     messages_text_list = []
     for message in messages:
-        decoded_content = base64.b64decode(message.get("message", "")).decode(
-            "utf-8", errors="replace"
-        )
+        content = message.get("message", "")
         consensus_timestamp = message.get("consensus_timestamp", "N/A")
         messages_text_list.append(
-            f"{decoded_content} - posted at: {consensus_timestamp}\n"
+            f"{content} - posted at: {consensus_timestamp}\n"
         )
 
     messages_text = "".join(messages_text_list)
@@ -84,30 +80,6 @@ def post_process(messages: List[TopicMessage], topic_id: str) -> str:
     return f"""Messages for topic {topic_id}:  
   --- Messages ---  {messages_text}  
   """
-
-
-def convert_messages_from_base64_to_string(
-    messages: List[TopicMessage],
-) -> List[Dict[str, Any]]:
-    """Decode the base64 message content in a list of messages to UTF-8 strings.
-
-    Args:
-        messages: The list of raw message dictionaries.
-    Returns:
-        A new list of messages with decoded 'message' fields."""
-    decoded_messages = []
-    for message in messages:
-        new_message = message.copy()
-        try:
-            new_message["message"] = base64.b64decode(
-                message.get("message", "")
-            ).decode("utf-8")
-        except Exception:
-            # Keep original if decode fails
-            pass
-        decoded_messages.append(new_message)
-    return decoded_messages
-
 
 async def get_topic_messages_query(
     client: Client,
@@ -145,7 +117,7 @@ async def get_topic_messages_query(
             human_message=post_process(messages_list, topic_id),
             extra={
                 "topicId": topic_id,
-                "messages": convert_messages_from_base64_to_string(messages_list),
+                "messages": messages_list,
             },
         )
 
