@@ -43,6 +43,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
     - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
     - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+  - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
   - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
 - [Token Query Tools](#token-query-tools)
     - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
@@ -739,6 +740,28 @@ Delete NFT allowances for specific serial numbers. Note that this tool does not 
 ```
 Delete NFT allowance for token 0.0.12345 serials [1, 2]
 Remove NFT allowance for token 0.0.67890 serial 5
+```
+
+---
+
+### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
+
+Transfer non-fungible tokens (NFTs). Support transferring multiple NFTs (from one collection) to multiple recipients in a single transaction.
+
+#### Parameters
+
+| Parameter           | Type         | Required | Description                                                             |
+|---------------------|--------------|----------|-------------------------------------------------------------------------|
+| `token_id`          | `str`        | ✅        | The NFT token ID to transfer (e.g., "0.0.12345").                       |
+| `recipients`        | `List[dict]` | ✅        | List of objects specifying recipients and serial numbers.               |
+| `source_account_id` | `str`        | ❌        | Account ID of the NFT owner (defaults to operator).                     |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                               |
+
+#### Example Prompts
+
+```
+Transfer NFT 0.0.12345 serial 1 to 0.0.67890
+Send NFT 0.0.12345 serial 2 from 0.0.11111 to 0.0.22222
 ```
 
 ---
