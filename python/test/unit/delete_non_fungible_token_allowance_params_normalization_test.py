@@ -4,8 +4,12 @@ from unittest.mock import MagicMock, patch
 from hiero_sdk_python import Client
 
 from hedera_agent_kit.shared.configuration import Context
-from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import HederaParameterNormaliser
-from hedera_agent_kit.shared.parameter_schemas.token_schema import DeleteNonFungibleTokenAllowanceParameters
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
+    HederaParameterNormaliser,
+)
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
+    DeleteNonFungibleTokenAllowanceParameters,
+)
 
 
 class TestDeleteNonFungibleTokenAllowanceParameterNormalization:
@@ -25,19 +29,19 @@ class TestDeleteNonFungibleTokenAllowanceParameterNormalization:
     def mock_account_resolver(self, operator_id):
         # Patch the AccountResolver used in the normalizer module
         with patch(
-                "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
+            "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
         ) as mock:
             # Mock resolve_account to return the input account or operator_id if None
-            mock.resolve_account.side_effect = (
-                lambda account, ctx, client: account if account else operator_id
+            mock.resolve_account.side_effect = lambda account, ctx, client: (
+                account if account else operator_id
             )
             yield mock
 
     def test_normalises_delete_params_correctly(
-            self,
-            mock_context,
-            mock_client,
-            mock_account_resolver,
+        self,
+        mock_context,
+        mock_client,
+        mock_account_resolver,
     ):
         """Should correctly normalize parameters with explicit owner and serial numbers."""
         params = DeleteNonFungibleTokenAllowanceParameters(
@@ -66,11 +70,11 @@ class TestDeleteNonFungibleTokenAllowanceParameterNormalization:
         assert res.transaction_memo == "delete allowance memo"
 
     def test_defaults_owner_account_id_to_operator(
-            self,
-            mock_context,
-            mock_client,
-            mock_account_resolver,
-            operator_id,
+        self,
+        mock_context,
+        mock_client,
+        mock_account_resolver,
+        operator_id,
     ):
         """Should default owner_account_id to operator when not provided."""
         params = DeleteNonFungibleTokenAllowanceParameters(
@@ -93,10 +97,10 @@ class TestDeleteNonFungibleTokenAllowanceParameterNormalization:
         assert allowance.serial_numbers == [10]
 
     def test_throws_when_no_serials(
-            self,
-            mock_context,
-            mock_client,
-            mock_account_resolver,
+        self,
+        mock_context,
+        mock_client,
+        mock_account_resolver,
     ):
         """Should raise ValueError when serial_numbers is empty."""
         params = DeleteNonFungibleTokenAllowanceParameters(
@@ -105,8 +109,8 @@ class TestDeleteNonFungibleTokenAllowanceParameterNormalization:
         )
 
         with pytest.raises(
-                ValueError,
-                match=r"serial_numbers must be provided",
+            ValueError,
+            match=r"serial_numbers must be provided",
         ):
             HederaParameterNormaliser.normalise_delete_non_fungible_token_allowance(
                 params, mock_context, mock_client

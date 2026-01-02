@@ -50,7 +50,9 @@ async def setup_environment(operator_client, operator_wrapper):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])
+            ),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -62,7 +64,9 @@ async def setup_environment(operator_client, operator_wrapper):
     creator_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=creator_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])
+            ),
         )
     )
     creator_account_id = creator_resp.account_id

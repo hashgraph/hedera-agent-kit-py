@@ -359,7 +359,9 @@ async def test_should_delete_multiple_serial_nft_allowances(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 2. ACTION: Agent deletes allowance for serials 1 and 2
-    input_text = f"Delete NFT allowance for token {nft_token_id} serials {serials_to_use}."
+    input_text = (
+        f"Delete NFT allowance for token {nft_token_id} serials {serials_to_use}."
+    )
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
 
     validate_tool_use(result, response_parser, TOOL_NAME_DELETE)

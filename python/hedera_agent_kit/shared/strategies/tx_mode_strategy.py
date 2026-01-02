@@ -163,7 +163,7 @@ class ReturnBytesStrategy(TxModeStrategy):
         # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
         return ReturnBytesToolResponse(
             bytes_data=b"bytes",
-            human_message=f"Transaction bytes: <HERE PASS SOME BYTES>",
+            human_message="Transaction bytes: <HERE PASS SOME BYTES>",
         )  # temporary placeholder
 
 

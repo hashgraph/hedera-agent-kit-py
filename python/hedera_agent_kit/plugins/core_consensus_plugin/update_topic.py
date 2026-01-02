@@ -76,7 +76,7 @@ Examples:
 - If the user does not mention the key -> do not set the field.
 - If the user provides a key -> set the field to the provided public key string.
 
-If the user provides multiple fields in a single request, 
+If the user provides multiple fields in a single request,
 combine them into **one tool call** with all parameters together.
 {usage_instructions}
 """

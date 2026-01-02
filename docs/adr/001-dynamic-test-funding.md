@@ -1,7 +1,7 @@
 # **ADR 0001: Dynamic USD-to-HBAR Test Account Funding**
 
-**Date:** 2025-12-12  
-**Status:** Accepted  
+**Date:** 2025-12-12
+**Status:** Accepted
 **Context:** Python test suite for Hedera Agent Kit requires reliable test account funding that remains stable across
 HBAR price fluctuations.
 

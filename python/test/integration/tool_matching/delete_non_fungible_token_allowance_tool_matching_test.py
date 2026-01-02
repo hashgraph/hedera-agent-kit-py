@@ -46,7 +46,9 @@ async def toolkit(test_setup):
 @pytest.mark.asyncio
 async def test_match_delete_nft_allowance_explicit(agent, toolkit, monkeypatch):
     """Test matching delete NFT allowance with explicit owner and serial numbers."""
-    input_text = "Delete NFT allowance for token 0.0.3003 serials [1, 2] from owner 0.0.1001"
+    input_text = (
+        "Delete NFT allowance for token 0.0.3003 serials [1, 2] from owner 0.0.1001"
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -176,4 +178,6 @@ async def test_tool_available(toolkit):
 
     assert tool is not None
     assert tool.name == DELETE_NFT_ALLOWANCE_TOOL
-    assert "delete" in tool.description.lower() and "allowance" in tool.description.lower()
+    assert (
+        "delete" in tool.description.lower() and "allowance" in tool.description.lower()
+    )

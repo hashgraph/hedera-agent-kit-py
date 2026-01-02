@@ -39,7 +39,9 @@ async def setup_environment(operator_client, operator_wrapper):
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])
+            ),
             key=executor_key_pair.public_key(),
         )
     )

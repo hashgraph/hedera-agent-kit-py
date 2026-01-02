@@ -16,7 +16,6 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit.shared.configuration import Context, AgentMode
 from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferHbarParametersNormalised,
@@ -34,8 +33,6 @@ DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINI
 # ============================================================================
 # MODULE-LEVEL FIXTURES
 # ============================================================================
-# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
-#       at session scope for the entire test run.
 
 
 @pytest.fixture(scope="module")
@@ -104,85 +101,6 @@ def langchain_config():
     return RunnableConfig(configurable={"thread_id": "schedule_delete_e2e"})
 
 
-@pytest.fixture(scope="module")
-def context(executor_account):
-    """Context is now based on the Executor (Module Scoped)."""
-    executor_id, _, _, _ = executor_account
-    # Note: The original code returned Context with operator_account_id from executor_client.
-    # We should re-check what executor_client.operator_account_id is.
-    # It is the executor's account id.
-    # The original fixture had implicit return None because it just assigned `executor_id, ... = executor_account`.
-    # It didn't yield anything?
-    # Wait, looking at lines 95-99 in original file:
-    # @pytest.fixture
-    # def context(executor_account):
-    #     """Context is now based on the Executor."""
-    #     executor_id, _, _, _ = (
-    #         executor_account  # ============================================================================
-    #     )
-    # It seems broken in the original? It ends with `)`. And no return/yield.
-    # Ah, the view might have been truncated or I misread it?
-    # No, it looks like it was cut off in the view or it is indeed returning None.
-    # The test `test_deletes_a_scheduled_transaction_by_admin` accepts `context`.
-    # And it RETURNS a Context at the END of the test (line 145).
-    # It doesn't USE `context` in the test body except as an argument.
-    # So `context` fixture might be unused or just a placeholder?
-    # I will replicate it as returning None or proper Context if needed.
-    # The test definition: `async def test_deletes_a_scheduled_transaction_by_admin(..., context, ...)`
-    # It seems unused.
-    # I will keep it simple.
-    return None
-
-
-# TEST CASES
-# ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_deletes_a_scheduled_transaction_by_admin(
-    agent_executor,
-    operator_client,
-    executor_account,
-    context,
-    langchain_config,
-    response_parser,
-):
-    """
-    E2E Test:
-    1. Setup: Executor creates a schedule (Executor -> Operator) with Executor as Admin.
-    2. Act: Agent (running as Executor) deletes the schedule.
-    3. Assert: Verify the tool output confirms deletion.
-    """
-    # Unpack executor fixture
-    _, _, executor_client, executor_wrapper = executor_account
-
-    # 1. Create the schedule
-    # Executor sends funds to the Operator
-    schedule_id = await create_deletable_scheduled_transaction(
-        wrapper=executor_wrapper,
-        client=executor_client,
-        recipient_id=operator_client.operator_account_id,
-    )
-
-    # 2. Act: Ask agent (Executor) to delete it
-    input_text = f"Delete scheduled transaction {schedule_id}"
-    result = await agent_executor.ainvoke(
-        {"messages": [HumanMessage(content=input_text)]},
-        config=langchain_config,
-    )
-
-    # 3. Assert
-    human_message = extract_tool_human_message(
-        result, response_parser, "schedule_delete_tool"
-    )
-
-    assert "successfully deleted" in human_message.lower()
-    return Context(
-        mode=AgentMode.AUTONOMOUS,
-        account_id=str(executor_client.operator_account_id),
-    )
-
-
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -191,6 +109,7 @@ async def test_deletes_a_scheduled_transaction_by_admin(
 async def create_deletable_scheduled_transaction(
     wrapper: HederaOperationsWrapper,
     client: Client,
+    admin_key: PrivateKey,
     recipient_id: AccountId,
 ) -> str:
     """
@@ -204,10 +123,9 @@ async def create_deletable_scheduled_transaction(
     future_seconds = int(time.time() + 60 * 60)
     expiration = Timestamp(seconds=future_seconds, nanos=0)
 
-    # Set admin_key to the Executor's key (client.operator_public_key)
-    # This allows the Agent (who is acting as Executor) to delete it.
+    # Set admin_key to the Executor's key so the Agent can delete it.
     scheduling_params: ScheduleCreateParams = ScheduleCreateParams(
-        admin_key=client.operator_private_key.public_key(),
+        admin_key=admin_key.public_key(),
         expiration_time=expiration,
         wait_for_expiry=True,
     )
@@ -264,12 +182,14 @@ async def test_deletes_a_scheduled_transaction_by_admin(
     """
     Standard Case: Direct command to delete.
     """
-    _, _, executor_client, executor_wrapper = executor_account
+    # Unpack executor key explicitly to pass to the helper
+    _, executor_key, executor_client, executor_wrapper = executor_account
 
     # 1. Create the schedule
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
+        admin_key=executor_key,
         recipient_id=operator_client.operator_account_id,
     )
 
@@ -298,11 +218,12 @@ async def test_deletes_schedule_with_natural_language_cancel_request(
     """
     Variation 1: Using "cancel" and polite natural language.
     """
-    _, _, executor_client, executor_wrapper = executor_account
+    _, executor_key, executor_client, executor_wrapper = executor_account
 
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
+        admin_key=executor_key,
         recipient_id=operator_client.operator_account_id,
     )
 
@@ -330,11 +251,12 @@ async def test_deletes_schedule_with_remove_command(
     """
     Variation 2: Using "remove" and implying urgency.
     """
-    _, _, executor_client, executor_wrapper = executor_account
+    _, executor_key, executor_client, executor_wrapper = executor_account
 
     schedule_id = await create_deletable_scheduled_transaction(
         wrapper=executor_wrapper,
         client=executor_client,
+        admin_key=executor_key,
         recipient_id=operator_client.operator_account_id,
     )
 

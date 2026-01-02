@@ -125,7 +125,9 @@ async def spender_account(
     # Executor creates spender funded with a small balance
     spender_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+            ),
             key=spender_key.public_key(),
         )
     )

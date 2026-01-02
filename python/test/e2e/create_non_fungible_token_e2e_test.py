@@ -4,7 +4,7 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution.
 """
 
-from typing import AsyncGenerator, Any
+from typing import Any
 
 import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client, TokenType, SupplyType

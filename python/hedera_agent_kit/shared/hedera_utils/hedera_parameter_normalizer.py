@@ -2339,7 +2339,6 @@ class HederaParameterNormaliser:
         if not parsed_params.serial_numbers:
             raise ValueError("serial_numbers must be provided")
 
-
         # For delete transaction, we don't need spender.
         # We pass None for spender_account_id.
         nft_allowance = TokenNftAllowance(

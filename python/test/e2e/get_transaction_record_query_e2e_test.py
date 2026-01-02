@@ -190,7 +190,7 @@ async def test_fetch_record_sdk_at_style(
     human_message = parsed_data["humanMessage"]
     assert parsed_data.get("error") is None
     # Use the hyphenated format for assertion
-    assert f"Transaction Details for " in human_message
+    assert "Transaction Details for " in human_message
 
 
 @pytest.mark.asyncio
@@ -211,7 +211,7 @@ async def test_fetch_record_mirror_node_style(
     human_message = parsed_data["humanMessage"]
     assert parsed_data.get("error") is None
     # Use the hyphenated format for assertion
-    assert f"Transaction Details for " in human_message
+    assert "Transaction Details for " in human_message
 
 
 @pytest.mark.asyncio

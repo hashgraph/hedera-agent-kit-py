@@ -92,7 +92,7 @@ def post_process(response: RawTransactionResponse) -> str:
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    return f"ERC20 token transferred successfully."
+    return "ERC20 token transferred successfully."
 
 
 async def transfer_erc20(
