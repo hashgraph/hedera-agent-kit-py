@@ -2,6 +2,7 @@ from typing import Optional
 
 from hiero_sdk_python import (
     AccountAllowanceApproveTransaction,
+    AccountAllowanceDeleteTransaction,
     AccountCreateTransaction,
     AccountDeleteTransaction,
     AccountUpdateTransaction,
@@ -52,13 +53,10 @@ from hedera_agent_kit.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     ContractExecuteTransactionParametersNormalised,
     SignScheduleTransactionParameters,
-)
-from hedera_agent_kit.shared.parameter_schemas.account_schema import (
-    ScheduleDeleteTransactionParametersNormalised,
-)
-from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
     TransferNonFungibleTokenParametersNormalised,
+    DeleteNftAllowanceParametersNormalised,
+    ScheduleDeleteTransactionParametersNormalised,
 )
 
 
@@ -518,6 +516,18 @@ class HederaBuilder:
     ) -> AccountAllowanceApproveTransaction:
         """Build a fungible token allowance approval transaction."""
         return HederaBuilder._build_account_allowance_approve_tx(params)
+
+    @staticmethod
+    def delete_nft_allowance(
+        params: DeleteNftAllowanceParametersNormalised,
+    ) -> Transaction:
+        """Build an NFT allowance deletion transaction."""
+        tx = AccountAllowanceDeleteTransaction(nft_wipe=params.nft_wipe)
+        if params.transaction_memo:
+            tx.set_transaction_memo(params.transaction_memo)
+        return HederaBuilder.maybe_wrap_in_schedule(
+            tx, getattr(params, "scheduling_params", None)
+        )
 
     @staticmethod
     def execute_transaction(

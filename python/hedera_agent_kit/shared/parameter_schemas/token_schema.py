@@ -352,3 +352,24 @@ class PendingAirdropQueryParameters(BaseModelWithArbitraryTypes):
         Optional[str],
         Field(description="The account ID to query for pending airdrops."),
     ] = None
+
+
+class DeleteNonFungibleTokenAllowanceParameters(OptionalScheduledTransactionParams):
+    token_id: Annotated[str, Field(description="The ID of the NFT token")]
+    serial_numbers: Annotated[
+        List[int], Field(description="List of serial numbers to remove allowance for")
+    ]
+    owner_account_id: Annotated[
+        Optional[str], Field(description="Owner account ID (defaults to operator)")
+    ] = None
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo")
+    ] = None
+    all_serials: Annotated[bool, Field(description="Remove allowance for all serials")] = False
+
+
+class DeleteNftAllowanceParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    nft_wipe: List[TokenNftAllowance]
+    transaction_memo: Optional[str] = None

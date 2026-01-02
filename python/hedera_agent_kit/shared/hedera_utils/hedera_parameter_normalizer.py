@@ -109,6 +109,8 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferNonFungibleTokenParameters,
     TransferNonFungibleTokenParametersNormalised,
     NftTransferNormalised,
+    DeleteNonFungibleTokenAllowanceParameters,
+    DeleteNftAllowanceParametersNormalised,
 )
 
 from hedera_agent_kit.shared.constants.contracts import (
@@ -2299,4 +2301,56 @@ class HederaParameterNormaliser:
         return TransferNonFungibleTokenWithAllowanceParametersNormalised(
             nft_approved_transfer=nft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    def normalise_delete_non_fungible_token_allowance(
+        params: DeleteNonFungibleTokenAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> DeleteNftAllowanceParametersNormalised:
+        """Normalize delete NFT allowance parameters.
+
+        Maps deletion request to an 'approve' request with spender 0.0.0,
+        which effectively removes the allowance.
+
+        Args:
+            params: Raw delete parameters.
+            context: Application context.
+            client: Hedera Client.
+
+        Returns:
+            DeleteNftAllowanceParametersNormalised: Parameters to 'approve 0.0.0'.
+        """
+        parsed_params: DeleteNonFungibleTokenAllowanceParameters = cast(
+            DeleteNonFungibleTokenAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteNonFungibleTokenAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Validate that serial_numbers is provided
+        if not parsed_params.serial_numbers:
+            raise ValueError("serial_numbers must be provided")
+
+
+        # For delete transaction, we don't need spender.
+        # We pass None for spender_account_id.
+        nft_allowance = TokenNftAllowance(
+            token_id=token_id,
+            owner_account_id=AccountId.from_string(owner_account_id),
+            spender_account_id=None,
+            serial_numbers=parsed_params.serial_numbers,
+        )
+
+        return DeleteNftAllowanceParametersNormalised(
+            nft_wipe=[nft_allowance],
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=getattr(params, "scheduling_params", None),
         )
