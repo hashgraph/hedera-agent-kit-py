@@ -10,14 +10,11 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_utils imp
 )
 from hedera_agent_kit.shared.parameter_schemas import ExchangeRateQueryParameters
 from hedera_agent_kit.shared.utils import ledger_id_from_network
-from test.utils.setup import get_operator_client_for_tests
 
 
 @pytest.fixture(scope="module")
-async def setup_client():
-    client = get_operator_client_for_tests()
-    yield client
-    client.close()
+async def setup_client(operator_client):
+    yield operator_client
 
 
 @pytest.mark.asyncio

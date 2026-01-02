@@ -10,6 +10,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.schedule.schedule_create_transaction import ScheduleCreateParams
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -23,94 +24,114 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def executor_account(operator_wrapper, operator_client):
-    """
-    Creates a temporary executor account.
-    Yields: (account_id, private_key, client, wrapper)
-    Teardown: Returns remaining HBARs to operator and deletes account.
-    """
-    executor_key: PrivateKey = PrivateKey.generate_ed25519()
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a temporary executor account (Module Scoped)."""
+    executor_key = PrivateKey.generate_ed25519()
     resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=DEFAULT_EXECUTOR_BALANCE, key=executor_key.public_key()
+            initial_balance=DEFAULT_EXECUTOR_BALANCE,
+            key=executor_key.public_key(),
         )
     )
-    executor_account_id = resp.account_id
-    executor_client = get_custom_client(executor_account_id, executor_key)
+    executor_account_id: AccountId = resp.account_id
+    executor_client: Client = get_custom_client(executor_account_id, executor_key)
     executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    yield executor_account_id, executor_key, executor_client, executor_wrapper
+    # Setup LangChain once
+    setup = await create_langchain_test_setup(custom_client=executor_client)
+
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key": executor_key,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    setup.cleanup()
 
     await return_hbars_and_delete_account(
-        executor_wrapper, executor_account_id, operator_client.operator_account_id
+        executor_wrapper,
+        executor_account_id,
+        operator_client.operator_account_id,
     )
     executor_client.close()
 
 
-@pytest.fixture
-async def langchain_test_setup(executor_account):
-    """
-    Sets up the LangChain agent using the EXECUTOR Client.
-    The Executor will be the Schedule Admin and the Payer.
-    """
-    _, _, executor_client, _ = executor_account
-
-    # We pass the executor_client as the custom_client
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["executor_account_id"],
+        res["executor_key"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
 
 
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    return langchain_test_setup.agent
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
 
 
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    return langchain_test_setup.response_parser
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
 
 
 @pytest.fixture
 def langchain_config():
+    """Provide a standard LangChain runnable config (Function Scoped)."""
     return RunnableConfig(configurable={"thread_id": "schedule_delete_e2e"})
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def context(executor_account):
-    """Context is now based on the Executor."""
-    executor_id, _, _, _ = (
-        executor_account  # ============================================================================
-    )
+    """Context is now based on the Executor (Module Scoped)."""
+    executor_id, _, _, _ = executor_account
+    # Note: The original code returned Context with operator_account_id from executor_client.
+    # We should re-check what executor_client.operator_account_id is.
+    # It is the executor's account id.
+    # The original fixture had implicit return None because it just assigned `executor_id, ... = executor_account`.
+    # It didn't yield anything?
+    # Wait, looking at lines 95-99 in original file:
+    # @pytest.fixture
+    # def context(executor_account):
+    #     """Context is now based on the Executor."""
+    #     executor_id, _, _, _ = (
+    #         executor_account  # ============================================================================
+    #     )
+    # It seems broken in the original? It ends with `)`. And no return/yield.
+    # Ah, the view might have been truncated or I misread it?
+    # No, it looks like it was cut off in the view or it is indeed returning None.
+    # The test `test_deletes_a_scheduled_transaction_by_admin` accepts `context`.
+    # And it RETURNS a Context at the END of the test (line 145).
+    # It doesn't USE `context` in the test body except as an argument.
+    # So `context` fixture might be unused or just a placeholder?
+    # I will replicate it as returning None or proper Context if needed.
+    # The test definition: `async def test_deletes_a_scheduled_transaction_by_admin(..., context, ...)`
+    # It seems unused.
+    # I will keep it simple.
+    return None
 
 
 # TEST CASES

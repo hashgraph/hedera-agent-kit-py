@@ -11,6 +11,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.plugins.core_account_plugin import (
@@ -23,77 +24,94 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 
 
 # Constants
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 DEFAULT_RECIPIENT_BALANCE = 0
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES (Run once per test session)
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES (Run once per test function)
-# ============================================================================
-
-
-@pytest.fixture
-async def executor_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """
-    Create a temporary executor account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-
-    Teardown:
-        Returns funds and deletes the account.
-    """
-    executor_key_pair = PrivateKey.generate_ed25519()
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a temporary executor account (Module Scoped)."""
+    executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_EXECUTOR_BALANCE,
-            key=executor_key_pair.public_key(),
+            key=executor_key.public_key(),
         )
     )
 
     executor_account_id = executor_resp.account_id
-    executor_client = get_custom_client(executor_account_id, executor_key_pair)
-    executor_wrapper_instance = HederaOperationsWrapper(executor_client)
+    executor_client = get_custom_client(executor_account_id, executor_key)
+    executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
+    # Setup LangChain once
+    setup = await create_langchain_test_setup(custom_client=executor_client)
+
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key": executor_key,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+        "toolkit": setup.toolkit,
+    }
+
+    yield resources
+
+    setup.cleanup()
 
     await return_hbars_and_delete_account(
-        executor_wrapper_instance,
+        executor_wrapper,
         executor_account_id,
         operator_client.operator_account_id,
     )
+    executor_client.close()
 
 
-@pytest.fixture
-async def executor_wrapper(executor_account):
-    """Provide just the executor wrapper from the executor_account fixture."""
-    _, _, _, wrapper = executor_account
-    return wrapper
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    # Accessor matching original yield: (id, key, client, wrapper)
+    return (
+        res["executor_account_id"],
+        res["executor_key"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def executor_wrapper(setup_module_resources):
+    return setup_module_resources["executor_wrapper"]
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def toolkit(setup_module_resources):
+    return setup_module_resources["toolkit"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
 
 
 @pytest.fixture
@@ -101,13 +119,10 @@ async def recipient_account(
     operator_wrapper, operator_client
 ) -> AsyncGenerator[str, None]:
     """
-    Create a temporary recipient account for tests.
+    Create a temporary recipient account for tests (Function Scoped).
 
     Yields:
         str: The recipient account ID
-
-    Teardown:
-        Returns funds and deletes the account.
     """
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -126,35 +141,8 @@ async def recipient_account(
 
 @pytest.fixture
 def langchain_config():
-    """Provide a standard LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "1"})
-
-
-@pytest.fixture
-async def langchain_test_setup(executor_account):
-    """Setup LangChain agent and toolkit with a real Hedera executor account."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def toolkit(langchain_test_setup):
-    """Provide the LangChain toolkit."""
-    return langchain_test_setup.toolkit
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
+    """Provide a standard LangChain runnable config (Function Scoped)."""
+    return RunnableConfig(configurable={"thread_id": "transfer_hbar_e2e"})
 
 
 # ============================================================================
@@ -267,10 +255,11 @@ async def test_invalid_params(
 ):
     """Test that invalid parameters result in proper error handling."""
     amount = Decimal("0.05")
-    # Using an intentionally invalid account ID (0.0.0)
-    input_text = f"Can you move {amount} HBARs to account with ID 0.0.0?"
+    # Using an intentionally invalid account ID that looks plausible but likely doesn't exist
+    input_text = f"Can you move {amount} HBARs to account with ID 0.0.999999999?"
 
     # We don't assert execution success, only that the agent attempts to call the tool
+
     parsed_data = await execute_transfer(
         agent_executor, input_text, langchain_config, response_parser
     )
@@ -287,6 +276,6 @@ async def test_invalid_params(
         for err in [
             "INVALID_ACCOUNT_ID",
             "Account ID",
-            "0.0.0",
+            "0.0.999999999",
         ]
     )

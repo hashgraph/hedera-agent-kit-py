@@ -5,6 +5,7 @@ from typing import cast
 from hiero_sdk_python import PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 
 from hedera_agent_kit.plugins.core_evm_plugin import TransferERC20Tool
 from hedera_agent_kit.shared import AgentMode
@@ -22,7 +23,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -31,16 +31,16 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_transfer_erc20():
+async def setup_transfer_erc20(operator_client, operator_wrapper):
     """Setup test environment with ERC20 token and accounts."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Create an executor account (token creator and sender)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -85,7 +85,6 @@ async def setup_transfer_erc20():
         operator_client.operator_account_id,
     )
     executor_client.close()
-    operator_client.close()
 
 
 async def create_recipient_account(wrapper: HederaOperationsWrapper):
@@ -93,7 +92,7 @@ async def create_recipient_account(wrapper: HederaOperationsWrapper):
     resp = await wrapper.create_account(
         CreateAccountParametersNormalised(
             key=wrapper.client.operator_private_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     return resp.account_id

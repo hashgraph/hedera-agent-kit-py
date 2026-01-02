@@ -10,6 +10,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
 from hedera_agent_kit.plugins.core_token_plugin import DissociateTokenTool
@@ -26,7 +27,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -34,15 +34,15 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+async def setup_environment(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # 1. Create Executor Account (The one associating/dissociating)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(2.5))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -53,7 +53,8 @@ async def setup_environment():
     token_creator_key = PrivateKey.generate_ed25519()
     token_creator_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=token_creator_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(2.5))
+            key=token_creator_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     token_creator_account_id = token_creator_resp.account_id
@@ -139,8 +140,6 @@ async def setup_environment():
         operator_client.operator_account_id,
     )
     token_creator_client.close()
-
-    operator_client.close()
 
 
 async def associate_tokens(

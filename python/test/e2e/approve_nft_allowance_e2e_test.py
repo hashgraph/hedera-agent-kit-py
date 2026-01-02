@@ -19,6 +19,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
 
@@ -35,85 +36,98 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(1.75))
-DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
-DEFAULT_RECIPIENT_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
+DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
+DEFAULT_RECIPIENT_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 TOOL_NAME = "approve_nft_allowance_tool"
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def owner_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary owner/treasury account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    owner_key_pair: PrivateKey = PrivateKey.generate_ed25519()
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a temporary owner/treasury account (Module Scoped)."""
+    owner_key = PrivateKey.generate_ed25519()
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_OWNER_BALANCE,
-            key=owner_key_pair.public_key(),
+            key=owner_key.public_key(),
         )
     )
 
     owner_account_id: AccountId = owner_resp.account_id
-    owner_client: Client = get_custom_client(owner_account_id, owner_key_pair)
+    owner_client: Client = get_custom_client(owner_account_id, owner_key)
+    owner_wrapper = HederaOperationsWrapper(owner_client)
 
-    owner_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        owner_client
-    )
+    # Setup LangChain once
+    setup = await create_langchain_test_setup(custom_client=owner_client)
 
-    yield owner_account_id, owner_key_pair, owner_client, owner_wrapper_instance
+    resources = {
+        "owner_account_id": owner_account_id,
+        "owner_key": owner_key,
+        "owner_client": owner_client,
+        "owner_wrapper": owner_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    setup.cleanup()
 
     await return_hbars_and_delete_account(
-        owner_wrapper_instance,
+        owner_wrapper,
         owner_account_id,
         operator_client.operator_account_id,
     )
     owner_client.close()
 
 
+@pytest.fixture(scope="module")
+def owner_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["owner_account_id"],
+        res["owner_key"],
+        res["owner_client"],
+        res["owner_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
+
+
+@pytest.fixture
+def langchain_config():
+    """Provide a standard LangChain runnable config (Function Scoped)."""
+    return RunnableConfig(configurable={"thread_id": "approve_nft_allowance_e2e"})
+
+
 @pytest.fixture
 async def spender_account(
     operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
-    """Create a temporary spender account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    spender_key_pair: PrivateKey = PrivateKey.generate_ed25519()
+    """Create a temporary spender account (Function Scoped)."""
+    spender_key_pair = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_SPENDER_BALANCE,
@@ -123,10 +137,7 @@ async def spender_account(
 
     spender_account_id: AccountId = spender_resp.account_id
     spender_client: Client = get_custom_client(spender_account_id, spender_key_pair)
-
-    spender_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        spender_client
-    )
+    spender_wrapper_instance = HederaOperationsWrapper(spender_client)
 
     yield spender_account_id, spender_key_pair, spender_client, spender_wrapper_instance
 
@@ -138,15 +149,12 @@ async def spender_account(
     spender_client.close()
 
 
+# Recipient account remains function scoped
 @pytest.fixture
 async def recipient_account(
     operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
-    """Create a temporary recipient account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
+    """Create a temporary recipient account (Function Scoped)."""
     recipient_key_pair: PrivateKey = PrivateKey.generate_ed25519()
     recipient_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -160,9 +168,7 @@ async def recipient_account(
         recipient_account_id, recipient_key_pair
     )
 
-    recipient_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        recipient_client
-    )
+    recipient_wrapper_instance = HederaOperationsWrapper(recipient_client)
 
     yield (
         recipient_account_id,
@@ -227,33 +233,6 @@ async def test_nft(owner_account, spender_account, recipient_account):
     await wait(MIRROR_NODE_WAITING_TIME)
 
     return nft_token_id
-
-
-@pytest.fixture
-def langchain_config():
-    """Provide a standard LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "1"})
-
-
-@pytest.fixture
-async def langchain_test_setup(owner_account):
-    """Set up LangChain agent and toolkit with the owner account."""
-    _, _, owner_client, _ = owner_account
-    setup = await create_langchain_test_setup(custom_client=owner_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 # ============================================================================

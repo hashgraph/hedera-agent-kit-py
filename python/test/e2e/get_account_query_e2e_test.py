@@ -9,6 +9,7 @@ import pytest
 from hiero_sdk_python import PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -20,66 +21,55 @@ from test.utils import (
     create_langchain_test_setup,
 )
 from test.utils.setup import (
-    get_operator_client_for_tests,
     MIRROR_NODE_WAITING_TIME,
 )
 
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
-# SESSION FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Operator client for the session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Operator wrapper for account operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def langchain_test_setup():
-    """Initialize LangChain agent and toolkit using an operator client as context."""
+@pytest.fixture(scope="module")
+async def setup_module_resources():
+    """Module-scoped setup for LangChain agent."""
     setup = await create_langchain_test_setup()
     yield setup
     setup.cleanup()
 
 
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
+@pytest.fixture(scope="module")
+def langchain_test_setup(setup_module_resources):
+    return setup_module_resources
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
     """Provide LangChain agent executor."""
-    return langchain_test_setup.agent
+    return setup_module_resources.agent
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    """Provide the LangChain response parser."""
+    return setup_module_resources.response_parser
 
 
 @pytest.fixture
 def langchain_config():
-    """LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "1"})
+    """LangChain runnable config (Function Scoped for thread isolation)."""
+    return RunnableConfig(configurable={"thread_id": "get_account_query_e2e"})
 
 
-@pytest.fixture
-async def hedera_ops(operator_client):
-    """Provide Hedera operations wrapper."""
+@pytest.fixture(scope="module")
+def hedera_ops(operator_client):
+    """Provide Hedera operations wrapper (Module Scoped)."""
     return HederaOperationsWrapper(operator_client)
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 # ============================================================================

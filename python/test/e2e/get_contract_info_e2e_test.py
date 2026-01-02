@@ -10,6 +10,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TopicId
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import (
@@ -22,23 +23,16 @@ from hedera_agent_kit.shared.parameter_schemas import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client for test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Provide a HederaOperationsWrapper for the operator."""
-    return HederaOperationsWrapper(operator_client)
+# ============================================================================
+# MODULE-LEVEL FIXTURES
+# ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture
@@ -47,7 +41,8 @@ async def executor_account(operator_wrapper, operator_client):
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -64,40 +59,33 @@ async def executor_account(operator_wrapper, operator_client):
     )
 
 
-@pytest.fixture
-async def langchain_setup(executor_account):
-    """Initialize LangChain with executor client."""
-    _, _, executor_client, _ = executor_account
-    from test import create_langchain_test_setup
-
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_setup):
-    """Provide LangChain agent executor."""
-    return langchain_setup.agent
-
-
-@pytest.fixture
-async def executor_wrapper(executor_account):
-    """Provide executor wrapper (not directly used by tests, but kept for parity)."""
-    _, _, _, wrapper = executor_account
-    return wrapper
+@pytest.fixture(scope="module")
+def langchain_setup(setup_environment):
+    """Provide LangChain setup from module resources."""
+    return setup_environment["langchain_setup"]
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+def agent_executor(setup_environment):
+    """Provide LangChain agent executor."""
+    return setup_environment["agent_executor"]
 
+
+@pytest.fixture(scope="module")
+def executor_wrapper(setup_environment):
+    """Provide executor wrapper."""
+    return setup_environment["executor_wrapper"]
+
+
+@pytest.fixture(scope="module")
+async def setup_environment(operator_client, operator_wrapper):
+    """Module-scoped environment setup using session-scoped operator fixtures."""
     # Executor account (Agent performing transfers)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75))
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -120,7 +108,29 @@ async def setup_environment():
     # Wait for mirror node to index the new contract
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    return erc20_address
+    # Setup LangChain
+    from test import create_langchain_test_setup
+
+    setup = await create_langchain_test_setup(custom_client=executor_client)
+
+    yield {
+        "erc20_address": erc20_address,
+        "executor_account_id": executor_account_id,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    setup.cleanup()
+
+    await return_hbars_and_delete_account(
+        executor_wrapper,
+        executor_account_id,
+        operator_client.operator_account_id,
+    )
+    executor_client.close()
 
 
 @pytest.fixture
@@ -198,7 +208,7 @@ async def test_get_contract_info_via_agent_success(
 ):
     """Fetch info for a newly deployed ERC20 contract and verify success content."""
     # Use freshly deployed ERC20 EVM address
-    contract_identifier = setup_environment
+    contract_identifier = setup_environment["erc20_address"]
 
     input_text = f"Get contract info for {contract_identifier}"
     parsed_data = await execute_get_contract_info_query(

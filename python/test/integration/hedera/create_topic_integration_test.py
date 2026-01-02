@@ -10,6 +10,7 @@ import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 
 from hedera_agent_kit.plugins.core_consensus_plugin import CreateTopicTool
 from hedera_agent_kit.shared import AgentMode
@@ -24,20 +25,19 @@ from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """Setup Hedera operator client and context for tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Create an executor account
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=executor_key_pair.public_key(),
         )
     )
@@ -54,7 +54,6 @@ async def setup_environment():
         "context": context,
     }
 
-    operator_client.close()
     await executor_wrapper.delete_account(
         DeleteAccountParametersNormalised(
             account_id=executor_account_id,

@@ -15,6 +15,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -25,139 +26,151 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.50))
-DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_OWNER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
+DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def owner_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create the Owner account (Grantor of allowance)."""
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create Owner, Spender, and Receiver accounts (Module Scoped)."""
+    # 1. Create Owner
     owner_key = PrivateKey.generate_ed25519()
-    resp = await operator_wrapper.create_account(
+    resp_owner = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_OWNER_BALANCE,
             key=owner_key.public_key(),
         )
     )
-    account_id = resp.account_id
-    client = get_custom_client(account_id, owner_key)
-    wrapper = HederaOperationsWrapper(client)
+    owner_id = resp_owner.account_id
+    owner_client = get_custom_client(owner_id, owner_key)
+    owner_wrapper = HederaOperationsWrapper(owner_client)
 
-    await wait(MIRROR_NODE_WAITING_TIME)
-
-    yield account_id, owner_key, client, wrapper
-
-    await return_hbars_and_delete_account(
-        wrapper, account_id, operator_client.operator_account_id
-    )
-
-
-@pytest.fixture
-async def spender_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create the Spender account (The Agent)."""
+    # 2. Create Spender (Agent)
     spender_key = PrivateKey.generate_ed25519()
-    resp = await operator_wrapper.create_account(
+    resp_spender = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_SPENDER_BALANCE,
             key=spender_key.public_key(),
         )
     )
-    account_id = resp.account_id
-    client = get_custom_client(account_id, spender_key)
-    wrapper = HederaOperationsWrapper(client)
+    spender_id = resp_spender.account_id
+    spender_client = get_custom_client(spender_id, spender_key)
+    spender_wrapper = HederaOperationsWrapper(spender_client)
 
-    await wait(MIRROR_NODE_WAITING_TIME)
-
-    yield account_id, spender_key, client, wrapper
-
-    await return_hbars_and_delete_account(
-        wrapper, account_id, operator_client.operator_account_id
-    )
-
-
-@pytest.fixture
-async def receiver_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a Receiver account (initially empty)."""
+    # 3. Create Receiver
     receiver_key = PrivateKey.generate_ed25519()
-    resp = await operator_wrapper.create_account(
+    resp_receiver = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=Hbar(2),
             key=receiver_key.public_key(),
         )
     )
-    account_id = resp.account_id
-    client = get_custom_client(account_id, receiver_key)
-    wrapper = HederaOperationsWrapper(client)
+    receiver_id = resp_receiver.account_id
+    receiver_client = get_custom_client(receiver_id, receiver_key)
+    receiver_wrapper = HederaOperationsWrapper(receiver_client)
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    yield account_id, receiver_key, client, wrapper
+    # 4. Setup LangChain for Spender
+    setup = await create_langchain_test_setup(custom_client=spender_client)
 
+    resources = {
+        "owner_id": owner_id,
+        "owner_key": owner_key,
+        "owner_client": owner_client,
+        "owner_wrapper": owner_wrapper,
+        "spender_id": spender_id,
+        "spender_key": spender_key,
+        "spender_client": spender_client,
+        "spender_wrapper": spender_wrapper,
+        "receiver_id": receiver_id,
+        "receiver_key": receiver_key,
+        "receiver_client": receiver_client,
+        "receiver_wrapper": receiver_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    setup.cleanup()
+
+    # Cleanup accounts
+    # Spender first (Agent)
     await return_hbars_and_delete_account(
-        wrapper, account_id, operator_client.operator_account_id
+        spender_wrapper, spender_id, operator_client.operator_account_id
     )
+    spender_client.close()
+
+    # Owner next
+    await return_hbars_and_delete_account(
+        owner_wrapper, owner_id, operator_client.operator_account_id
+    )
+    owner_client.close()
+
+    # Receiver last
+    await return_hbars_and_delete_account(
+        receiver_wrapper, receiver_id, operator_client.operator_account_id
+    )
+    receiver_client.close()
+
+
+@pytest.fixture(scope="module")
+def owner_account(setup_module_resources):
+    res = setup_module_resources
+    return res["owner_id"], res["owner_key"], res["owner_client"], res["owner_wrapper"]
+
+
+@pytest.fixture(scope="module")
+def spender_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["spender_id"],
+        res["spender_key"],
+        res["spender_client"],
+        res["spender_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def receiver_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["receiver_id"],
+        res["receiver_key"],
+        res["receiver_client"],
+        res["receiver_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
 
 
 @pytest.fixture
 def langchain_config():
-    """Provide a standard LangChain runnable config."""
+    """Provide a standard LangChain runnable config (Function Scoped)."""
     return RunnableConfig(configurable={"thread_id": "transfer_allowance_e2e"})
-
-
-@pytest.fixture
-async def langchain_test_setup(spender_account):
-    """Set up LangChain agent acting as the SPENDER."""
-    _, _, spender_client, _ = spender_account
-    setup = await create_langchain_test_setup(custom_client=spender_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 # ============================================================================
