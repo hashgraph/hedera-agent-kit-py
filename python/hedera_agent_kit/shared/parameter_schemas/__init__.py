@@ -85,6 +85,7 @@ from .token_schema import (
     DeleteTokenParametersNormalised,
     TransferFungibleTokenParametersNormalised,
     DeleteNftAllowanceParametersNormalised,
+    TransferNonFungibleTokenParametersNormalised
 )
 from .transaction_schema import (
     TransactionRecordQueryParameters,
