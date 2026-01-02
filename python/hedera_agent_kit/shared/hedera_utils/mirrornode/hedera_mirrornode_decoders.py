@@ -6,7 +6,7 @@ from typing import List, Any, Dict, Union
 from .types import TopicMessage
 
 
-def decode_messages(
+def decode_base64_messages(
         messages: List[TopicMessage]
 ) -> List[Dict[str, Any]]:
     """Decode base64 message content to UTF-8 human-readable strings.

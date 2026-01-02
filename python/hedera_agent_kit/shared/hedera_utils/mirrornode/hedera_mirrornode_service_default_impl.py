@@ -13,7 +13,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TopicMessage,
 )
 from hedera_agent_kit.shared.utils.ledger_id import LedgerId
-from .hedera_mirrornode_decoders import decode_messages
+from .hedera_mirrornode_decoders import decode_base64_messages
 from .types import (
     AccountResponse,
     TokenBalancesResponse,
@@ -171,7 +171,7 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             )
 
         # Decode messages based on encoding parameter
-        decoded_messages = decode_messages(messages[:limit])
+        decoded_messages = decode_base64_messages(messages[:limit])
 
         return {
             "topic_id": query_params["topic_id"],
