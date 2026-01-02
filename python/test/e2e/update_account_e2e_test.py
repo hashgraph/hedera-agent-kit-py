@@ -148,7 +148,7 @@ async def test_update_max_auto_token_associations(
 
     observation = extract_tool_response(result, "update_account_tool")
     assert "updated" in observation.human_message.lower()
-    account_info = executor_wrapper.get_account_info(target_account_id)
+    executor_wrapper.get_account_info(target_account_id)
     # assert account_info.max_automatic_token_associations.to_number() == 10  # FIXME: not supported by the SDK - implemented for future use
 
 
@@ -174,7 +174,7 @@ async def test_update_decline_staking_rewards(
 
     observation = extract_tool_response(result, "update_account_tool")
     assert "updated" in observation.human_message.lower()
-    account_info = executor_wrapper.get_account_info(target_account_id)
+    executor_wrapper.get_account_info(target_account_id)
     # assert account_info.staking_info.decline_staking_reward is True  # FIXME: not supported by the SDK - implemented for future use
 
 

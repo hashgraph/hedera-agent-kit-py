@@ -116,7 +116,7 @@ GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com
 ```
 
 
-> NOTE: 
+> NOTE:
 > **Using Hex Encoded Keys (ECDSA/ED25519)?**
 > The `PrivateKey.from_string()` method used in the examples expects a DER encoded key string.
 > If you are using a hex encoded private key (common in some wallets), you should update the code to use the specific factory method:

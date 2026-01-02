@@ -4,7 +4,7 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution and verification.
 """
 
-from typing import AsyncGenerator, Any
+from typing import Any
 
 import pytest
 from hiero_sdk_python import (
@@ -240,7 +240,7 @@ def validate_tool_use(
         raise ValueError(
             f"Tool execution failed: {tool_call.parsedData.get('humanMessage', 'Unknown error')}"
         )
-    
+
     return tool_call
 
 
@@ -306,8 +306,9 @@ async def test_should_schedule_nft_transfer(
 
     # Schedule transfer of NFT using natural language with unique memo to avoid duplicates
     import uuid
+
     random_memo = f"Scheduled transfer {uuid.uuid4()}"
-    
+
     # Use wait_for_expiry to ensure the transaction doesn't execute immediately
     expiry = (datetime.now() + timedelta(minutes=10)).isoformat()
 
@@ -329,11 +330,16 @@ async def test_should_schedule_nft_transfer(
     # Verify NFT was NOT transferred to the receiver (because it should be pending due to wait_for_expiry)
     await wait(MIRROR_NODE_WAITING_TIME)
     recipient_nfts = await receiver_wrapper.get_account_nfts(str(receiver_id))
-    
+
     found_nft = False
     for nft in recipient_nfts.get("nfts"):
-        if nft.get("token_id") == str(nft_token_id) and nft.get("serial_number") == serial_to_transfer:
+        if (
+            nft.get("token_id") == str(nft_token_id)
+            and nft.get("serial_number") == serial_to_transfer
+        ):
             found_nft = True
             break
 
-    assert not found_nft, f"NFT serial {serial_to_transfer} should NOT be in receiver's account yet (schedule pending)"
+    assert (
+        not found_nft
+    ), f"NFT serial {serial_to_transfer} should NOT be in receiver's account yet (schedule pending)"

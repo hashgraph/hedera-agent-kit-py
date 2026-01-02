@@ -196,4 +196,3 @@ Workflow Includes:
 | Documentation    | None (Future: Sphinx/MkDocs) | ❌    |
 | Versioning       | poetry-dynamic-versioning    | ✅    |
 | CI CD            | github actions               | ✅    |
-

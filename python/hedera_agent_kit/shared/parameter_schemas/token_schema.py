@@ -365,7 +365,9 @@ class DeleteNonFungibleTokenAllowanceParameters(OptionalScheduledTransactionPara
     transaction_memo: Annotated[
         Optional[str], Field(description="Optional transaction memo")
     ] = None
-    all_serials: Annotated[bool, Field(description="Remove allowance for all serials")] = False
+    all_serials: Annotated[
+        bool, Field(description="Remove allowance for all serials")
+    ] = False
 
 
 class DeleteNftAllowanceParametersNormalised(

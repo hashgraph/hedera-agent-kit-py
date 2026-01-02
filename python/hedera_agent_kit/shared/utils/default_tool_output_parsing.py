@@ -71,7 +71,7 @@ def transaction_tool_output_parser(raw_output: str) -> ParserOutput:
                 "raw": executed_response.to_dict()["raw"],
                 "humanMessage": executed_response.human_message,
             }
-        except Exception as error:
+        except Exception:
             return {
                 "raw": merged_raw,
                 "humanMessage": human_message,

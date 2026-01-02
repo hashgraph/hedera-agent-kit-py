@@ -236,7 +236,9 @@ async def test_delete_account_with_natural_language_variations(
     resp = await create_test_account(
         executor_wrapper,
         executor_client,
-        initial_balance_in_hbar=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+        initial_balance_in_hbar=Hbar(
+            UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+        ),
     )
     target_account_id = str(resp.account_id)
 

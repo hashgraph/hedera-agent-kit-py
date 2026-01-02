@@ -4,7 +4,7 @@ This module provides full E2E testing from simulated user input through the
 LangChain agent, Hedera client interaction, to on-chain balance queries.
 """
 
-from typing import AsyncGenerator, Any
+from typing import Any
 import pytest
 
 from hiero_sdk_python import PrivateKey, Hbar
@@ -155,7 +155,9 @@ async def test_get_hbar_balance_for_specific_account_nonzero(
 
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+            ),
             key=executor_wrapper.client.operator_private_key.public_key(),
         )
     )

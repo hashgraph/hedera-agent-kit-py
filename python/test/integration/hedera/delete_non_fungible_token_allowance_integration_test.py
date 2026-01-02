@@ -1,4 +1,5 @@
 """Integration tests for delete NFT allowance tool."""
+
 from typing import cast
 
 import pytest
@@ -16,7 +17,9 @@ from hiero_sdk_python import (
 from test.utils.usd_to_hbar_service import UsdToHbarService
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 
-from hedera_agent_kit.plugins.core_token_plugin import DeleteNonFungibleTokenAllowanceTool
+from hedera_agent_kit.plugins.core_token_plugin import (
+    DeleteNonFungibleTokenAllowanceTool,
+)
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.models import (
@@ -181,7 +184,7 @@ async def test_deletes_nft_allowance_with_explicit_owner(setup_accounts):
 async def test_deletes_nft_allowance_with_default_owner(setup_accounts):
     owner_client: Client = setup_accounts["owner_client"]
     owner_wrapper: HederaOperationsWrapper = setup_accounts["owner_wrapper"]
-    owner_account_id: AccountId = setup_accounts["owner_account_id"]
+
     spender_account_id: AccountId = setup_accounts["spender_account_id"]
     nft_token_id: TokenId = setup_accounts["nft_token_id"]
     context: Context = setup_accounts["context"]

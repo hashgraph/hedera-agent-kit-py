@@ -158,9 +158,7 @@ async def test_transfer_nft_tool(setup_accounts):
     params = TransferNonFungibleTokenParameters(
         source_account_id=str(owner_account_id),
         token_id=str(token_id),
-        recipients=[
-            NftTransfer(recipient=str(receiver_account_id), serial_number=1)
-        ],
+        recipients=[NftTransfer(recipient=str(receiver_account_id), serial_number=1)],
         transaction_memo="NFT transfer tool test",
     )
 
@@ -173,10 +171,7 @@ async def test_transfer_nft_tool(setup_accounts):
 
     assert result is not None
     assert exec_result.raw.status == "SUCCESS"
-    assert (
-        "Non-fungible tokens successfully transferred"
-        in result.human_message
-    )
+    assert "Non-fungible tokens successfully transferred" in result.human_message
 
     # Verify the NFT was transferred to the receiver
     await wait(MIRROR_NODE_WAITING_TIME)
@@ -191,4 +186,4 @@ async def test_transfer_nft_tool(setup_accounts):
             found_nft = True
             break
 
-    assert found_nft, f"NFT serial 1 not found in receiver's account"
+    assert found_nft, "NFT serial 1 not found in receiver's account"
