@@ -19,7 +19,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
     - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
     - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
-  - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
+    - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
 - [Account Query Tools](#account-query-tools)
     - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
     - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
@@ -43,8 +43,8 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
     - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
     - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
-  - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
-  - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
+    - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
+    - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
 - [Token Query Tools](#token-query-tools)
     - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
     - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
@@ -53,7 +53,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
     - [CREATE_ERC721_TOOL](#create_erc721_tool)
     - [MINT_ERC721_TOOL](#mint_erc721_tool)
-  - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
+    - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
 - [EVM Query Tools](#evm-query-tools)
     - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
 - [Transaction Query Tools](#transaction-query-tools)
@@ -479,12 +479,12 @@ Get messages from an HCS topic.
 
 #### Parameters
 
-| Parameter    | Type       | Required | Description                                                          |
-|--------------|------------|----------|----------------------------------------------------------------------|
-| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                   |
-| `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format.  |
+| Parameter    | Type       | Required | Description                                                                                                                |
+|--------------|------------|----------|----------------------------------------------------------------------------------------------------------------------------|
+| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                                                                         |
+| `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format. |
 | `end_time`   | `datetime` | ❌        | End datetime filter (ISO 8601). Messages before this time are returned.  LLM should handle parsing to correct tool format. |
-| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100. Max value is 100.             |
+| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100. Max value is 100.                                                   |
 
 #### Example Prompts
 
@@ -719,21 +719,21 @@ Delete token allowance for token 0.0.12345 from spender 0.0.67890
 Remove all token allowances for spender 0.0.67890
 ```
 
-
 ---
 
 ### DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL
 
-Delete NFT allowances for specific serial numbers. Note that this tool does not support deleting all allowances for a token.
+Delete NFT allowances for specific serial numbers. Note that this tool does not support deleting all allowances for a
+token.
 
 #### Parameters
 
-| Parameter            | Type         | Required | Description                                |
-|----------------------|--------------|----------|--------------------------------------------|
-| `token_id`           | `str`        | ✅        | NFT token ID.                              |
-| `serial_numbers`     | `List[int]`  | ✅        | Serial numbers to remove allowances for.   |
-| `owner_account_id`   | `str`        | ❌        | Owner account ID (defaults to operator).   |
-| `transaction_memo`   | `str`        | ❌        | Memo for the transaction.                  |
+| Parameter          | Type        | Required | Description                              |
+|--------------------|-------------|----------|------------------------------------------|
+| `token_id`         | `str`       | ✅        | NFT token ID.                            |
+| `serial_numbers`   | `List[int]` | ✅        | Serial numbers to remove allowances for. |
+| `owner_account_id` | `str`       | ❌        | Owner account ID (defaults to operator). |
+| `transaction_memo` | `str`       | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
@@ -746,16 +746,17 @@ Remove NFT allowance for token 0.0.67890 serial 5
 
 ### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
 
-Transfer non-fungible tokens (NFTs). Support transferring multiple NFTs (from one collection) to multiple recipients in a single transaction.
+Transfer non-fungible tokens (NFTs). Support transferring multiple NFTs (from one collection) to multiple recipients in
+a single transaction.
 
 #### Parameters
 
-| Parameter           | Type         | Required | Description                                                             |
-|---------------------|--------------|----------|-------------------------------------------------------------------------|
-| `token_id`          | `str`        | ✅        | The NFT token ID to transfer (e.g., "0.0.12345").                       |
-| `recipients`        | `List[dict]` | ✅        | List of objects specifying recipients and serial numbers.               |
-| `source_account_id` | `str`        | ❌        | Account ID of the NFT owner (defaults to operator).                     |
-| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                               |
+| Parameter           | Type         | Required | Description                                               |
+|---------------------|--------------|----------|-----------------------------------------------------------|
+| `token_id`          | `str`        | ✅        | The NFT token ID to transfer (e.g., "0.0.12345").         |
+| `recipients`        | `List[dict]` | ✅        | List of objects specifying recipients and serial numbers. |
+| `source_account_id` | `str`        | ❌        | Account ID of the NFT owner (defaults to operator).       |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                 |
 
 #### Example Prompts
 
@@ -844,7 +845,8 @@ Transfer ERC-20 tokens.
 | `amount`            | `int` | ✅        | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
 
 > [!IMPORTANT]
-> The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
+> The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For
+> example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
 
 #### Example Prompts
 
@@ -911,7 +913,8 @@ Transfer an ERC-721 NFT.
 | `token_id`     | `int` | ✅        | The ID of the specific NFT within the ERC-721 collection to transfer. |
 
 > [!NOTE]
-> In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The first minted NFT is usually token ID 0.
+> In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The
+> first minted NFT is usually token ID 0.
 
 #### Example Prompts
 
