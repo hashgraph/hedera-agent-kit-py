@@ -26,6 +26,7 @@ from .account_schema import (
     TransferHbarWithAllowanceParametersNormalised,
     DeleteHbarAllowanceParameters,
     DeleteTokenAllowanceParameters,
+    ScheduleDeleteTransactionParametersNormalised,
 )
 from .common_schema import (
     OptionalScheduledTransactionParams,
@@ -82,6 +83,8 @@ from .token_schema import (
     ApproveNftAllowanceParametersNormalised,
     DeleteTokenParameters,
     DeleteTokenParametersNormalised,
+    TransferFungibleTokenParametersNormalised,
+    DeleteNftAllowanceParametersNormalised,
 )
 from .transaction_schema import (
     TransactionRecordQueryParameters,

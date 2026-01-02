@@ -42,6 +42,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
   - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
   - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
   - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+  - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
 - [Token Query Tools](#token-query-tools)
   - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
   - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
@@ -687,6 +688,29 @@ Delete fungible token allowances.
 ```
 Delete token allowance for token 0.0.12345 from spender 0.0.67890
 Remove all token allowances for spender 0.0.67890
+```
+
+
+---
+
+### DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL
+
+Delete NFT allowances for specific serial numbers. Note that this tool does not support deleting all allowances for a token.
+
+#### Parameters
+
+| Parameter            | Type         | Required | Description                                |
+|----------------------|--------------|----------|--------------------------------------------|
+| `token_id`           | `str`        | ✅        | NFT token ID.                              |
+| `serial_numbers`     | `List[int]`  | ✅        | Serial numbers to remove allowances for.   |
+| `owner_account_id`   | `str`        | ❌        | Owner account ID (defaults to operator).   |
+| `transaction_memo`   | `str`        | ❌        | Memo for the transaction.                  |
+
+#### Example Prompts
+
+```
+Delete NFT allowance for token 0.0.12345 serials [1, 2]
+Remove NFT allowance for token 0.0.67890 serial 5
 ```
 
 ---
