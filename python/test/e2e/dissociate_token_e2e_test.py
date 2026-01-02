@@ -180,10 +180,10 @@ def extract_tool_result(
 
 @pytest.mark.asyncio
 async def test_dissociate_single_token(setup_environment):
-    executor_client = setup_environment["executor_client"]
+
     executor_wrapper = setup_environment["executor_wrapper"]
     executor_account_id = setup_environment["executor_account_id"]
-    executor_key = setup_environment["executor_key"]
+
     creator_client = setup_environment["creator_client"]
     creator_wrapper = setup_environment["creator_wrapper"]
 
@@ -234,10 +234,10 @@ async def test_dissociate_single_token(setup_environment):
 
 @pytest.mark.asyncio
 async def test_dissociate_multiple_tokens(setup_environment):
-    executor_client = setup_environment["executor_client"]
+
     executor_wrapper = setup_environment["executor_wrapper"]
     executor_account_id = setup_environment["executor_account_id"]
-    executor_key = setup_environment["executor_key"]
+
     creator_client = setup_environment["creator_client"]
     creator_wrapper = setup_environment["creator_wrapper"]
 

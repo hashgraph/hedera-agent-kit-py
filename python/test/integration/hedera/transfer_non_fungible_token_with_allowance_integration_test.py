@@ -159,7 +159,7 @@ async def setup_accounts(operator_client, operator_wrapper):
 @pytest.mark.asyncio
 async def test_transfer_nft_via_approved_allowance(setup_accounts):
     """Test transferring NFT via approved allowance."""
-    owner_client: Client = setup_accounts["owner_client"]
+
     owner_wrapper: HederaOperationsWrapper = setup_accounts["owner_wrapper"]
     owner_account_id: AccountId = setup_accounts["owner_account_id"]
     spender_client: Client = setup_accounts["spender_client"]

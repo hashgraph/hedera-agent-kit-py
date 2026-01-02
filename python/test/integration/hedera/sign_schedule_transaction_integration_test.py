@@ -281,7 +281,7 @@ async def test_sign_fails_when_schedule_already_executed(setup_accounts):
     # First sign should succeed and execute the transaction
     tool = SignScheduleTransactionTool(context)
     params = SignScheduleTransactionToolParameters(schedule_id=schedule_id)
-    first_result: ToolResponse = await tool.execute(executor_client, context, params)
+    await tool.execute(executor_client, context, params)
 
     # This may succeed or fail depending on whether the schedule auto-executes
     # Try to sign again - this should fail as the schedule is already executed

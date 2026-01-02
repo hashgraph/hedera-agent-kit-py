@@ -184,7 +184,7 @@ async def test_deletes_nft_allowance_with_explicit_owner(setup_accounts):
 async def test_deletes_nft_allowance_with_default_owner(setup_accounts):
     owner_client: Client = setup_accounts["owner_client"]
     owner_wrapper: HederaOperationsWrapper = setup_accounts["owner_wrapper"]
-    owner_account_id: AccountId = setup_accounts["owner_account_id"]
+
     spender_account_id: AccountId = setup_accounts["spender_account_id"]
     nft_token_id: TokenId = setup_accounts["nft_token_id"]
     context: Context = setup_accounts["context"]

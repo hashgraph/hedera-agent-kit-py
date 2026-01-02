@@ -132,7 +132,7 @@ async def test_transfer_hbar_without_allowance_should_fail(setup_accounts):
 
 @pytest.mark.asyncio
 async def test_transfer_hbar_with_allowance_success(setup_accounts):
-    owner_client: Client = setup_accounts["owner_client"]
+
     owner_wrapper: HederaOperationsWrapper = setup_accounts["owner_wrapper"]
     owner_account_id: AccountId = setup_accounts["owner_account_id"]
     spender_client: Client = setup_accounts["spender_client"]
