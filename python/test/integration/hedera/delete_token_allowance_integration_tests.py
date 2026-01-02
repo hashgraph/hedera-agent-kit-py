@@ -11,6 +11,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 
 from hedera_agent_kit.plugins.core_token_plugin import DeleteTokenAllowanceTool
@@ -48,7 +49,7 @@ async def setup_accounts(operator_client, operator_wrapper):
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(1.75)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
             key=executor_key.public_key(),
         )
     )
@@ -60,7 +61,7 @@ async def setup_accounts(operator_client, operator_wrapper):
     spender_key = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(0.25)),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=spender_key.public_key(),
         )
     )

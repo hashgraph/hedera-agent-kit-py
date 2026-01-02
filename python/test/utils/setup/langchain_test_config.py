@@ -129,3 +129,22 @@ TOOLKIT_OPTIONS: LangchainTestOptions = LangchainTestOptions(
 )
 
 MIRROR_NODE_WAITING_TIME = 4000
+
+
+# Balance tiers for test account funding.
+# These are defined in USD and should be converted to HBAR at runtime
+# using UsdToHbarService.usd_to_hbar().
+#
+# Tiers:
+# - MINIMAL:  $0.50 - Basic operations (single transfer, simple query)
+# - STANDARD: $5.00 - Most common test scenarios (token operations, multiple transfers)
+# - ELEVATED: $10.00 - Complex operations (NFT minting, multiple token operations)
+# - MAXIMUM:  $20.00 - Heavy operations (contract deployments, extensive token operations)
+
+BALANCE_TIERS = {
+    "MINIMAL": 0.5,
+    "STANDARD": 5.0,
+    "ELEVATED": 10.0,
+    "MAXIMUM": 20.0,
+}
+
