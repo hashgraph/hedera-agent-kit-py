@@ -136,15 +136,13 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
         )
         
         limit = query_params.get("limit", 100)
-        encoding = query_params.get("encoding", "utf-8")
+        encoding = query_params.get("encoding", "base64")
         # Request at most 100 messages per page (Mirror Node max)
         page_limit = min(limit, 100)
         
         url: str = (
             f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit={page_limit}"
         )
-
-        print(url)
 
         messages: List[TopicMessage] = []
         fetched_pages: int = 0
@@ -173,7 +171,7 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             )
 
         # Decode messages based on encoding parameter
-        decoded_messages = decode_messages(messages[:limit], encoding)
+        decoded_messages = decode_messages(messages[:limit])
 
         return {
             "topic_id": query_params["topic_id"],

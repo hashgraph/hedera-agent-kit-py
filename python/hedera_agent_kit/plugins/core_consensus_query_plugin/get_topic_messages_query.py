@@ -53,6 +53,8 @@ Parameters:
 - end_time (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime  
 - limit: (Optional) Max number of messages to return. Defaults to 100. Max value is 100.
 {usage_instructions}  
+
+Note: When limit is set, the most recent messages up to the limit will be returned within the specified time range.
 """
 
 

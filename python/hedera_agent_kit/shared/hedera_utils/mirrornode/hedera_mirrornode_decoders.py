@@ -7,20 +7,15 @@ from .types import TopicMessage
 
 
 def decode_messages(
-    messages: List[TopicMessage], encoding: str
-) -> Union[List[Dict[str, Any]], List[TopicMessage]]:
-    """Decode the base64 message content based on the specified encoding.
+        messages: List[TopicMessage]
+) -> List[Dict[str, Any]]:
+    """Decode base64 message content to UTF-8 human-readable strings.
 
     Args:
         messages: The list of raw message dictionaries from the Mirror Node.
-        encoding: The target encoding ('utf-8' or 'base64').
     Returns:
-        A new list of messages with decoded 'message' fields (if encoding is 'utf-8').
+        A new list of messages with decoded 'message' fields.
     """
-    if encoding == "base64":
-        # Keep the original base64 encoding
-        return messages
-
     decoded_messages = []
     for message in messages:
         new_message = dict(message)
