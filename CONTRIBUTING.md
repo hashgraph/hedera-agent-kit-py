@@ -51,6 +51,23 @@ Make sure the name and email match the identity you've set in Git. GitHub Action
 
 ## 3. Code Style & Testing
 
+### Pre-commit Hooks
+We use pre-commit to ensure code quality checks (linting, formatting, and unit tests) run automatically before every commit.
+
+To set up pre-commit locally:
+
+```bash
+poetry run pre-commit install
+```
+
+This will run checks like `ruff`, `black`, and unit tests whenever you run `git commit`.
+
+You can also trigger them manually at any time (from the `python/` directory):
+
+```bash
+poetry run pre-commit run --all-files --config ../.pre-commit-config.yaml
+```
+
 ### Linting & Formatting
 
 This project uses **Ruff** for linting and **Black** for code formatting.

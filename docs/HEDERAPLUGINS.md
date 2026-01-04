@@ -80,9 +80,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and management of to
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                                                                 | Description                          | Details                                                                  |
-|---------------------------------------------------------------------------|--------------------------------------|--------------------------------------------------------------------------|
-| [`GET_TOPIC_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_info_query_tool) | Returns information for an HCS topic | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_info_query_tool) |
+| Tool Name                                                                             | Description                                          | Details                                                                          |
+|---------------------------------------------------------------------------------------|------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`GET_TOPIC_INFO_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_info_query_tool)             | Returns information for an HCS topic                 | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_info_query_tool)         |
+| [`GET_TOPIC_MESSAGES_QUERY_TOOL`](./HEDERATOOLS.md#get_topic_messages_query_tool)     | Returns messages from an HCS topic with date filters | [View Parameters & Examples](./HEDERATOOLS.md#get_topic_messages_query_tool)     |
 
 ---
 
@@ -250,3 +251,75 @@ The Python SDK currently supports one agent mode:
 
 > **Coming Soon:** `AgentMode.RETURN_BYTES` - In this mode, the agent creates the transaction and returns the bytes for
 > the user to execute in another tool (human-in-the-loop pattern).
+
+---
+
+## Scheduling Transactions
+
+Most tools in the Hedera Agent Kit support **scheduled transactions**. This allows you to create a transaction that will be executed at a later time or once specific signatures are collected.
+
+### Scheduling Parameters
+
+When a tool supports scheduling, it accepts an optional `schedulingParams` object with the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `is_scheduled` | `boolean` | Set to `true` to create a scheduled transaction instead of executing immediately. |
+| `expiration_time` | `string` | ISO 8601 formatted date string (e.g., "2026-02-01T00:00:00Z") when the transaction expires if not fully signed. |
+| `wait_for_expiry` | `boolean` | If `true`, the transaction executes only at `expiration_time`. If `false` (default), it executes as soon as signatures are collected. |
+| `admin_key` | `boolean \| string` | Admin key to manage the scheduled transaction. `true` uses the operator key. |
+| `payer_account_id` | `string` | Account ID that pays the execution fee. Defaults to the operator. |
+
+### Supported Tools
+
+The following tools currently support transaction scheduling:
+
+**Core Account Plugin**
+*   `CREATE_ACCOUNT_TOOL`
+*   `UPDATE_ACCOUNT_TOOL`
+*   `TRANSFER_HBAR_TOOL`
+
+**Core Token Plugin**
+*   `CREATE_FUNGIBLE_TOKEN_TOOL`
+*   `CREATE_NON_FUNGIBLE_TOKEN_TOOL`
+*   `MINT_FUNGIBLE_TOKEN_TOOL`
+*   `MINT_NON_FUNGIBLE_TOKEN_TOOL`
+*   `TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`
+*   `TRANSFER_NFT_WITH_ALLOWANCE_TOOL`
+*   `TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL`
+*   `AIRDROP_FUNGIBLE_TOKEN_TOOL`
+*   `DISSOCIATE_TOKEN_TOOL`
+*   `DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL`
+
+**Core Consensus Plugin**
+*   `SUBMIT_TOPIC_MESSAGE_TOOL`
+
+**Core EVM Plugin**
+*   `CREATE_ERC20_TOOL`
+*   `TRANSFER_ERC20_TOOL`
+*   `CREATE_ERC721_TOOL`
+*   `MINT_ERC721_TOOL`
+*   `TRANSFER_ERC721_TOOL`
+
+### Prompting Best Practices
+
+To successfully create a scheduled transaction via an AI agent, use clear and explicit prompts:
+
+1.  **Explicit Intent**: clearly state that you want to *schedule* the transaction.
+2.  **Specific Timestamps**: Use exact dates for expiration or execution time. Avoid relative terms like "tomorrow" or "in 2 days" if possible, or ensure the agent can resolve them to a specific date.
+
+**Good Examples:**
+*   "Transfer 10 HBAR to 0.0.12345 and schedule it to expire on 2025-12-31."
+*   "Create a scheduled transaction to mint 100 tokens of 0.0.56789, executing on 2026-01-01."
+
+**Bad Examples:**
+*   "Transfer 10 HBAR later." (Vague timing)
+*   "Schedule a transfer." (Missing expiration details might default unexpectedly)
+
+### Python SDK Implementation
+
+In the Python SDK, scheduling is handled via the `OptionalScheduledTransactionParams` schema in `hedera_agent_kit.shared.parameter_schemas.common_schema`. Tools inheriting from this schema automatically support the parameters listed above.
+
+To enable scheduling in a custom tool:
+1.  Inherit from `OptionalScheduledTransactionParams`.
+2.  In your tool's logic, use `HederaBuilder.maybe_wrap_in_schedule` to conditionally wrap the transaction.

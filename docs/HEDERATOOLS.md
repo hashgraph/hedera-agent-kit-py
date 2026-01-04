@@ -9,56 +9,57 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 ## Table of Contents
 
 - [Account Tools](#account-tools)
-  - [TRANSFER_HBAR_TOOL](#transfer_hbar_tool)
-  - [CREATE_ACCOUNT_TOOL](#create_account_tool)
-  - [UPDATE_ACCOUNT_TOOL](#update_account_tool)
-  - [DELETE_ACCOUNT_TOOL](#delete_account_tool)
-  - [APPROVE_HBAR_ALLOWANCE_TOOL](#approve_hbar_allowance_tool)
-  - [DELETE_HBAR_ALLOWANCE_TOOL](#delete_hbar_allowance_tool)
-  - [TRANSFER_HBAR_WITH_ALLOWANCE_TOOL](#transfer_hbar_with_allowance_tool)
-  - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
-  - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
-  - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
-  - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
+    - [TRANSFER_HBAR_TOOL](#transfer_hbar_tool)
+    - [CREATE_ACCOUNT_TOOL](#create_account_tool)
+    - [UPDATE_ACCOUNT_TOOL](#update_account_tool)
+    - [DELETE_ACCOUNT_TOOL](#delete_account_tool)
+    - [APPROVE_HBAR_ALLOWANCE_TOOL](#approve_hbar_allowance_tool)
+    - [DELETE_HBAR_ALLOWANCE_TOOL](#delete_hbar_allowance_tool)
+    - [TRANSFER_HBAR_WITH_ALLOWANCE_TOOL](#transfer_hbar_with_allowance_tool)
+    - [APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#approve_fungible_token_allowance_tool)
+    - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
+    - [SCHEDULE_DELETE_TOOL](#schedule_delete_tool)
+    - [SIGN_SCHEDULE_TRANSACTION_TOOL](#sign_schedule_transaction_tool)
 - [Account Query Tools](#account-query-tools)
-  - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
-  - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
-  - [GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL](#get_account_token_balances_query_tool)
+    - [GET_HBAR_BALANCE_QUERY_TOOL](#get_hbar_balance_query_tool)
+    - [GET_ACCOUNT_QUERY_TOOL](#get_account_query_tool)
+    - [GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL](#get_account_token_balances_query_tool)
 - [Consensus Tools](#consensus-tools)
-  - [CREATE_TOPIC_TOOL](#create_topic_tool)
-  - [SUBMIT_TOPIC_MESSAGE_TOOL](#submit_topic_message_tool)
-  - [DELETE_TOPIC_TOOL](#delete_topic_tool)
-  - [UPDATE_TOPIC_TOOL](#update_topic_tool)
+    - [CREATE_TOPIC_TOOL](#create_topic_tool)
+    - [SUBMIT_TOPIC_MESSAGE_TOOL](#submit_topic_message_tool)
+    - [DELETE_TOPIC_TOOL](#delete_topic_tool)
+    - [UPDATE_TOPIC_TOOL](#update_topic_tool)
 - [Consensus Query Tools](#consensus-query-tools)
-  - [GET_TOPIC_INFO_QUERY_TOOL](#get_topic_info_query_tool)
+    - [GET_TOPIC_INFO_QUERY_TOOL](#get_topic_info_query_tool)
+    - [GET_TOPIC_MESSAGES_QUERY_TOOL](#get_topic_messages_query_tool)
 - [Token Tools](#token-tools)
-  - [CREATE_FUNGIBLE_TOKEN_TOOL](#create_fungible_token_tool)
-  - [CREATE_NON_FUNGIBLE_TOKEN_TOOL](#create_non_fungible_token_tool)
-  - [MINT_FUNGIBLE_TOKEN_TOOL](#mint_fungible_token_tool)
-  - [MINT_NON_FUNGIBLE_TOKEN_TOOL](#mint_non_fungible_token_tool)
-  - [ASSOCIATE_TOKEN_TOOL](#associate_token_tool)
-  - [DISSOCIATE_TOKEN_TOOL](#dissociate_token_tool)
-  - [AIRDROP_FUNGIBLE_TOKEN_TOOL](#airdrop_fungible_token_tool)
-  - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
-  - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
-  - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
-  - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
-  - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
+    - [CREATE_FUNGIBLE_TOKEN_TOOL](#create_fungible_token_tool)
+    - [CREATE_NON_FUNGIBLE_TOKEN_TOOL](#create_non_fungible_token_tool)
+    - [MINT_FUNGIBLE_TOKEN_TOOL](#mint_fungible_token_tool)
+    - [MINT_NON_FUNGIBLE_TOKEN_TOOL](#mint_non_fungible_token_tool)
+    - [ASSOCIATE_TOKEN_TOOL](#associate_token_tool)
+    - [DISSOCIATE_TOKEN_TOOL](#dissociate_token_tool)
+    - [AIRDROP_FUNGIBLE_TOKEN_TOOL](#airdrop_fungible_token_tool)
+    - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
+    - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
+    - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+    - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
+    - [DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL](#delete_non_fungible_token_allowance_tool)
 - [Token Query Tools](#token-query-tools)
-  - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
-  - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
+    - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
+    - [GET_PENDING_AIRDROP_QUERY_TOOL](#get_pending_airdrop_query_tool)
 - [EVM Tools](#evm-tools)
-  - [CREATE_ERC20_TOOL](#create_erc20_tool)
-  - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
-  - [CREATE_ERC721_TOOL](#create_erc721_tool)
-  - [MINT_ERC721_TOOL](#mint_erc721_tool)
-  - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
+    - [CREATE_ERC20_TOOL](#create_erc20_tool)
+    - [TRANSFER_ERC20_TOOL](#transfer_erc20_tool)
+    - [CREATE_ERC721_TOOL](#create_erc721_tool)
+    - [MINT_ERC721_TOOL](#mint_erc721_tool)
+    - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
 - [EVM Query Tools](#evm-query-tools)
-  - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
+    - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
 - [Transaction Query Tools](#transaction-query-tools)
-  - [GET_TRANSACTION_RECORD_QUERY_TOOL](#get_transaction_record_query_tool)
+    - [GET_TRANSACTION_RECORD_QUERY_TOOL](#get_transaction_record_query_tool)
 - [Misc Query Tools](#misc-query-tools)
-  - [GET_EXCHANGE_RATE_TOOL](#get_exchange_rate_tool)
+    - [GET_EXCHANGE_RATE_TOOL](#get_exchange_rate_tool)
 
 ---
 
@@ -82,6 +83,7 @@ Transfer HBAR between accounts.
 Transfer 0.1 HBAR to 0.0.12345
 Transfer 0.05 HBAR to 0.0.12345 with memo "Payment for services"
 Can you move 0.05 HBARs to account with ID 0.0.12345?
+Transfer 1 HBAR to 0.0.12345 and schedule the transaction with expiration time 01.02.2026
 ```
 
 ---
@@ -105,6 +107,7 @@ Creates a new Hedera account.
 Create a new Hedera account
 Create a new account with 10 HBAR
 Create an account with memo "My primary account" and 5 HBAR initial balance
+Create a new account with 10 HBAR and schedule the transaction with expiration time 01.02.2026
 ```
 
 ---
@@ -128,6 +131,7 @@ Update an account's metadata.
 ```
 Update account 0.0.12345 to have max auto associations of 10
 Set my account memo to "Updated account"
+Set my account memo to "Scheduled Update" and schedule this with expiration time 01.02.2026
 ```
 
 ---
@@ -403,6 +407,7 @@ Submit a message to an HCS topic.
 ```
 Submit "Hello World" to topic 0.0.12345
 Post a message "Daily update" to topic 0.0.12345
+Submit "Scheduled Message" to topic 0.0.12345 and schedule with expiration time 01.02.2026
 ```
 
 ---
@@ -472,6 +477,33 @@ What is the memo of topic 0.0.12345?
 
 ---
 
+### GET_TOPIC_MESSAGES_QUERY_TOOL
+
+Get messages from an HCS topic.
+
+#### Parameters
+
+| Parameter    | Type       | Required | Description                                                                                                                |
+|--------------|------------|----------|----------------------------------------------------------------------------------------------------------------------------|
+| `topic_id`   | `str`      | ✅        | Topic ID to query.                                                                                                         |
+| `start_time` | `datetime` | ❌        | Start datetime filter (ISO 8601). Messages after this time are returned. LLM should handle parsing to correct tool format. |
+| `end_time`   | `datetime` | ❌        | End datetime filter (ISO 8601). Messages before this time are returned.  LLM should handle parsing to correct tool format. |
+| `limit`      | `int`      | ❌        | Maximum number of messages to return. Defaults to 100. Max value is 100.                                                   |
+
+#### Example Prompts
+
+```
+Get messages from topic 0.0.12345
+Show me the last 10 messages from topic 0.0.12345
+What messages were posted to topic 0.0.12345?
+Get messages from topic 0.0.12345 with limit 5
+Get messages from topic 0.0.12345 after 2024-01-01T00:00:00Z
+Fetch messages from topic 0.0.12345 between 2024-01-01 and 2024-06-30
+Get all messages from topic 0.0.12345 posted in the last hour
+```
+
+---
+
 ## Token Tools
 
 ### CREATE_FUNGIBLE_TOKEN_TOOL
@@ -496,7 +528,7 @@ Create a fungible token on Hedera.
 ```
 Create a fungible token named MyToken with symbol MTK
 Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000
-Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.
+Create a fungible token named MyToken with symbol MTK. Schedule the transaction with expiration 01.02.2026.
 ```
 
 ---
@@ -520,6 +552,7 @@ Create a non-fungible token (NFT) on Hedera.
 ```
 Create an NFT collection named MyNFT with symbol MNFT
 Create an NFT named ArtCollection with symbol ART and max supply 1000
+Create an NFT collection named ScheduledNFT and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -540,6 +573,7 @@ Mint additional supply of a fungible token.
 ```
 Mint 100 tokens of 0.0.12345
 Add 500 supply to token 0.0.12345
+Mint 100 tokens of 0.0.12345 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -560,6 +594,7 @@ Mint NFTs with metadata.
 ```
 Mint NFT 0.0.12345 with metadata ipfs://QmTest123
 Mint 3 NFTs for token 0.0.12345 with URIs ["ipfs://a", "ipfs://b", "ipfs://c"]
+Mint NFT 0.0.12345 with metadata ipfs://Scheduled and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -580,6 +615,7 @@ Associate tokens with an account.
 ```
 Associate token 0.0.12345 with my account
 Associate tokens 0.0.12345 and 0.0.67890 with account 0.0.11111
+Associate token 0.0.12345 with my account and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -601,6 +637,7 @@ Dissociate tokens from an account.
 ```
 Dissociate token 0.0.12345 from my account
 Remove token 0.0.12345 association from account 0.0.67890
+Dissociate token 0.0.12345 from my account and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -623,6 +660,7 @@ Airdrop fungible tokens to multiple recipients.
 ```
 Airdrop 100 tokens of 0.0.12345 to accounts 0.0.11111 and 0.0.22222
 Send 50 tokens each of 0.0.12345 to three accounts
+Airdrop 100 tokens of 0.0.12345 to 0.0.11111 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -645,6 +683,7 @@ Transfer fungible tokens using an allowance.
 ```
 Transfer 50 tokens of 0.0.12345 from 0.0.11111 to 0.0.22222 using allowance
 Use my token allowance to send 100 tokens from 0.0.11111
+Transfer 50 tokens of 0.0.12345 from 0.0.11111 using allowance and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -667,6 +706,7 @@ Transfer NFTs using an allowance.
 ```
 Transfer NFT 0.0.12345 serial 1 from 0.0.11111 to 0.0.22222 using allowance
 Use allowance to send NFT serial 5 from owner 0.0.11111
+Transfer NFT 0.0.12345 serial 1 from 0.0.11111 using allowance and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -689,51 +729,55 @@ Delete fungible token allowances.
 ```
 Delete token allowance for token 0.0.12345 from spender 0.0.67890
 Remove all token allowances for spender 0.0.67890
+Delete token allowance for token 0.0.12345 from spender 0.0.67890 and schedule with expiration 01.02.2026
 ```
-
 
 ---
 
 ### DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL
 
-Delete NFT allowances for specific serial numbers. Note that this tool does not support deleting all allowances for a token.
+Delete NFT allowances for specific serial numbers. Note that this tool does not support deleting all allowances for a
+token.
 
 #### Parameters
 
-| Parameter            | Type         | Required | Description                                |
-|----------------------|--------------|----------|--------------------------------------------|
-| `token_id`           | `str`        | ✅        | NFT token ID.                              |
-| `serial_numbers`     | `List[int]`  | ✅        | Serial numbers to remove allowances for.   |
-| `owner_account_id`   | `str`        | ❌        | Owner account ID (defaults to operator).   |
-| `transaction_memo`   | `str`        | ❌        | Memo for the transaction.                  |
+| Parameter          | Type        | Required | Description                              |
+|--------------------|-------------|----------|------------------------------------------|
+| `token_id`         | `str`       | ✅        | NFT token ID.                            |
+| `serial_numbers`   | `List[int]` | ✅        | Serial numbers to remove allowances for. |
+| `owner_account_id` | `str`       | ❌        | Owner account ID (defaults to operator). |
+| `transaction_memo` | `str`       | ❌        | Memo for the transaction.                |
 
 #### Example Prompts
 
 ```
 Delete NFT allowance for token 0.0.12345 serials [1, 2]
 Remove NFT allowance for token 0.0.67890 serial 5
+Delete NFT allowance for token 0.0.12345 serials [1] and schedule with expiration 01.02.2026
 ```
 
 ---
 
 ### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
 
-Transfer non-fungible tokens (NFTs). Support transferring multiple NFTs (from one collection) to multiple recipients in a single transaction.
+Transfer non-fungible tokens (NFTs). Support transferring multiple NFTs (from one collection) to multiple recipients in
+a single transaction.
 
 #### Parameters
 
-| Parameter           | Type         | Required | Description                                                             |
-|---------------------|--------------|----------|-------------------------------------------------------------------------|
-| `token_id`          | `str`        | ✅        | The NFT token ID to transfer (e.g., "0.0.12345").                       |
-| `recipients`        | `List[dict]` | ✅        | List of objects specifying recipients and serial numbers.               |
-| `source_account_id` | `str`        | ❌        | Account ID of the NFT owner (defaults to operator).                     |
-| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                               |
+| Parameter           | Type         | Required | Description                                               |
+|---------------------|--------------|----------|-----------------------------------------------------------|
+| `token_id`          | `str`        | ✅        | The NFT token ID to transfer (e.g., "0.0.12345").         |
+| `recipients`        | `List[dict]` | ✅        | List of objects specifying recipients and serial numbers. |
+| `source_account_id` | `str`        | ❌        | Account ID of the NFT owner (defaults to operator).       |
+| `transaction_memo`  | `str`        | ❌        | Memo for the transaction.                                 |
 
 #### Example Prompts
 
 ```
 Transfer NFT 0.0.12345 serial 1 to 0.0.67890
 Send NFT 0.0.12345 serial 2 from 0.0.11111 to 0.0.22222
+Transfer NFT 0.0.12345 serial 1 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -798,7 +842,7 @@ Deploy an ERC-20 token via factory contract.
 ```
 Create an ERC20 token named MyERC20 with symbol M20
 Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000
-Create an ERC20 token named "MyToken" with symbol MTK. Schedule this transaction instead of executing it immediately.
+Create an ERC20 token named "MyToken" with symbol MTK. Schedule with expiration 01.02.2026.
 ```
 
 ---
@@ -816,13 +860,15 @@ Transfer ERC-20 tokens.
 | `amount`            | `int` | ✅        | Amount to transfer in **base units** (smallest denomination, e.g., for 18 decimals: 1 token = 10^18 base units). |
 
 > [!IMPORTANT]
-> The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
+> The `amount` parameter accepts values in **base units** (the smallest token denomination), not display units. For
+> example, if the token has 18 decimals and you want to transfer 1 token, you must pass `1000000000000000000` (10^18).
 
 #### Example Prompts
 
 ```
 Transfer 100 tokens of contract 0.0.12345 to 0.0.67890
 Send 50 ERC20 tokens from 0x1234... to 0x5678...
+Transfer 100 tokens of 0.0.12345 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -844,6 +890,7 @@ Deploy an ERC-721 (NFT) token via factory contract.
 ```
 Create an ERC721 token named MyNFT with symbol MNFT
 Create an ERC721 collection called ArtDrops with symbol AD and base URI ipfs://Qm...
+Create an ERC721 token named MyNFT with symbol MNFT and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -865,6 +912,7 @@ Mint a new ERC-721 NFT by calling the `safeMint(to)` function on the contract.
 Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b
 Mint ERC721 token 0.0.6486793 to Hedera account ID 0.0.2222222
 Mint ERC721 token 0.0.9999
+Mint ERC721 token 0.0.9999 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -883,13 +931,15 @@ Transfer an ERC-721 NFT.
 | `token_id`     | `int` | ✅        | The ID of the specific NFT within the ERC-721 collection to transfer. |
 
 > [!NOTE]
-> In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The first minted NFT is usually token ID 0.
+> In ERC-721 collections, token IDs typically start from **0** (or 1, depending on the contract implementation). The
+> first minted NFT is usually token ID 0.
 
 #### Example Prompts
 
 ```
 Transfer ERC721 token 0 from contract 0.0.12345 to 0.0.67890
 Send NFT #5 from 0x1234... to 0x5678...
+Transfer ERC721 token 0 from contract 0.0.12345 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---

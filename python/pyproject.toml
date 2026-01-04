@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hedera-agent-kit"
-version = "3.1.0"
+version = "3.2.0"
 description = "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like"
 authors = ["Hashgraph"]
 license = "Apache-2.0"
@@ -18,11 +18,11 @@ aiohttp = ">=3.13.1,<4.0.0"
 pydantic = "^2.12.3"
 hiero-sdk-python = "0.1.9"
 web3 = "==7.14.0"
+mcp = "1.25.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=25.9.0,<26.0.0"
 pytest = ">=8.4.2,<9.0.0"
-mypy = ">=1.18.2,<2.0.0"
 ruff = ">=0.14.1,<0.15.0"
 pytest-asyncio = "==1.2.0"
 pytest-timeout = "==2.4.0"
@@ -30,6 +30,7 @@ pytest-rerunfailures = "==16.1"
 pytest-mock = "==3.15.1"
 pytest-xdist = ">=3.5.0,<4.0.0"
 pydeps = "==3.0.1"
+pre-commit = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

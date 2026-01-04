@@ -46,6 +46,15 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 ---
 
+### Third Party Plugins
+
+- CoinCap Plugin - provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
+  - PyPI: [https://pypi.org/project/coincap-hedera-agent-kit-plugin](https://pypi.org/project/coincap-hedera-agent-kit-plugin)
+  - Source: [https://github.com/henrytongv/hedera-agent-kit-py](https://github.com/henrytongv/hedera-agent-kit-py)
+  - ✅ Tested/endorsed version of plugin: coincap-hedera-agent-kit-plugin==0.8
+
+---
+
 ## Developer Examples
 
 You can try out examples of the different types of agents you can build by following the instructions in the [Developer Examples](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md) doc in this repo.
@@ -116,7 +125,7 @@ GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com
 ```
 
 
-> NOTE: 
+> NOTE:
 > **Using Hex Encoded Keys (ECDSA/ED25519)?**
 > The `PrivateKey.from_string()` method used in the examples expects a DER encoded key string.
 > If you are using a hex encoded private key (common in some wallets), you should update the code to use the specific factory method:

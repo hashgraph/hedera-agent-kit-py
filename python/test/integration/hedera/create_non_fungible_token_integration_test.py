@@ -17,7 +17,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
     CreateNonFungibleTokenParameters,
     SchedulingParams,
 )
-from test import HederaOperationsWrapper
 
 
 @pytest.fixture(scope="module")

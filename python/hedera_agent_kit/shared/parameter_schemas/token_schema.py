@@ -151,8 +151,9 @@ class NftTransfer(BaseModelWithArbitraryTypes):
 
 class TransferNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     source_account_id: Annotated[
-        str, Field(description="Account ID of the token owner.")
-    ]
+        Optional[str],
+        Field(description="Account ID of the token owner (defaults to operator)."),
+    ] = None
     token_id: Annotated[str, Field(description="The NFT token ID.")]
     recipients: Annotated[
         List[NftTransfer],
@@ -365,7 +366,9 @@ class DeleteNonFungibleTokenAllowanceParameters(OptionalScheduledTransactionPara
     transaction_memo: Annotated[
         Optional[str], Field(description="Optional transaction memo")
     ] = None
-    all_serials: Annotated[bool, Field(description="Remove allowance for all serials")] = False
+    all_serials: Annotated[
+        bool, Field(description="Remove allowance for all serials")
+    ] = False
 
 
 class DeleteNftAllowanceParametersNormalised(

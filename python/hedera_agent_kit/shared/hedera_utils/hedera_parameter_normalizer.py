@@ -29,7 +29,10 @@ from hedera_agent_kit.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
-from hedera_agent_kit.shared.hedera_utils.mirrornode.types import TokenInfo
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
+    TokenInfo,
+    TopicMessagesQueryParams,
+)
 from hedera_agent_kit.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
@@ -68,6 +71,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     MintFungibleTokenParameters,
     MintFungibleTokenParametersNormalised,
+    TopicMessagesQueryParameters,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     AirdropFungibleTokenParameters,
@@ -2304,6 +2308,56 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    def normalise_get_topic_messages(
+        params: TopicMessagesQueryParameters,
+    ) -> TopicMessagesQueryParams:
+        """
+        Normalizes and parses topic message query parameters into a standard format.
+
+        This static method is used to validate and process the input parameters for
+        retrieving messages related to a particular topic. It ensures adherence to
+        the expected schema, assigns default values where necessary, and formats the
+        parameters into a usable dictionary.
+
+        :param params: TopicMessagesQueryParameters object containing query parameters
+                       such as topic ID and optional limit and timestamp ranges.
+        :return: A dictionary formatted as TopicMessagesQueryParams with keys
+                 "topic_id", "limit", "lowerTimestamp", and "upperTimestamp".
+        """
+        # Validate and parse parameters
+        parsed_params: TopicMessagesQueryParameters = cast(
+            TopicMessagesQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TopicMessagesQueryParameters
+            ),
+        )
+
+        limit: int = parsed_params.limit or 100
+
+        # Convert start_time and end_time to Hedera Mirror Node timestamp format
+        lower_timestamp: str = ""
+        if parsed_params.start_time:
+            start_dt = datetime.fromisoformat(
+                parsed_params.start_time.replace("Z", "+00:00")
+            )
+            lower_timestamp = f"{int(start_dt.timestamp())}.000000000"
+
+        upper_timestamp: str = ""
+        if parsed_params.end_time:
+            end_dt = datetime.fromisoformat(
+                parsed_params.end_time.replace("Z", "+00:00")
+            )
+            upper_timestamp = f"{int(end_dt.timestamp())}.000000000"
+
+        query_params: TopicMessagesQueryParams = {
+            "topic_id": parsed_params.topic_id,
+            "limit": limit,
+            "lowerTimestamp": lower_timestamp,
+            "upperTimestamp": upper_timestamp,
+        }
+        return query_params
+
+    @staticmethod
     def normalise_delete_non_fungible_token_allowance(
         params: DeleteNonFungibleTokenAllowanceParameters,
         context: Context,
@@ -2338,7 +2392,6 @@ class HederaParameterNormaliser:
         # Validate that serial_numbers is provided
         if not parsed_params.serial_numbers:
             raise ValueError("serial_numbers must be provided")
-
 
         # For delete transaction, we don't need spender.
         # We pass None for spender_account_id.

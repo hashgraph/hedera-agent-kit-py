@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.1 # recent stable version compatible with pyproject.toml
+    hooks:
+      - id: ruff
+        args: [ --fix, --config=python/pyproject.toml ]
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0 # recent stable version
+    hooks:
+      - id: black
+        args: [ --config=python/pyproject.toml ]
+
+  - repo: local
+    hooks:
+      - id: unit-tests
+        name: run-unit-tests
+        entry: bash -c "cd python && poetry run pytest test/unit"
+        language: system
+        files: ^python/
+        pass_filenames: false

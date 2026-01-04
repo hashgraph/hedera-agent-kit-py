@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "hedera-mcp-server"
+version = "0.1.0"
+description = "MCP Server for Hedera Agent Kit"
+authors = ["Hashgraph"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{ include = "server.py" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+mcp = "1.25.0"
+python-dotenv = ">=1,<2"
+hedera-agent-kit = { path = "../python", develop = true }
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
