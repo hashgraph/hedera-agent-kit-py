@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from decimal import Decimal
 from typing import Optional, Any, Dict, List, Coroutine
 
@@ -12,6 +13,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TopicMessage,
 )
 from hedera_agent_kit.shared.utils.ledger_id import LedgerId
+from .hedera_mirrornode_decoders import decode_base64_messages
 from .types import (
     AccountResponse,
     TokenBalancesResponse,
@@ -132,8 +134,14 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             if query_params.get("upperTimestamp")
             else ""
         )
+        
+        limit = query_params.get("limit", 100)
+        encoding = query_params.get("encoding", "base64")
+        # Request at most 100 messages per page (Mirror Node max)
+        page_limit = min(limit, 100)
+        
         url: str = (
-            f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit=100"
+            f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit={page_limit}"
         )
 
         messages: List[TopicMessage] = []
@@ -143,7 +151,16 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             data: Dict[str, Any] = await self._fetch_json(
                 url, context=f"topic messages for {query_params['topic_id']}"
             )
-            messages.extend(data.get("messages", []))
+            batch = data.get("messages", [])
+            if not batch:
+                break
+                
+            messages.extend(batch)
+            
+            # effective_limit cancellation
+            if len(messages) >= limit:
+                break
+
             fetched_pages += 1
             if fetched_pages >= 100:
                 break
@@ -153,9 +170,12 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
                 else None
             )
 
+        # Decode messages based on encoding parameter
+        decoded_messages = decode_base64_messages(messages[:limit])
+
         return {
             "topic_id": query_params["topic_id"],
-            "messages": messages[: query_params.get("limit", 100)],
+            "messages": decoded_messages,
         }
 
     async def get_topic_info(self, topic_id: str) -> TopicInfo:
