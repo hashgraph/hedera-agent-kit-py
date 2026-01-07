@@ -114,18 +114,7 @@ async def delete_token_allowance(
         tx = HederaBuilder.approve_token_allowance(normalised_params)
 
         # Execute transaction and post-process result
-        result = await handle_transaction(tx, client, context)
-
-        if context.mode == AgentMode.RETURN_BYTES:
-            return result
-
-        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
-        human_message = post_process(raw_tx_data)
-
-        return ExecutedTransactionToolResponse(
-            human_message=human_message,
-            raw=raw_tx_data,
-        )
+        return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
         desc = "Failed to delete token allowance(s)."
