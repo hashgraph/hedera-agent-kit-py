@@ -25,5 +25,5 @@ repos:
         name: run-unit-tests
         entry: bash -c "cd python && poetry run pytest test/unit"
         language: system
-        types: [python]
+        files: ^python/
         pass_filenames: false
