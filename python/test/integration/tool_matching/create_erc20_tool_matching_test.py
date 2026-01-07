@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.plugins.core_evm_plugin import core_evm_plugin_tool_names
+from hedera_agent_kit.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
 CREATE_ERC20_TOOL = core_evm_plugin_tool_names["CREATE_ERC20_TOOL"]
@@ -23,13 +23,13 @@ async def test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(test_setup):
     """Provide the agent executor for invoking language queries."""
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     """Provide the toolkit instance."""
     return test_setup.toolkit
@@ -96,8 +96,8 @@ async def test_match_command_with_explicit_decimals(
 
 @pytest.mark.asyncio
 async def test_handle_minimal_input_with_defaults(agent_executor, toolkit, monkeypatch):
-    """Test that the tool matches when only token name and symbol are provided."""
-    input_text = "Create ERC20 token SampleCoin with symbol SC"
+    """Test that the tool matches when only a token name and symbol are provided."""
+    input_text = "Create an ERC20 token SampleCoin with symbol SC"
     config: "RunnableConfig" = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()

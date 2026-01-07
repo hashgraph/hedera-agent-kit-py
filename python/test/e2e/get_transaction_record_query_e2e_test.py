@@ -6,47 +6,34 @@ tools up to on-chain execution.
 
 from typing import AsyncGenerator, Any
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey, AccountId, TransactionId
+from hiero_sdk_python import Hbar, PrivateKey, TransactionId
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     TransferHbarParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(5, in_tinybars=False)
-
-
-# ============================================================================
-# SESSION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
 # FUNCTION-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture

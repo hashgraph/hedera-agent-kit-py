@@ -2,34 +2,24 @@ from typing import cast
 
 import pytest
 
-from hedera_agent_kit_py.plugins.core_consensus_plugin import SubmitTopicMessageTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.plugins.core_consensus_plugin import SubmitTopicMessageTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     SubmitTopicMessageParameters,
     CreateTopicParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
-from test.utils.setup import get_operator_client_for_tests, MIRROR_NODE_WAITING_TIME
-
-
-@pytest.fixture(scope="module")
-def setup_client():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
-
-    yield operator_client, operator_wrapper
-
-    operator_client.close()
+from test.utils.setup import MIRROR_NODE_WAITING_TIME
 
 
 @pytest.fixture(scope="function")
-async def setup_test_topic(setup_client):
-    operator_client, operator_wrapper = setup_client
+async def setup_test_topic(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # create a topic for each test so tests are isolated
     create_params = CreateTopicParametersNormalised(

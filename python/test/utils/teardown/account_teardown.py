@@ -3,8 +3,8 @@ from decimal import Decimal
 
 from hiero_sdk_python import AccountId
 
-from hedera_agent_kit_py.shared.hedera_utils import to_base_unit
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.hedera_utils import to_base_unit
+from hedera_agent_kit.shared.parameter_schemas import (
     DeleteAccountParametersNormalised,
     TransferHbarParametersNormalised,
 )
@@ -49,7 +49,7 @@ async def return_hbars_and_delete_account(
         print(f"Transferring {transfer_amount_tinybars} tinybars")
 
         if transfer_amount_tinybars <= 0:
-            raise ValueError("Not enough HBAR to return")
+            print("Not enough HBAR to return. Couldn't delete account.")
 
         # Use HederaOperationsWrapper transfer_hbar method
         await account_wrapper.transfer_hbar(

@@ -7,8 +7,6 @@ The flow tested is:
 1. Owner creates a Token.
 2. Owner grants an allowance to a Spender for that Token.
 3. Agent (acting as Owner) revokes/deletes that allowance via natural language.
-
-
 """
 
 import asyncio
@@ -24,56 +22,40 @@ from hiero_sdk_python import (
     TokenAllowance,
     SupplyType,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
     ApproveTokenAllowanceParametersNormalised,
 )
 from test import HederaOperationsWrapper
 from test.utils import create_langchain_test_setup
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(50, in_tinybars=False)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
 MIRROR_NODE_WAITING_TIME_SEC = 10
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def executor_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary executor account for tests (the agent/owner).
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_client, operator_wrapper):
     """
+    Module-scoped setup that creates the Executor account, Fungible Token,
+    and LangChain agent ONCE for the entire test module.
+    """
+    # 1. Create Executor Account
     executor_key_pair: PrivateKey = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -84,30 +66,9 @@ async def executor_account(
 
     executor_account_id: AccountId = executor_resp.account_id
     executor_client: Client = get_custom_client(executor_account_id, executor_key_pair)
-    executor_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        executor_client
-    )
+    executor_wrapper_instance = HederaOperationsWrapper(executor_client)
 
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
-
-    yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
-
-    await return_hbars_and_delete_account(
-        executor_wrapper_instance,
-        executor_account_id,
-        operator_client.operator_account_id,
-    )
-
-
-@pytest.fixture
-async def fungible_token(executor_account) -> AsyncGenerator[TokenId, None]:
-    """Create a fungible token owned by the executor.
-
-    Yields:
-        TokenId: The ID of the created token.
-    """
-    owner_id, owner_key, _, owner_wrapper = executor_account
-
+    # 2. Create Fungible Token
     ft_params = TokenParams(
         token_name="E2EDeleteToken",
         token_symbol="DEL",
@@ -116,44 +77,95 @@ async def fungible_token(executor_account) -> AsyncGenerator[TokenId, None]:
         decimals=2,
         max_supply=10000,
         supply_type=SupplyType.FINITE,
-        treasury_account_id=owner_id,
-        auto_renew_account_id=owner_id,
+        treasury_account_id=executor_account_id,
+        auto_renew_account_id=executor_account_id,
     )
 
-    # Both Admin and Supply keys are the owner's key
     token_keys = TokenKeys(
-        supply_key=owner_key.public_key(),
-        admin_key=owner_key.public_key(),
+        supply_key=executor_key_pair.public_key(),
+        admin_key=executor_key_pair.public_key(),
     )
 
     create_params = CreateFungibleTokenParametersNormalised(
         token_params=ft_params, keys=token_keys
     )
 
-    token_resp = await owner_wrapper.create_fungible_token(create_params)
+    token_resp = await executor_wrapper_instance.create_fungible_token(create_params)
     token_id = token_resp.token_id
 
+    # Wait for mirror node ingestion
     await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
 
-    yield token_id
+    # 3. Setup LangChain
+    langchain_setup = await create_langchain_test_setup(custom_client=executor_client)
+
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key_pair": executor_key_pair,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper_instance,
+        "token_id": token_id,
+        "langchain_setup": langchain_setup,
+        "agent_executor": langchain_setup.agent,
+        "response_parser": langchain_setup.response_parser,
+    }
+
+    yield resources
+
+    # Teardown
+    langchain_setup.cleanup()
+
+    await return_hbars_and_delete_account(
+        executor_wrapper_instance,
+        executor_account_id,
+        operator_client.operator_account_id,
+    )
+    executor_client.close()
+
+
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["executor_account_id"],
+        res["executor_key_pair"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def fungible_token(setup_module_resources):
+    return setup_module_resources["token_id"]
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
+
+
+# ============================================================================
+# FUNCTION-LEVEL FIXTURES
+# ============================================================================
 
 
 @pytest.fixture
 async def spender_account(
     executor_account, operator_client
 ) -> AsyncGenerator[tuple, None]:
-    """Create a separate spender account.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    spender_key: PrivateKey = PrivateKey.generate_ed25519()
+    """Create a separate spender account (Function Scoped)."""
     _, _, _, executor_wrapper = executor_account
+    spender_key: PrivateKey = PrivateKey.generate_ed25519()
 
     # Executor creates spender funded with a small balance
     spender_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(10),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=spender_key.public_key(),
         )
     )
@@ -161,8 +173,6 @@ async def spender_account(
     spender_id = spender_resp.account_id
     spender_client = get_custom_client(spender_id, spender_key)
     spender_wrapper = HederaOperationsWrapper(spender_client)
-
-    await asyncio.sleep(MIRROR_NODE_WAITING_TIME_SEC)
 
     yield spender_id, spender_key, spender_client, spender_wrapper
 
@@ -172,33 +182,13 @@ async def spender_account(
         spender_id,
         operator_client.operator_account_id,
     )
+    spender_client.close()
 
 
 @pytest.fixture
 def langchain_config():
     """Provide a standard LangChain runnable config."""
     return RunnableConfig(configurable={"thread_id": "delete_token_allowance_e2e"})
-
-
-@pytest.fixture
-async def langchain_test_setup(executor_account):
-    """Set up LangChain agent and toolkit with a real Hedera executor account."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 # ============================================================================

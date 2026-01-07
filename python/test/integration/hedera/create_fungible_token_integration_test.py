@@ -5,19 +5,18 @@ from decimal import Decimal
 import pytest
 from hiero_sdk_python import SupplyType
 
-from hedera_agent_kit_py.plugins.core_token_plugin import CreateFungibleTokenTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.plugins.core_token_plugin import CreateFungibleTokenTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ToolResponse,
     ExecutedTransactionToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateFungibleTokenParameters,
     SchedulingParams,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests
 
 
 def to_display_unit(amount: int, decimals: int) -> Decimal:
@@ -28,19 +27,15 @@ def to_display_unit(amount: int, decimals: int) -> Decimal:
 
 
 @pytest.fixture(scope="module")
-async def setup_client():
+async def setup_client(operator_client, operator_wrapper):
     """Setup operator client and context for tests."""
-    client = get_operator_client_for_tests()
-    hedera_operations_wrapper = HederaOperationsWrapper(client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     context = Context(
-        mode=AgentMode.AUTONOMOUS, account_id=str(client.operator_account_id)
+        mode=AgentMode.AUTONOMOUS, account_id=str(operator_client.operator_account_id)
     )
 
-    yield client, hedera_operations_wrapper, context
-
-    if client:
-        client.close()
+    yield operator_client, operator_wrapper, context
 
 
 @pytest.mark.asyncio

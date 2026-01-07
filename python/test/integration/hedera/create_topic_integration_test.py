@@ -9,33 +9,35 @@ from typing import cast
 import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_consensus_plugin import CreateTopicTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
+
+from hedera_agent_kit.plugins.core_consensus_plugin import CreateTopicTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ToolResponse,
     ExecutedTransactionToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateTopicParameters,
     DeleteAccountParametersNormalised,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """Setup Hedera operator client and context for tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Create an executor account
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=executor_key_pair.public_key(),
         )
     )
@@ -52,7 +54,6 @@ async def setup_environment():
         "context": context,
     }
 
-    operator_client.close()
     await executor_wrapper.delete_account(
         DeleteAccountParametersNormalised(
             account_id=executor_account_id,
@@ -81,7 +82,8 @@ async def test_create_topic_with_default_params(setup_environment):
     topic_info = wrapper.get_topic_info(str(exec_result.raw.topic_id))
     assert topic_info is not None
     assert topic_info.memo is ""
-    assert topic_info.admin_key is None
+    # Admin key should be set by default (defaults to True)
+    assert topic_info.admin_key is not None
     assert topic_info.submit_key is None
 
 
@@ -92,9 +94,7 @@ async def test_create_topic_with_memo_and_submit_key(setup_environment):
     wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
     context: Context = setup_environment["context"]
 
-    params = CreateTopicParameters(
-        topic_memo="Integration test topic", is_submit_key=True
-    )
+    params = CreateTopicParameters(topic_memo="Integration test topic", submit_key=True)
     tool = CreateTopicTool(context)
 
     result: ToolResponse = await tool.execute(client, context, params)
@@ -105,7 +105,8 @@ async def test_create_topic_with_memo_and_submit_key(setup_environment):
 
     assert topic_info is not None
     assert topic_info.memo == "Integration test topic"
-    assert topic_info.admin_key is None
+    # Admin key should be set by default
+    assert topic_info.admin_key is not None
     assert (
         topic_info.submit_key.ECDSA_secp256k1
         == client.operator_private_key.public_key().to_bytes_raw()
@@ -119,7 +120,7 @@ async def test_create_topic_with_empty_memo(setup_environment):
     wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
     context: Context = setup_environment["context"]
 
-    params = CreateTopicParameters(topic_memo="", is_submit_key=False)
+    params = CreateTopicParameters(topic_memo="", submit_key=False, admin_key=False)
     tool = CreateTopicTool(context)
 
     result: ToolResponse = await tool.execute(client, context, params)
@@ -130,3 +131,36 @@ async def test_create_topic_with_empty_memo(setup_environment):
 
     assert topic_info.memo == ""
     assert topic_info.submit_key is None
+    assert topic_info.admin_key is None
+
+
+@pytest.mark.asyncio
+async def test_create_topic_with_custom_public_key(setup_environment):
+    """Test creating a topic with a custom public key string."""
+    client: Client = setup_environment["executor_client"]
+    wrapper: HederaOperationsWrapper = setup_environment["executor_wrapper"]
+    context: Context = setup_environment["context"]
+
+    # Generate a custom key pair
+    custom_key = PrivateKey.generate_ecdsa()
+    custom_public_key_str = custom_key.public_key().to_string_der()
+
+    params = CreateTopicParameters(
+        topic_memo="Custom key topic",
+        submit_key=custom_public_key_str,
+        admin_key=False,
+    )
+    tool = CreateTopicTool(context)
+
+    result: ToolResponse = await tool.execute(client, context, params)
+    exec_result = cast(ExecutedTransactionToolResponse, result)
+
+    assert "Topic created successfully" in result.human_message
+    topic_info = wrapper.get_topic_info(str(exec_result.raw.topic_id))
+
+    assert topic_info.memo == "Custom key topic"
+    assert topic_info.admin_key is None
+    assert topic_info.submit_key is not None
+    assert (
+        topic_info.submit_key.ECDSA_secp256k1 == custom_key.public_key().to_bytes_raw()
+    )

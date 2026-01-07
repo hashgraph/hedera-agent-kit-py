@@ -8,16 +8,18 @@ from typing import Any
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
 from test.utils import create_langchain_test_setup
 
 
 # ============================================================================
-# FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def langchain_test_setup():
     """Initialize LangChain test setup for the session."""
     setup = await create_langchain_test_setup()
@@ -25,19 +27,19 @@ async def langchain_test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(langchain_test_setup):
     """Provide the LangChain agent executor."""
     return langchain_test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def langchain_config():
     """Provide the runnable configuration for LangChain execution."""
     return RunnableConfig(configurable={"thread_id": "exchange_rate_e2e"})
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def response_parser(langchain_test_setup):
     """Provide the LangChain response parser."""
     return langchain_test_setup.response_parser

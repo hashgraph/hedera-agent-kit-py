@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
 GET_TOPIC_INFO_QUERY_TOOL = "get_topic_info_query_tool"
@@ -21,13 +21,13 @@ async def test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(test_setup):
     """Provide the agent executor for invoking language queries."""
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     """Provide the toolkit instance."""
     return test_setup.toolkit

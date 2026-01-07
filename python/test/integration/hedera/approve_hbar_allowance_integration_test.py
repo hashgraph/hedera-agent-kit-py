@@ -9,22 +9,24 @@ from hiero_sdk_python import (
     AccountId,
 )
 
-from hedera_agent_kit_py.plugins.core_account_plugin.approve_hbar_allowance import (
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
+
+from hedera_agent_kit.plugins.core_account_plugin.approve_hbar_allowance import (
     ApproveHbarAllowanceTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ApproveHbarAllowanceParameters,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -32,15 +34,15 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+async def setup_accounts(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Setup executor account (the one granting allowance)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(10)
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -51,7 +53,8 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(5)
+            key=spender_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     spender_account_id = spender_resp.account_id

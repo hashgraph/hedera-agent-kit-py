@@ -11,22 +11,25 @@ from hiero_sdk_python import (
     TokenType,
     TokenNftAllowance,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
-from hedera_agent_kit_py.plugins.core_token_plugin.transfer_non_fungible_token_with_allowance import (
+from hedera_agent_kit.plugins.core_token_plugin.transfer_non_fungible_token_with_allowance import (
     TransferNftWithAllowanceTool,
 )
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.types import NftBalanceResponse
-from hedera_agent_kit_py.shared.models import (
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import NftBalanceResponse
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     CreateAccountParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     CreateNonFungibleTokenParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParameters,
     NftApprovedTransfer,
@@ -35,7 +38,6 @@ from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -43,16 +45,16 @@ from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
+async def setup_accounts(operator_client, operator_wrapper):
     """Setup accounts and NFT token for integration tests."""
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     # Setup owner account (NFT treasury)
     owner_key = PrivateKey.generate_ed25519()
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=owner_key.public_key(), initial_balance=Hbar(35)
+            key=owner_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     owner_account_id = owner_resp.account_id
@@ -63,7 +65,8 @@ async def setup_accounts():
     spender_key = PrivateKey.generate_ecdsa()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=spender_key.public_key(), initial_balance=Hbar(20)
+            key=spender_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
         )
     )
     spender_account_id = spender_resp.account_id
@@ -147,7 +150,6 @@ async def setup_accounts():
         print(f"Warning: Failed to cleanup owner account: {e}")
 
     owner_client.close()
-    operator_client.close()
 
 
 @pytest.mark.asyncio

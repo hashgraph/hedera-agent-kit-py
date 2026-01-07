@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_evm_plugin import core_evm_plugin_tool_names
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.plugins.core_evm_plugin import core_evm_plugin_tool_names
+from hedera_agent_kit.shared.models import ToolResponse
 from test import create_langchain_test_setup
 
 TRANSFER_ERC20_TOOL = core_evm_plugin_tool_names["TRANSFER_ERC20_TOOL"]
@@ -19,12 +19,12 @@ async def test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(test_setup):
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     return test_setup.toolkit
 
@@ -337,7 +337,7 @@ async def test_tool_available(toolkit):
 async def test_missing_amount(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer ERC20 tokens from contract 0.0.1234 to 0.0.5678"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "2"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -362,7 +362,7 @@ async def test_missing_amount(agent_executor, toolkit, monkeypatch):
 async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer 1243 ERC20 tokens from contract 0.0.1234"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "3"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()
@@ -387,7 +387,7 @@ async def test_missing_recipient(agent_executor, toolkit, monkeypatch):
 async def test_missing_erc20_address(agent_executor, toolkit, monkeypatch):
     """Test handling missing amounts."""
     input_text = "Transfer 1243 ERC20 tokens to account 0.0.5678"
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "4"}}
 
     # Mock Hedera API
     hedera_api = toolkit.get_hedera_agentkit_api()

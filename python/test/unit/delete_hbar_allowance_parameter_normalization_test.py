@@ -1,12 +1,11 @@
 import pytest
 from unittest.mock import Mock
-from hiero_sdk_python import AccountId, Client, Hbar
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils import to_tinybars
-from hedera_agent_kit_py.shared.hedera_utils.hedera_parameter_normalizer import (
+from hiero_sdk_python import Client
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.account_schema import (
+from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     DeleteHbarAllowanceParameters,
 )
 

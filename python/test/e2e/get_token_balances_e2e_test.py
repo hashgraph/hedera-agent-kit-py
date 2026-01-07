@@ -7,21 +7,23 @@ LangChain agent, Hedera client interaction, to on-chain token balance queries.
 import pytest
 from typing import Any
 from hiero_sdk_python import PrivateKey, Hbar, SupplyType
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
-from hedera_agent_kit_py.shared.parameter_schemas.token_schema import (
+from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
@@ -31,21 +33,22 @@ from test.utils.teardown import return_hbars_and_delete_account
 # ============================================================================
 # FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
+async def setup_environment(operator_client, operator_wrapper):
     """
     Setup operator, executor (agent), and tokens for balance query tests.
+    Uses session-scoped operator fixtures from conftest.py.
     """
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
-
     # 1. Create an executor account (The Agent)
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(20)
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -110,7 +113,7 @@ async def setup_environment():
         "langchain_config": langchain_config,
     }
 
-    # Teardown
+    # Teardown - only cleanup module resources, operator is managed by conftest.py
     lc_setup.cleanup()
 
     await return_hbars_and_delete_account(
@@ -120,7 +123,6 @@ async def setup_environment():
     )
 
     executor_client.close()
-    operator_client.close()
 
 
 # ============================================================================
@@ -176,8 +178,8 @@ async def test_get_token_balances_for_specific_account(setup_environment):
     # Check for core elements in the response
     assert "Token Balances" in human_message
     assert str(token_id) in human_message
-    # We transferred 25 raw units
-    assert "25" in human_message
+    # We transferred 25 raw units, the human-readable balance should be 0.25 (2 decimals)
+    assert "0.25" in human_message
     assert raw_data.get("error") is None
 
 
@@ -201,9 +203,10 @@ async def test_get_token_balances_for_self(setup_environment):
     human_message = tool_call.parsedData.get("humanMessage", "")
     raw_data = tool_call.parsedData.get("raw", {})
 
+    # We transferred 25 raw units, the human-readable balance should be 0.25 (2 decimals)
     assert "Token Balances" in human_message
     assert str(token_id) in human_message
-    assert "25" in human_message
+    assert "0.25" in human_message
     assert raw_data.get("error") is None
 
 

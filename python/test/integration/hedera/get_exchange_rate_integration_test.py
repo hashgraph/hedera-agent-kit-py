@@ -1,23 +1,20 @@
 import pytest
 from hiero_sdk_python import Client
 
-from hedera_agent_kit_py.plugins.core_misc_query_plugin.get_exchange_rate_tool import (
+from hedera_agent_kit.plugins.core_misc_query_plugin.get_exchange_rate_tool import (
     get_exchange_rate_query,
 )
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_utils import (
     get_mirrornode_service,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import ExchangeRateQueryParameters
-from hedera_agent_kit_py.shared.utils import ledger_id_from_network
-from test.utils.setup import get_operator_client_for_tests
+from hedera_agent_kit.shared.parameter_schemas import ExchangeRateQueryParameters
+from hedera_agent_kit.shared.utils import ledger_id_from_network
 
 
 @pytest.fixture(scope="module")
-async def setup_client():
-    client = get_operator_client_for_tests()
-    yield client
-    client.close()
+async def setup_client(operator_client):
+    yield operator_client
 
 
 @pytest.mark.asyncio

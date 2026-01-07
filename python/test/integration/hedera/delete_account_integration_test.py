@@ -3,31 +3,33 @@ from typing import cast
 import pytest
 from hiero_sdk_python import Client, PrivateKey, Hbar
 
-from hedera_agent_kit_py.plugins.core_account_plugin import DeleteAccountTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.models import (
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
+
+from hedera_agent_kit.plugins.core_account_plugin import DeleteAccountTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.models import (
     ExecutedTransactionToolResponse,
     ToolResponse,
 )
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.shared.parameter_schemas import (
     DeleteAccountParameters,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper
-from test.utils.setup import get_operator_client_for_tests, get_custom_client
+from test.utils.setup import get_custom_client
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 
 @pytest.fixture(scope="module")
-async def setup_accounts():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
+async def setup_accounts(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
 
     executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(20, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
             key=executor_key_pair.public_key(),
         )
     )
@@ -49,7 +51,6 @@ async def setup_accounts():
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
-    operator_client.close()
 
 
 async def create_temp_account(
@@ -57,7 +58,7 @@ async def create_temp_account(
 ):
     resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5, in_tinybars=False),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
             key=executor_client.operator_private_key.public_key(),
         )
     )

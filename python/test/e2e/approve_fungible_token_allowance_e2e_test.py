@@ -17,94 +17,141 @@ from hiero_sdk_python import (
     SupplyType,
     TokenId,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateFungibleTokenParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(20)
-DEFAULT_SPENDER_BALANCE = Hbar(5)
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
+DEFAULT_SPENDER_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 TOOL_NAME = "approve_fungible_token_allowance_tool"
 
 
 # ============================================================================
-# SESSION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
-
-# ============================================================================
-# FUNCTION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-async def executor_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary executor account (the Owner) for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    executor_key_pair: PrivateKey = PrivateKey.generate_ed25519()
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a temporary executor account (Owner) and test token (Module Scoped)."""
+    # 1. Create Executor (Owner)
+    executor_key_pair = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_EXECUTOR_BALANCE,
             key=executor_key_pair.public_key(),
         )
     )
-
     executor_account_id: AccountId = executor_resp.account_id
     executor_client: Client = get_custom_client(executor_account_id, executor_key_pair)
+    executor_wrapper = HederaOperationsWrapper(executor_client)
 
-    executor_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        executor_client
+    # 2. Create Test Fungible Token
+    treasury_public_key = executor_key_pair.public_key()
+    keys = TokenKeys(
+        supply_key=treasury_public_key,
+        admin_key=treasury_public_key,
     )
+    ft_params = TokenParams(
+        token_name="E2EAllowToken",
+        token_symbol="E2EALW",
+        initial_supply=50000,
+        decimals=2,
+        max_supply=100000,
+        supply_type=SupplyType.FINITE,
+        treasury_account_id=executor_account_id,
+    )
+    create_params = CreateFungibleTokenParametersNormalised(
+        token_params=ft_params, keys=keys
+    )
+    token_resp = await executor_wrapper.create_fungible_token(create_params)
+    token_id = token_resp.token_id
 
-    yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
+    # Wait for propagation
+    await wait(MIRROR_NODE_WAITING_TIME)
+
+    # 3. Setup LangChain
+    setup = await create_langchain_test_setup(custom_client=executor_client)
+
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key_pair": executor_key_pair,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "token_id": token_id,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    setup.cleanup()
 
     await return_hbars_and_delete_account(
-        executor_wrapper_instance,
+        executor_wrapper,
         executor_account_id,
         operator_client.operator_account_id,
     )
     executor_client.close()
 
 
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["executor_account_id"],
+        res["executor_key_pair"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def test_token(setup_module_resources):
+    return setup_module_resources["token_id"]
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
+
+
+@pytest.fixture
+def langchain_config():
+    """Provide a standard LangChain runnable config (Function Scoped)."""
+    return RunnableConfig(configurable={"thread_id": "approve_fungible_allowance_e2e"})
+
+
+# Function-scoped Spender to ensure isolation (association state etc.)
 @pytest.fixture
 async def spender_account(
     operator_wrapper, operator_client
 ) -> AsyncGenerator[tuple, None]:
-    """Create a temporary spender account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
+    """Create a temporary spender account for tests."""
     spender_key_pair: PrivateKey = PrivateKey.generate_ed25519()
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
@@ -128,62 +175,6 @@ async def spender_account(
         operator_client.operator_account_id,
     )
     spender_client.close()
-
-
-@pytest.fixture
-async def test_token(executor_account):
-    """Create a test fungible token owned by executor."""
-    executor_id, executor_key, executor_client, executor_wrapper = executor_account
-
-    treasury_public_key = executor_key.public_key()
-    keys = TokenKeys(
-        supply_key=treasury_public_key,
-        admin_key=treasury_public_key,
-    )
-    ft_params = TokenParams(
-        token_name="E2EAllowToken",
-        token_symbol="E2EALW",
-        initial_supply=50000,
-        decimals=2,
-        max_supply=100000,
-        supply_type=SupplyType.FINITE,
-        treasury_account_id=executor_id,
-    )
-    create_params = CreateFungibleTokenParametersNormalised(
-        token_params=ft_params, keys=keys
-    )
-    token_resp = await executor_wrapper.create_fungible_token(create_params)
-
-    await wait(MIRROR_NODE_WAITING_TIME)
-
-    return token_resp.token_id
-
-
-@pytest.fixture
-def langchain_config():
-    """Provide a standard LangChain runnable config."""
-    return RunnableConfig(configurable={"thread_id": "1"})
-
-
-@pytest.fixture
-async def langchain_test_setup(executor_account):
-    """Set up LangChain agent and toolkit with the executor (Owner) account."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 # ============================================================================

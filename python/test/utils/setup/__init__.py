@@ -4,8 +4,8 @@ from .langchain_test_config import (
     DEFAULT_LLM_OPTIONS,
     TOOLKIT_OPTIONS,
     MIRROR_NODE_WAITING_TIME,
+    get_api_key_for_worker,
 )
-from .langchain_test_setup import get_provider_api_key_map
 from .llm_factory import LLMProvider, LLMOptions, LLMFactory
 
 __all__ = [
@@ -18,6 +18,6 @@ __all__ = [
     "LLMProvider",
     "LLMOptions",
     "LLMFactory",
-    "get_provider_api_key_map",
+    "get_api_key_for_worker",
     "MIRROR_NODE_WAITING_TIME",
 ]

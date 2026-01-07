@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test.utils import create_langchain_test_setup
 
 CREATE_TOPIC_TOOL = "create_topic_tool"
@@ -22,13 +22,13 @@ async def test_setup():
     setup.cleanup()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent_executor(test_setup):
     """Provide the agent executor."""
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     """Provide the toolkit."""
     return test_setup.toolkit
@@ -86,7 +86,7 @@ async def test_match_create_topic_with_memo_and_submit_key(
     payload = args[1]
     assert args[0] == CREATE_TOPIC_TOOL
     assert payload.get("topic_memo") == "Payments"
-    assert payload.get("is_submit_key") is True
+    assert payload.get("submit_key") is True
 
 
 @pytest.mark.asyncio
@@ -95,11 +95,12 @@ async def test_match_create_topic_with_memo_and_submit_key(
     [
         ("Open a new consensus topic", {}),
         ('Create topic with memo "My memo"', {"topic_memo": "My memo"}),
-        ("Create topic and set submit key", {"is_submit_key": True}),
+        ("Create topic and set submit key", {"submit_key": True}),
         (
             'Create topic with transaction memo "TX: memo"',
             {"transaction_memo": "TX: memo"},
         ),
+        ("Create topic without admin key", {"admin_key": False}),
     ],
 )
 async def test_handle_various_natural_language_variations(

@@ -14,114 +14,105 @@ from hiero_sdk_python import (
     Client,
     TopicId,
 )
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(20, in_tinybars=False)
-
-
-# ============================================================================
-# SESSION-LEVEL FIXTURES
-# ============================================================================
-
-
-@pytest.fixture(scope="session")
-def operator_client():
-    """Initialize operator client once per test session."""
-    return get_operator_client_for_tests()
-
-
-@pytest.fixture(scope="session")
-def operator_wrapper(operator_client):
-    """Create a wrapper for operator client operations."""
-    return HederaOperationsWrapper(operator_client)
-
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
 
 # ============================================================================
-# FUNCTION-LEVEL FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
-@pytest.fixture
-async def executor_account(
-    operator_wrapper, operator_client
-) -> AsyncGenerator[tuple, None]:
-    """Create a temporary executor account for tests.
-
-    Yields:
-        tuple: (account_id, private_key, client, wrapper)
-    """
-    executor_key_pair: PrivateKey = PrivateKey.generate_ed25519()
+@pytest.fixture(scope="module")
+async def setup_module_resources(operator_wrapper, operator_client):
+    """Create a temporary executor account (Module Scoped)."""
+    executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=DEFAULT_EXECUTOR_BALANCE,
-            key=executor_key_pair.public_key(),
+            key=executor_key.public_key(),
         )
     )
-
     executor_account_id: AccountId = executor_resp.account_id
-    executor_client: Client = get_custom_client(executor_account_id, executor_key_pair)
-    executor_wrapper_instance: HederaOperationsWrapper = HederaOperationsWrapper(
-        executor_client
-    )
+    executor_client: Client = get_custom_client(executor_account_id, executor_key)
+    executor_wrapper = HederaOperationsWrapper(executor_client)
+
+    # Setup LangChain once
+    setup = await create_langchain_test_setup(custom_client=executor_client)
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    yield executor_account_id, executor_key_pair, executor_client, executor_wrapper_instance
+    resources = {
+        "executor_account_id": executor_account_id,
+        "executor_key": executor_key,
+        "executor_client": executor_client,
+        "executor_wrapper": executor_wrapper,
+        "langchain_setup": setup,
+        "agent_executor": setup.agent,
+        "response_parser": setup.response_parser,
+    }
+
+    yield resources
+
+    setup.cleanup()
 
     await return_hbars_and_delete_account(
-        executor_wrapper_instance,
+        executor_wrapper,
         executor_account_id,
         operator_client.operator_account_id,
     )
+    executor_client.close()
 
 
-@pytest.fixture
-async def executor_wrapper(executor_account):
-    """Provide just the executor wrapper from the executor_account fixture."""
-    _, _, _, wrapper = executor_account
-    return wrapper
+@pytest.fixture(scope="module")
+def executor_account(setup_module_resources):
+    res = setup_module_resources
+    return (
+        res["executor_account_id"],
+        res["executor_key"],
+        res["executor_client"],
+        res["executor_wrapper"],
+    )
+
+
+@pytest.fixture(scope="module")
+def executor_wrapper(setup_module_resources):
+    return setup_module_resources["executor_wrapper"]
+
+
+@pytest.fixture(scope="module")
+def agent_executor(setup_module_resources):
+    return setup_module_resources["agent_executor"]
+
+
+@pytest.fixture(scope="module")
+def response_parser(setup_module_resources):
+    return setup_module_resources["response_parser"]
 
 
 @pytest.fixture
 def langchain_config():
-    """Provide a standard LangChain runnable config."""
+    """Provide a standard LangChain runnable config (Function Scoped)."""
     return RunnableConfig(configurable={"thread_id": "update_topic_e2e"})
-
-
-@pytest.fixture
-async def langchain_test_setup(executor_account):
-    """Set up LangChain agent and toolkit with a real Hedera executor account."""
-    _, _, executor_client, _ = executor_account
-    setup = await create_langchain_test_setup(custom_client=executor_client)
-    yield setup
-    setup.cleanup()
-
-
-@pytest.fixture
-async def agent_executor(langchain_test_setup):
-    """Provide the LangChain agent executor."""
-    return langchain_test_setup.agent
-
-
-@pytest.fixture
-async def response_parser(langchain_test_setup):
-    """Provide the LangChain response parser."""
-    return langchain_test_setup.response_parser
 
 
 @pytest.fixture
@@ -309,7 +300,8 @@ async def test_update_autorenew_account(
     secondary_key = executor_client.operator_private_key
     secondary_resp = await executor_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(0), key=secondary_key.public_key()
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            key=secondary_key.public_key(),
         )
     )
     secondary_account_id = str(secondary_resp.account_id)

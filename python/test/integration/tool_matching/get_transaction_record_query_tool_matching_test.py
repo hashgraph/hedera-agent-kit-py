@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.plugins.core_transaction_query_plugin import (
+from hedera_agent_kit.plugins.core_transaction_query_plugin import (
     core_transaction_query_plugin_tool_names,
 )
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 from test import create_langchain_test_setup
 
 GET_TRANSACTION_RECORD_QUERY_TOOL = core_transaction_query_plugin_tool_names[
@@ -26,13 +26,13 @@ async def test_setup():
     yield setup
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def agent(test_setup):
     """Provide the agent executor."""
     return test_setup.agent
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def toolkit(test_setup):
     """Provide the toolkit."""
     return test_setup.toolkit

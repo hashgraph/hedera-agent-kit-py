@@ -8,6 +8,9 @@ tools up to on-chain execution.
 import pytest
 from typing import Any
 from hiero_sdk_python import Hbar, PrivateKey
+
+from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import (
     TokenParams,
     TokenKeys,
@@ -15,37 +18,37 @@ from hiero_sdk_python.tokens.token_create_transaction import (
 )
 from langchain_core.runnables import RunnableConfig
 
-from hedera_agent_kit_py.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
+from hedera_agent_kit.shared.parameter_schemas import (
     CreateFungibleTokenParametersNormalised,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils import create_langchain_test_setup
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
 from test.utils.teardown.account_teardown import return_hbars_and_delete_account
 
 # ============================================================================
-# FIXTURES
+# MODULE-LEVEL FIXTURES
 # ============================================================================
+# Note: operator_client and operator_wrapper fixtures are provided by conftest.py
+#       at session scope for the entire test run.
 
 
 @pytest.fixture(scope="module")
-async def setup_environment():
-    operator_client = get_operator_client_for_tests()
-    operator_wrapper = HederaOperationsWrapper(operator_client)
-
+async def setup_environment(operator_client, operator_wrapper):
+    """Module-scoped environment setup using session-scoped operator fixtures."""
     # Executor account (The Agent)
     # This account will also act as the Treasury/Admin for the tokens it creates
     # so it has permission to mint.
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            key=executor_key.public_key(), initial_balance=Hbar(50)
+            key=executor_key.public_key(),
+            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -80,14 +83,13 @@ async def setup_environment():
         "FT_PARAMS": FT_PARAMS,
     }
 
-    # Teardown
+    # Teardown (Don't close operator_client - it's session-scoped from conftest.py)
     lc_setup.cleanup()
 
     await return_hbars_and_delete_account(
         executor_wrapper, executor_account_id, operator_client.operator_account_id
     )
     executor_client.close()
-    operator_client.close()
 
 
 # ============================================================================

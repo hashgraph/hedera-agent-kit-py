@@ -1,28 +1,25 @@
 import pytest
 from hiero_sdk_python import PrivateKey
 
-from hedera_agent_kit_py.plugins.core_account_query_plugin import GetAccountQueryTool
-from hedera_agent_kit_py.shared import AgentMode
-from hedera_agent_kit_py.shared.configuration import Context
-from hedera_agent_kit_py.shared.parameter_schemas import (
+from hedera_agent_kit.plugins.core_account_query_plugin import GetAccountQueryTool
+from hedera_agent_kit.shared import AgentMode
+from hedera_agent_kit.shared.configuration import Context
+from hedera_agent_kit.shared.parameter_schemas import (
     AccountQueryParameters,
     CreateAccountParametersNormalised,
 )
 from test import HederaOperationsWrapper, wait
 from test.utils.setup import (
-    get_operator_client_for_tests,
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
-from hedera_agent_kit_py.shared.models import ToolResponse
+from hedera_agent_kit.shared.models import ToolResponse
 
 
 @pytest.fixture(scope="module")
-async def setup_operator():
-    client = get_operator_client_for_tests()
-    wrapper = HederaOperationsWrapper(client)
-    yield {"client": client, "wrapper": wrapper}
-    client.close()
+async def setup_operator(operator_client, operator_wrapper):
+    # operator_client and operator_wrapper are provided by conftest.py (session scope)
+    yield {"client": operator_client, "wrapper": operator_wrapper}
 
 
 @pytest.mark.asyncio
