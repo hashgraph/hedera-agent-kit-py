@@ -40,7 +40,9 @@ async def setup_module_resources(operator_wrapper, operator_client):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+            ),
         )
     )
     executor_account_id = executor_resp.account_id

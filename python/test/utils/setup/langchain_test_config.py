@@ -147,4 +147,3 @@ BALANCE_TIERS = {
     "ELEVATED": 10.0,
     "MAXIMUM": 20.0,
 }
-

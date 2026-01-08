@@ -12,8 +12,6 @@ from typing import Any, Callable, Optional, cast
 
 from hiero_sdk_python import (
     Client,
-    AccountId,
-    TransactionId,
     TransactionReceipt,
     ResponseCode, TopicDeleteTransaction,
 )
@@ -158,12 +156,12 @@ class ReturnBytesStrategy(TxModeStrategy):
         """
         if not context.account_id:
             raise ValueError("Context account_id is required for RETURN_BYTES mode")
-        tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
+        # tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
         # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
         # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
         return ReturnBytesToolResponse(
             bytes_data=b"bytes",
-            human_message=f"Transaction bytes: <HERE PASS SOME BYTES>",
+            human_message="Transaction bytes: <HERE PASS SOME BYTES>",
         )  # temporary placeholder
 
 

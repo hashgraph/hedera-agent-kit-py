@@ -37,7 +37,9 @@ async def setup_environment(operator_client, operator_wrapper):
     executor_key_pair = PrivateKey.generate_ecdsa()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+            ),
             key=executor_key_pair.public_key(),
         )
     )
@@ -81,7 +83,7 @@ async def test_create_topic_with_default_params(setup_environment):
 
     topic_info = wrapper.get_topic_info(str(exec_result.raw.topic_id))
     assert topic_info is not None
-    assert topic_info.memo is ""
+    assert topic_info.memo == ""
     # Admin key should be set by default (defaults to True)
     assert topic_info.admin_key is not None
     assert topic_info.submit_key is None

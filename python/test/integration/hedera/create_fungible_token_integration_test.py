@@ -16,7 +16,6 @@ from hedera_agent_kit.shared.parameter_schemas import (
     CreateFungibleTokenParameters,
     SchedulingParams,
 )
-from test import HederaOperationsWrapper
 
 
 def to_display_unit(amount: int, decimals: int) -> Decimal:
