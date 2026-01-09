@@ -83,6 +83,7 @@ Transfer HBAR between accounts.
 Transfer 0.1 HBAR to 0.0.12345
 Transfer 0.05 HBAR to 0.0.12345 with memo "Payment for services"
 Can you move 0.05 HBARs to account with ID 0.0.12345?
+Transfer 1 HBAR to 0.0.12345 and schedule the transaction with expiration time 01.02.2026
 ```
 
 ---
@@ -106,6 +107,7 @@ Creates a new Hedera account.
 Create a new Hedera account
 Create a new account with 10 HBAR
 Create an account with memo "My primary account" and 5 HBAR initial balance
+Create a new account with 10 HBAR and schedule the transaction with expiration time 01.02.2026
 ```
 
 ---
@@ -129,6 +131,7 @@ Update an account's metadata.
 ```
 Update account 0.0.12345 to have max auto associations of 10
 Set my account memo to "Updated account"
+Set my account memo to "Scheduled Update" and schedule this with expiration time 01.02.2026
 ```
 
 ---
@@ -404,6 +407,7 @@ Submit a message to an HCS topic.
 ```
 Submit "Hello World" to topic 0.0.12345
 Post a message "Daily update" to topic 0.0.12345
+Submit "Scheduled Message" to topic 0.0.12345 and schedule with expiration time 01.02.2026
 ```
 
 ---
@@ -524,7 +528,7 @@ Create a fungible token on Hedera.
 ```
 Create a fungible token named MyToken with symbol MTK
 Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000
-Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.
+Create a fungible token named MyToken with symbol MTK. Schedule the transaction with expiration 01.02.2026.
 ```
 
 ---
@@ -548,6 +552,7 @@ Create a non-fungible token (NFT) on Hedera.
 ```
 Create an NFT collection named MyNFT with symbol MNFT
 Create an NFT named ArtCollection with symbol ART and max supply 1000
+Create an NFT collection named ScheduledNFT and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -568,6 +573,7 @@ Mint additional supply of a fungible token.
 ```
 Mint 100 tokens of 0.0.12345
 Add 500 supply to token 0.0.12345
+Mint 100 tokens of 0.0.12345 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -588,6 +594,7 @@ Mint NFTs with metadata.
 ```
 Mint NFT 0.0.12345 with metadata ipfs://QmTest123
 Mint 3 NFTs for token 0.0.12345 with URIs ["ipfs://a", "ipfs://b", "ipfs://c"]
+Mint NFT 0.0.12345 with metadata ipfs://Scheduled and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -608,6 +615,7 @@ Associate tokens with an account.
 ```
 Associate token 0.0.12345 with my account
 Associate tokens 0.0.12345 and 0.0.67890 with account 0.0.11111
+Associate token 0.0.12345 with my account and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -629,6 +637,7 @@ Dissociate tokens from an account.
 ```
 Dissociate token 0.0.12345 from my account
 Remove token 0.0.12345 association from account 0.0.67890
+Dissociate token 0.0.12345 from my account and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -651,6 +660,7 @@ Airdrop fungible tokens to multiple recipients.
 ```
 Airdrop 100 tokens of 0.0.12345 to accounts 0.0.11111 and 0.0.22222
 Send 50 tokens each of 0.0.12345 to three accounts
+Airdrop 100 tokens of 0.0.12345 to 0.0.11111 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -673,6 +683,7 @@ Transfer fungible tokens using an allowance.
 ```
 Transfer 50 tokens of 0.0.12345 from 0.0.11111 to 0.0.22222 using allowance
 Use my token allowance to send 100 tokens from 0.0.11111
+Transfer 50 tokens of 0.0.12345 from 0.0.11111 using allowance and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -695,6 +706,7 @@ Transfer NFTs using an allowance.
 ```
 Transfer NFT 0.0.12345 serial 1 from 0.0.11111 to 0.0.22222 using allowance
 Use allowance to send NFT serial 5 from owner 0.0.11111
+Transfer NFT 0.0.12345 serial 1 from 0.0.11111 using allowance and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -717,6 +729,7 @@ Delete fungible token allowances.
 ```
 Delete token allowance for token 0.0.12345 from spender 0.0.67890
 Remove all token allowances for spender 0.0.67890
+Delete token allowance for token 0.0.12345 from spender 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -740,6 +753,7 @@ token.
 ```
 Delete NFT allowance for token 0.0.12345 serials [1, 2]
 Remove NFT allowance for token 0.0.67890 serial 5
+Delete NFT allowance for token 0.0.12345 serials [1] and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -763,6 +777,7 @@ a single transaction.
 ```
 Transfer NFT 0.0.12345 serial 1 to 0.0.67890
 Send NFT 0.0.12345 serial 2 from 0.0.11111 to 0.0.22222
+Transfer NFT 0.0.12345 serial 1 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -827,7 +842,7 @@ Deploy an ERC-20 token via factory contract.
 ```
 Create an ERC20 token named MyERC20 with symbol M20
 Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000
-Create an ERC20 token named "MyToken" with symbol MTK. Schedule this transaction instead of executing it immediately.
+Create an ERC20 token named "MyToken" with symbol MTK. Schedule with expiration 01.02.2026.
 ```
 
 ---
@@ -853,6 +868,7 @@ Transfer ERC-20 tokens.
 ```
 Transfer 100 tokens of contract 0.0.12345 to 0.0.67890
 Send 50 ERC20 tokens from 0x1234... to 0x5678...
+Transfer 100 tokens of 0.0.12345 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -874,6 +890,7 @@ Deploy an ERC-721 (NFT) token via factory contract.
 ```
 Create an ERC721 token named MyNFT with symbol MNFT
 Create an ERC721 collection called ArtDrops with symbol AD and base URI ipfs://Qm...
+Create an ERC721 token named MyNFT with symbol MNFT and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -895,6 +912,7 @@ Mint a new ERC-721 NFT by calling the `safeMint(to)` function on the contract.
 Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b
 Mint ERC721 token 0.0.6486793 to Hedera account ID 0.0.2222222
 Mint ERC721 token 0.0.9999
+Mint ERC721 token 0.0.9999 and schedule with expiration 01.02.2026
 ```
 
 ---
@@ -921,6 +939,7 @@ Transfer an ERC-721 NFT.
 ```
 Transfer ERC721 token 0 from contract 0.0.12345 to 0.0.67890
 Send NFT #5 from 0x1234... to 0x5678...
+Transfer ERC721 token 0 from contract 0.0.12345 to 0.0.67890 and schedule with expiration 01.02.2026
 ```
 
 ---
