@@ -151,8 +151,8 @@ class NftTransfer(BaseModelWithArbitraryTypes):
 
 class TransferNonFungibleTokenParameters(OptionalScheduledTransactionParams):
     source_account_id: Annotated[
-        str, Field(description="Account ID of the token owner.")
-    ]
+        Optional[str], Field(description="Account ID of the token owner (defaults to operator).")
+    ] = None
     token_id: Annotated[str, Field(description="The NFT token ID.")]
     recipients: Annotated[
         List[NftTransfer],
