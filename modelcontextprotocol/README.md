@@ -2,13 +2,6 @@
 
 This directory contains the MCP server implementation for Hedera Agent Kit.
 
-## Usage
-
-```bash
-poetry install
-poetry run python server.py --ledger-id testnet --tools all
-```
-
 ## Antigravity (VS Code) Configuration
 
 To use this MCP server in Antigravity or VS Code, add the following to your MCP settings configuration file (e.g. `~/.gemini/antigravity/mcp_config.json` or VS Code settings).
