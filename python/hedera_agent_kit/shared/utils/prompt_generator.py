@@ -91,7 +91,7 @@ Important:
         Generates parameter descriptions for scheduled transactions.
         """
         default_account_desc = AccountResolver.get_default_account_description(context)
-        return f"""schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately.
+        return f"""scheduling_params (object, optional): Parameters for scheduling this transaction instead of executing immediately.
 
 **Fields that apply to the *schedule entity*, not the inner transaction:**
 
