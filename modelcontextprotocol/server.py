@@ -3,6 +3,7 @@ import sys
 import os
 import argparse
 from dotenv import load_dotenv
+from grpc.framework.interfaces.base.base import Operator
 
 # Redirect stdout to stderr immediately to avoid polluting an MCP channel
 original_stdout = sys.stdout
@@ -65,7 +66,7 @@ def main():
     
     context = Context(
         account_id=operator_id,
-        account_public_key=operator_key,
+        account_public_key=PrivateKey.from_string(operator_key).public_key().to_string(),
         mode=args.agent_mode
     )
 
