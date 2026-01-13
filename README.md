@@ -48,9 +48,10 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 ### Third Party Plugins
 
-- [CoinCap Plugin](https://pypi.org/project/coincap-hedera-agent-kit-plugin) provides access to the CoinCap API to get the current price of HBAR in USD currency.
-
-  Github repository: [https://github.com/henrytongv/coincap-hedera-plugin-py](https://github.com/henrytongv/coincap-hedera-plugin-py)
+- CoinCap Plugin - provides access to the CoinCap API to get the current price of HBAR in USD currency.
+  - PyPI: [https://pypi.org/project/coincap-hedera-agent-kit-plugin](https://pypi.org/project/coincap-hedera-agent-kit-plugin)
+  - Source: [https://github.com/henrytongv/hedera-agent-kit-py](https://github.com/henrytongv/hedera-agent-kit-py)
+  - ✅ Tested/endorsed version: coincap-hedera-agent-kit-plugin==0.8
 
 ---
 
