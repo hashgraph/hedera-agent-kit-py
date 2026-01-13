@@ -54,7 +54,9 @@ async def setup_accounts(operator_client, operator_wrapper):
     owner_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=owner_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])
+            ),
         )
     )
     owner_account_id = owner_resp.account_id
@@ -66,7 +68,9 @@ async def setup_accounts(operator_client, operator_wrapper):
     spender_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=spender_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+            ),
         )
     )
     spender_account_id = spender_resp.account_id
@@ -155,7 +159,7 @@ async def setup_accounts(operator_client, operator_wrapper):
 @pytest.mark.asyncio
 async def test_transfer_nft_via_approved_allowance(setup_accounts):
     """Test transferring NFT via approved allowance."""
-    owner_client: Client = setup_accounts["owner_client"]
+
     owner_wrapper: HederaOperationsWrapper = setup_accounts["owner_wrapper"]
     owner_account_id: AccountId = setup_accounts["owner_account_id"]
     spender_client: Client = setup_accounts["spender_client"]
@@ -218,4 +222,4 @@ async def test_transfer_nft_via_approved_allowance(setup_accounts):
             found_nft = True
             break
 
-    assert found_nft, f"NFT serial 1 not found in spender's account"
+    assert found_nft, "NFT serial 1 not found in spender's account"

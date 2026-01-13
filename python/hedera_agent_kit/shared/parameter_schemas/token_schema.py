@@ -144,6 +144,38 @@ class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     transaction_memo: Optional[str] = None
 
 
+class NftTransfer(BaseModelWithArbitraryTypes):
+    recipient: Annotated[str, Field(description="The recipient account ID.")]
+    serial_number: Annotated[int, Field(gt=0, description="The NFT serial number.")]
+
+
+class TransferNonFungibleTokenParameters(OptionalScheduledTransactionParams):
+    source_account_id: Annotated[
+        Optional[str], Field(description="Account ID of the token owner (defaults to operator).")
+    ] = None
+    token_id: Annotated[str, Field(description="The NFT token ID.")]
+    recipients: Annotated[
+        List[NftTransfer],
+        Field(min_length=1, description="Array of recipient and NFT serial pairs."),
+    ]
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo.")
+    ] = None
+
+
+class NftTransferNormalised(BaseModelWithArbitraryTypes):
+    sender_id: AccountId
+    receiver_id: AccountId
+    serial_number: int
+
+
+class TransferNonFungibleTokenParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    nft_transfers: Dict[TokenId, List[NftTransferNormalised]]
+    transaction_memo: Optional[str] = None
+
+
 class TokenTransferEntry(BaseModelWithArbitraryTypes):
     account_id: Annotated[
         str, Field(description="The recipient's account ID (e.g., '0.0.12345').")
@@ -320,3 +352,26 @@ class PendingAirdropQueryParameters(BaseModelWithArbitraryTypes):
         Optional[str],
         Field(description="The account ID to query for pending airdrops."),
     ] = None
+
+
+class DeleteNonFungibleTokenAllowanceParameters(OptionalScheduledTransactionParams):
+    token_id: Annotated[str, Field(description="The ID of the NFT token")]
+    serial_numbers: Annotated[
+        List[int], Field(description="List of serial numbers to remove allowance for")
+    ]
+    owner_account_id: Annotated[
+        Optional[str], Field(description="Owner account ID (defaults to operator)")
+    ] = None
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo")
+    ] = None
+    all_serials: Annotated[
+        bool, Field(description="Remove allowance for all serials")
+    ] = False
+
+
+class DeleteNftAllowanceParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    nft_wipe: List[TokenNftAllowance]
+    transaction_memo: Optional[str] = None

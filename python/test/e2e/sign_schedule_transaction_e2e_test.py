@@ -10,7 +10,6 @@ import pytest
 from hiero_sdk_python import (
     PrivateKey,
     Hbar,
-    Client,
     AccountId,
     Timestamp,
 )

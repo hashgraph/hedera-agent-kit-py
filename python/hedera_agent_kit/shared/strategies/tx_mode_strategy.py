@@ -8,14 +8,12 @@ transactions are handled (executed on-chain or returned as bytes) according to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, cast
 
 from hiero_sdk_python import (
     Client,
-    AccountId,
-    TransactionId,
     TransactionReceipt,
-    ResponseCode,
+    ResponseCode, TopicDeleteTransaction,
 )
 from hiero_sdk_python.hapi.services.response_code_pb2 import ResponseCodeEnum
 from hiero_sdk_python.transaction.transaction import Transaction
@@ -103,10 +101,10 @@ class ExecuteStrategy(TxModeStrategy):
         # Create a raw response object
         raw_transaction_response = RawTransactionResponse(
             status=ResponseCode(receipt.status).name,
-            account_id=getattr(receipt, "account_id", None),
-            token_id=getattr(receipt, "token_id", None),
+            account_id=getattr(receipt, "account_id", None) or getattr(tx, "account_id", None),
+            token_id=getattr(receipt, "token_id", None) or getattr(tx, "token_id", None),
             transaction_id=getattr(receipt, "transaction_id", None),
-            topic_id=getattr(receipt, "topic_id", None),
+            topic_id=getattr(receipt, "topic_id", None) or getattr(tx, "topic_id", None),
             schedule_id=getattr(receipt, "schedule_id", None),
             factory_contract_id=None,
             # In the case of tools like create_erc20 or create_er721, the sdk returns the id of factory contract.
@@ -158,12 +156,12 @@ class ReturnBytesStrategy(TxModeStrategy):
         """
         if not context.account_id:
             raise ValueError("Context account_id is required for RETURN_BYTES mode")
-        tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
+        # tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
         # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
         # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
         return ReturnBytesToolResponse(
             bytes_data=b"bytes",
-            human_message=f"Transaction bytes: <HERE PASS SOME BYTES>",
+            human_message="Transaction bytes: <HERE PASS SOME BYTES>",
         )  # temporary placeholder
 
 

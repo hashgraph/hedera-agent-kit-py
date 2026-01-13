@@ -46,7 +46,7 @@ def transfer_fungible_token_with_allowance_prompt(context: Context = {}) -> str:
     return f"""
 {context_snippet}
 
-This tool transfers Fungible Tokens **on behalf of another account** using a pre-approved **Allowance**. 
+This tool transfers Fungible Tokens **on behalf of another account** using a pre-approved **Allowance**.
 
 Use this tool ONLY when:
 - The request involves spending from a "source account" that is NOT the current signer.

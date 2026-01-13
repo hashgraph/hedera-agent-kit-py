@@ -13,7 +13,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     SubmitTopicMessageParameters,
     CreateTopicParametersNormalised,
 )
-from test import HederaOperationsWrapper, wait
+from test import wait
 from test.utils.setup import MIRROR_NODE_WAITING_TIME
 
 

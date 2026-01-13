@@ -4,14 +4,12 @@ This module provides full testing from user-simulated input, through the LLM,
 tools up to on-chain execution and verification of the allowance usage.
 """
 
-from typing import AsyncGenerator, Any
+from typing import Any
 
 import pytest
 from hiero_sdk_python import (
     Hbar,
     PrivateKey,
-    AccountId,
-    Client,
     SupplyType,
     TokenType,
     TokenNftAllowance,

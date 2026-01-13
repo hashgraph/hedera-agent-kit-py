@@ -69,7 +69,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         executor_resp = await operator_wrapper.create_account(
             CreateAccountParametersNormalised(
                 key=executor_key.public_key(),
-                initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])),
+                initial_balance=Hbar(
+                    UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])
+                ),
             )
         )
         executor_account_id = executor_resp.account_id
@@ -81,7 +83,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         spender_resp = await operator_wrapper.create_account(
             CreateAccountParametersNormalised(
                 key=spender_key.public_key(),
-                initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+                initial_balance=Hbar(
+                    UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+                ),
             )
         )
         spender_account_id = spender_resp.account_id
@@ -93,7 +97,9 @@ class TestTransferFungibleTokenWithAllowanceIntegration:
         receiver_resp = await operator_wrapper.create_account(
             CreateAccountParametersNormalised(
                 key=receiver_key.public_key(),
-                initial_balance=Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])),
+                initial_balance=Hbar(
+                    UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
+                ),
             )
         )
         receiver_account_id = receiver_resp.account_id

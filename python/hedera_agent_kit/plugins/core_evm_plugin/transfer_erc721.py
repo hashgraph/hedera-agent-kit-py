@@ -8,12 +8,11 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import cast
 
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit.shared.configuration import Context, AgentMode
+from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
@@ -22,7 +21,6 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_servi
 from hedera_agent_kit.shared.models import (
     ToolResponse,
     RawTransactionResponse,
-    ExecutedTransactionToolResponse,
 )
 from hedera_agent_kit.shared.parameter_schemas import (
     TransferERC721Parameters,
@@ -90,7 +88,7 @@ def post_process(response: RawTransactionResponse) -> str:
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    return f"ERC721 token transferred successfully."
+    return "ERC721 token transferred successfully."
 
 
 async def transfer_erc721(
@@ -116,18 +114,7 @@ async def transfer_erc721(
         )
 
         tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
-        result = await handle_transaction(tx, client, context)
-
-        if context.mode == AgentMode.RETURN_BYTES:
-            return result
-
-        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
-        human_message = post_process(raw_tx_data)
-
-        return ExecutedTransactionToolResponse(
-            human_message=human_message,
-            raw=raw_tx_data,
-        )
+        return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
         message = f"Failed to transfer ERC721: {str(e)}"
