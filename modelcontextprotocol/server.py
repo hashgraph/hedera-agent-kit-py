@@ -3,7 +3,6 @@ import sys
 import os
 import argparse
 from dotenv import load_dotenv
-from grpc.framework.interfaces.base.base import Operator
 
 # Redirect stdout to stderr immediately to avoid polluting an MCP channel
 original_stdout = sys.stdout
@@ -15,7 +14,7 @@ from hedera_agent_kit.shared.configuration import Configuration, Context
 from hedera_agent_kit.plugins import (
     core_token_plugin,
     core_account_plugin,
-    core_consensus_plugin,
+    core_consensus_plugin, core_consensus_query_plugin,
 )
 
 def log(message: str, level: str = "info"):
@@ -75,7 +74,7 @@ def main():
     config = Configuration(
         tools=tools_list,
         context=context,
-        plugins=[core_token_plugin, core_account_plugin, core_consensus_plugin]
+        plugins=[core_token_plugin, core_account_plugin, core_consensus_plugin, core_consensus_query_plugin]
     )
 
     server = HederaMCPToolkit(client, config)
