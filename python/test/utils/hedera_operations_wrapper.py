@@ -21,7 +21,8 @@ from hiero_sdk_python import (
     TransactionReceipt,
     TransactionRecordQuery,
     TransactionId,
-    BatchTransaction, PrivateKey,
+    BatchTransaction,
+    PrivateKey,
 )
 from hiero_sdk_python.account.account_balance import AccountBalance
 from hiero_sdk_python.consensus.topic_info import TopicInfo
@@ -771,7 +772,9 @@ class HederaOperationsWrapper:
         return await self.mirrornode.get_scheduled_transaction_details(scheduled_tx_id)
 
     async def batch_submit_topic_message(
-        self, params_list: List[SubmitTopicMessageParametersNormalised], batch_key: PrivateKey
+        self,
+        params_list: List[SubmitTopicMessageParametersNormalised],
+        batch_key: PrivateKey,
     ) -> RawTransactionResponse:
         """Batch submits multiple topic messages in a single transaction.
 
