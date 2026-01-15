@@ -23,4 +23,3 @@ def get_mirrornode_service(
     if mirrornode_service is not None:
         return mirrornode_service
     return HederaMirrornodeServiceDefaultImpl(ledger_id)
-

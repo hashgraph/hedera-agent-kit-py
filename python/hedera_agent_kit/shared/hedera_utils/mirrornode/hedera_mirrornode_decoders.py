@@ -1,14 +1,12 @@
 """Mirrornode message decoding utilities."""
 
 import base64
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict
 
 from .types import TopicMessage
 
 
-def decode_base64_messages(
-        messages: List[TopicMessage]
-) -> List[Dict[str, Any]]:
+def decode_base64_messages(messages: List[TopicMessage]) -> List[Dict[str, Any]]:
     """Decode base64 message content to UTF-8 human-readable strings.
 
     Args:
