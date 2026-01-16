@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "adk-hedera-agent-kit-examples"
+version = "1.0.0"
+description = "Example applications using hedera-agent-kit-py with Google ADK"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+hedera_agent_kit = { path = "../../", develop = true }
+google-adk = "1.21.0"
+google-genai = "1.56.0"
+python-dotenv = "1.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
