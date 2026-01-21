@@ -11,7 +11,7 @@ packages = [{ include = "server.py" }]
 python = ">=3.10,<3.14"
 mcp = "1.25.0"
 python-dotenv = ">=1,<2"
-hedera-agent-kit = { path = "../python", develop = true }
+hedera_agent_kit = "3.2.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -6,7 +6,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-hedera_agent_kit = { path = "../../", develop = true }
+hedera_agent_kit = "3.2.0"
 langchain = "==1.2.0"
 langchain-openai = "==1.1.6"
 langchain-anthropic = "==1.3.0"
