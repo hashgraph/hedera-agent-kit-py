@@ -1,5 +1,4 @@
 import asyncio
-import base64
 from decimal import Decimal
 from typing import Optional, Any, Dict, List, Coroutine
 
@@ -134,12 +133,11 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             if query_params.get("upperTimestamp")
             else ""
         )
-        
+
         limit = query_params.get("limit", 100)
-        encoding = query_params.get("encoding", "base64")
         # Request at most 100 messages per page (Mirror Node max)
         page_limit = min(limit, 100)
-        
+
         url: str = (
             f"{self.base_url}/topics/{query_params['topic_id']}/messages?{lower}{upper}&order=desc&limit={page_limit}"
         )
@@ -154,9 +152,9 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             batch = data.get("messages", [])
             if not batch:
                 break
-                
+
             messages.extend(batch)
-            
+
             # effective_limit cancellation
             if len(messages) >= limit:
                 break

@@ -3,6 +3,7 @@
 This module validates querying topic messages through the tool -> mirror node flow,
 testing message fetching, limit handling, and error scenarios.
 """
+
 from typing import List
 
 import pytest
@@ -259,14 +260,25 @@ async def test_fetch_50_messages(setup_accounts):
     context = setup_accounts["context"]
     executor_wrapper = setup_accounts["executor_wrapper"]
     topic_id = (
-        await executor_wrapper.create_topic(CreateTopicParametersNormalised(submit_key=executor_client.operator_private_key.public_key()))
+        await executor_wrapper.create_topic(
+            CreateTopicParametersNormalised(
+                submit_key=executor_client.operator_private_key.public_key()
+            )
+        )
     ).topic_id
 
     print(topic_id)
 
     for batch in range(4):
-        params: List[SubmitTopicMessageParametersNormalised] = [SubmitTopicMessageParametersNormalised(topic_id=topic_id, message=f"Message {index}, Batch {batch}") for index in range(25)]
-        await executor_wrapper.batch_submit_topic_message(params, batch_key=executor_client.operator_private_key)
+        params: List[SubmitTopicMessageParametersNormalised] = [
+            SubmitTopicMessageParametersNormalised(
+                topic_id=topic_id, message=f"Message {index}, Batch {batch}"
+            )
+            for index in range(25)
+        ]
+        await executor_wrapper.batch_submit_topic_message(
+            params, batch_key=executor_client.operator_private_key
+        )
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
