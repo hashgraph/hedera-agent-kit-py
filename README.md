@@ -308,7 +308,7 @@ _See more in [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-k
 
 ## Creating Plugins & Contributing
 
-- You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/HEDERAPLUGINS.md)
+- You can find a guide for creating plugins in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
 
 - If you would like to contribute and suggest improvements for the Python SDK, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 

@@ -165,13 +165,17 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 1. Create a new tool file in the appropriate plugin directory (e.g., `hedera_agent_kit/plugins/core_token_plugin/`)
 2. Define the parameter schema in `hedera_agent_kit/shared/parameter_schemas/`
-3. Add parameter normalization logic in `hedera_agent_kit/shared/parameter_normaliser.py`
+3. Add parameter normalization logic in `hedera_agent_kit/shared/hedera_utils/hedera_parameter_normalizer.py`
 4. Register the tool in the plugin's `__init__.py`
 5. Write tests:
    - Unit tests in `test/unit/`
    - Integration tests in `test/integration/`
    - E2E tests in `test/e2e/`
-   - Tool matching tests in `test/tool_matching_tests/`
+   - Tool matching tests in `test/integration/tool_matching/`
+
+### Create a New Plugin
+
+For a detailed guide on how to create and register your own plugins, please refer to [docs/PLUGINS.md](docs/PLUGINS.md).
 
 ---
 
