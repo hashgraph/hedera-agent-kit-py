@@ -39,7 +39,7 @@ poetry install
 
 ## Available Agent Scripts
 
-This folder contains one agent example:
+This folder contains two agent examples:
 
 ### Plugin Tool Calling Agent (`plugin_tool_calling_agent.py`)
 
@@ -49,7 +49,7 @@ LangChain v1 agent with LangGraph support, featuring plugin-based tool managemen
 poetry run python plugin_tool_calling_agent.py
 ```
 
-## Usage
+#### Usage
 
 Once you run the script, you'll enter an interactive CLI chatbot. You can:
 
@@ -59,7 +59,7 @@ Once you run the script, you'll enter an interactive CLI chatbot. You can:
 - Query balances and account information
 - Type `exit` or `quit` to end the session
 
-## Example Interactions
+#### Example Interactions
 
 ```
 You: Create a new account with 10 HBAR
@@ -68,6 +68,36 @@ You: Transfer 5 HBAR to account 0.0.800
 You: Create a new topic with memo "My first topic"
 You: exit
 ```
+
+## Hedera Agent with preconfigured MCPs (`hedera_mcp_agent.py`)
+
+This agent demonstrates how to integrate **Hederion MCP** and **Hgraph MCP** using a LangChain v1 agent and the `hedera-agent-kit` SDK.
+
+### Key Features
+
+* **Hederion MCP:** Acts as a proxy, wrapping internal logic into a single query tool and processing requests on the backend.
+* **Hgraph MCP:** Exposes multiple granular query tools, allowing the LangChain agent to handle specific parameters directly.
+* **Integration:** Tools are fetched and adapted using the `langchain-mcp-adapters` library.
+
+### Prerequisites & Notes
+
+* **Mainnet Only:** These MCPs are configured for Mainnet; all queries will be executed on the Hedera Mainnet.
+* **API Key:** Hgraph MCP requires a `HGRAPH_API_KEY`. Obtain one at the [Hgraph Dashboard](https://dashboard.hgraph.com/).
+* **Documentation:** * [Hgraph Agent Docs](https://docs.hgraph.com/agent)
+* [Hederion Home](https://hederion.com/)
+
+
+
+### Execution
+
+To run the MCP agent, use the following command:
+
+```bash
+poetry run python hedera_mcp_agent.py
+
+```
+
+---
 
 ## Additional LLM Providers
 

@@ -50,6 +50,13 @@ class Context:
         self.mirrornode_service = mirrornode_service
 
 
+class HederaMCPServer(str, Enum):
+    """Enumeration of preconfigured Hedera MCP servers."""
+
+    HEDERION_MCP_MAINNET = "HEDERION_MCP_MAINNET"
+    HGRAPH_MCP_MAINNET = "HGRAPH_MCP_MAINNET"
+
+
 class Configuration:
     """Represents the agent configuration, including tools, plugins, and runtime context."""
 
@@ -60,6 +67,7 @@ class Configuration:
         tools: Optional[List[str]] = None,
         plugins: Optional[List[Plugin]] = None,
         context: Optional[Context] = None,
+        mcp_servers: Optional[List[HederaMCPServer]] = None,
     ):
         """
         Args:
@@ -67,7 +75,9 @@ class Configuration:
                 all tools are considered enabled.
             plugins (Optional[List[Plugin]]): External plugins to load.
             context (Optional[Context]): Runtime context containing account info and services.
+            mcp_servers (Optional[List[HederaMCPServer]]): List of MCP servers to connect to.
         """
         self.tools = tools  # If empty, all tools will be used.
         self.plugins = plugins  # External plugins to load.
         self.context = context
+        self.mcp_servers = mcp_servers
