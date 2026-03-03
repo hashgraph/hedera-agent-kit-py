@@ -9,6 +9,7 @@ from hiero_sdk_python import (
     Timestamp,
     Client,
     Hbar,
+    HbarUnit,
     TopicId,
     TokenId,
     SupplyType,
@@ -455,7 +456,7 @@ class HederaParameterNormaliser:
 
         # cast input to tinybars and build an instance of Hbar class
         initial_balance = Hbar(
-            to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True
+            to_tinybars(Decimal(parsed_params.initial_balance)), unit=HbarUnit.TINYBAR
         )
 
         # truncate memo if longer than 100 chars
@@ -1115,8 +1116,6 @@ class HederaParameterNormaliser:
         if parsed_params.account_memo is not None:
             account_params.account_memo = parsed_params.account_memo
 
-        # FIXME: commented out - SDK does not support these fields yet
-        """
         if parsed_params.max_automatic_token_associations is not None:
             account_params.max_automatic_token_associations = (
                 parsed_params.max_automatic_token_associations
@@ -1127,8 +1126,7 @@ class HederaParameterNormaliser:
             )
 
         if parsed_params.decline_staking_reward is not None:
-            account_params.decline_reward = parsed_params.decline_staking_reward
-        """
+            account_params.decline_staking_reward = parsed_params.decline_staking_reward
 
         # Normalize scheduling parameters (if present and is_scheduled = True)
         scheduling_params: ScheduleCreateParams | None = None

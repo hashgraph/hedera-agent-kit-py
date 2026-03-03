@@ -123,7 +123,7 @@ async def test_get_account_query_for_newly_created_account(
     create_resp = await hedera_ops.create_account(
         CreateAccountParametersNormalised(
             key=private_key.public_key(),
-            initial_balance=Hbar(1, in_tinybars=False),
+            initial_balance=Hbar(1),
         )
     )
     account_id = create_resp.account_id
