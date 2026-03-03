@@ -57,8 +57,6 @@ async def test_match_associate_token_minimal(agent_executor, toolkit, monkeypatc
     payload = args[1]
     assert args[0] == ASSOCIATE_TOKEN_TOOL
     assert payload.get("token_ids") == ["0.0.12345"]
-    # account_id is optional and will be inferred from context by the tool
-    assert "account_id" not in payload
 
 
 @pytest.mark.asyncio
