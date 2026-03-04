@@ -1,7 +1,11 @@
 from hiero_sdk_python import Client
 
+
+from langchain_core.tools import BaseTool
+
 from hedera_agent_kit import Configuration, Tool
 from hedera_agent_kit.langchain.tool import HederaAgentKitTool
+from hedera_agent_kit.langchain.hedera_mcps import load_multiple_mcp_tools
 from hedera_agent_kit.shared import ToolDiscovery, HederaAgentAPI
 from hedera_agent_kit.shared.configuration import Context
 
@@ -22,7 +26,9 @@ class HederaLangchainToolkit:
             client (Client): Hedera client instance connected to a network.
             configuration (Configuration): Configuration containing tools, plugins, and context.
         """
-        context: Context = configuration.context or {}
+        context: Context = configuration.context or Context()
+
+        self._configuration = configuration
 
         # Discover tools based on configuration
         tool_discovery: ToolDiscovery = ToolDiscovery.create_from_configuration(
@@ -52,6 +58,20 @@ class HederaLangchainToolkit:
             list[HederaAgentKitTool]: List of tools wrapped for LangChain.
         """
         return self.tools
+
+    async def get_mcp_tools(self) -> list[BaseTool]:
+        """
+        Asynchronously loads tools from configured MCP servers.
+        This allows for explicit loading of external tools independent of the core HAK tools.
+
+        Returns:
+            list[BaseTool]: List of tools from MCP servers.
+        """
+        enabled_mcps = self._configuration.mcp_servers or []
+        if not enabled_mcps:
+            return []
+
+        return await load_multiple_mcp_tools(enabled_mcps)
 
     def get_hedera_agentkit_api(self) -> HederaAgentAPI:
         """

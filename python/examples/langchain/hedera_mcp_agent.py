@@ -9,58 +9,41 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
-from hedera_agent_kit import Configuration, Context
+from hedera_agent_kit import Configuration, HederaMCPServer, Context
 from hedera_agent_kit.langchain import HederaLangchainToolkit
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit.shared.configuration import AgentMode
-from hedera_agent_kit.plugins import (
-    core_account_plugin,
-    core_consensus_query_plugin,
-    core_account_query_plugin,
-    core_consensus_plugin,
-    core_evm_plugin,
-    core_misc_query_plugin,
-    core_transaction_query_plugin,
-    core_token_query_plugin,
-    core_token_plugin,
-    core_evm_query_plugin,
-)
+from hedera_agent_kit.plugins import core_misc_query_plugin
 
 # Load environment variables
 load_dotenv(".env")
 
+# Ensure HGRAPH_API_KEY is set for HGRAPH_MCP_MAINNET
+if "HGRAPH_API_KEY" not in os.environ:
+    print("Warning: HGRAPH_API_KEY not set. HGRAPH_MCP_MAINNET might fail.")
 
-# This example demonstrates how to use the Hedera Agent Kit with a comprehensive set of core plugins.
-# It is configured for Testnet use with an autonomous agent mode.
+
+# This example demonstrates how to use the Hedera Agent Kit with predefined HGRPAH MCP tools.
+# The example is configured with a testnet client, but all the HGRAPH MCP provides mainnet query tools.
+# You can use it with your testnet account to query the mainnet information for testing purposes.
 async def bootstrap():
-    # 1. Initialize Hedera Client
+    # 1. Initialize Hedera Client (Mainnet for this example as HGRAPH MCP is on Mainnet)
     client = Client(Network("testnet"))
 
-    # Set operator credentials
+    # Set operator if available, otherwise read-only (which might limit some tools)
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
-
     if operator_id and operator_key:
         client.set_operator(operator_id, operator_key)
 
-    # 2. Define Configuration with Plugins
-    # We load the full suite of Hedera core plugins for account, token, and consensus management.
+    # 2. Define Configuration with MCP Servers
     configuration: Configuration = Configuration(
-        plugins=[
-            core_account_plugin,
-            core_account_query_plugin,
-            core_consensus_plugin,
-            core_consensus_query_plugin,
-            core_token_plugin,
-            core_token_query_plugin,
-            core_evm_plugin,
-            core_evm_query_plugin,
-            core_transaction_query_plugin,
-            core_misc_query_plugin,
-        ],
-        tools=[],  # will load all tools from selected plugins automatically
+        plugins=[core_misc_query_plugin],  # load some example tools
+        tools=[],  # will load all tools from selected plugins
+        mcp_servers=[
+            HederaMCPServer.HEDERION_MCP_MAINNET,
+            HederaMCPServer.HGRAPH_MCP_MAINNET,  # requires HGRAPH_API_KEY env var
+        ],  # only mainnet servers are available
         context=Context(
-            mode=AgentMode.AUTONOMOUS,
             account_id=str(operator_id),
             account_public_key=str(operator_key),  # optional
         ),
@@ -70,9 +53,19 @@ async def bootstrap():
     hedera_toolkit = HederaLangchainToolkit(client, configuration)
 
     # 4. Fetch Tools
-    # Standard Hedera Tools from the plugins defined above
-    all_tools = hedera_toolkit.get_tools()
-    print(f"Loaded {len(all_tools)} Hedera Agent Kit tools.")
+    # Standard Hedera Tools
+    hak_tools = hedera_toolkit.get_tools()
+    print(f"Loaded {len(hak_tools)} Hedera Agent Kit tools.")
+
+    # External MCP Tools
+    try:
+        mcp_tools = await hedera_toolkit.get_mcp_tools()
+        print(f"Loaded {len(mcp_tools)} external MCP tools.")
+    except Exception as e:
+        print(f"Failed to load MCP tools: {e}")
+        mcp_tools = []
+
+    all_tools = hak_tools + mcp_tools
     print(f"Total tools: {len(all_tools)}")
 
     # 5. Create Agent
@@ -81,7 +74,7 @@ async def bootstrap():
     agent = create_agent(
         model=llm,
         tools=all_tools,
-        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and plugin tools.",
+        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and external MCP tools.",
         checkpointer=InMemorySaver(),
     )
 
@@ -91,7 +84,6 @@ async def bootstrap():
     )
 
     print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
-    print("Ready to handle HBAR transfers, token queries, and consensus topics.")
 
     # 6. Run Agent CLI loop
     while True:
@@ -114,7 +106,7 @@ async def bootstrap():
                 config=config,
             )
 
-            # Parse the response to extract tool execution data
+            # note: the external mcp tools do not support the response parsing fully
             parsed_data = response_parsing_service.parse_new_tool_messages(response)
 
             ## 1. Handle case when NO tool was called (simple chat)
@@ -129,15 +121,12 @@ async def bootstrap():
                 )  # <- agent response text generated based on the tool call response
                 print("\n=== Tool Data ===")
                 print(
-                    "= Direct tool response =\n",
-                    tool_call.parsedData.get(
-                        "humanMessage", "No human message available"
-                    ),
-                )  # <- deterministic tool human-readable response.
+                    "= Direct tool response =\n", tool_call.parsedData["humanMessage"]
+                )  # <- you can use this string for a deterministic tool human-readable response.
                 print("\n= Full tool response =")
                 pprint(
                     tool_call.parsedData
-                )  # <- full object for convenient tool response extraction
+                )  # <- you can use this object for convenient tool response extraction
 
         except Exception as e:
             print("Error:", e)

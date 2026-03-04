@@ -197,8 +197,12 @@ async def test_fail_update_non_existent_account(
     )
 
     observation = extract_tool_response(result, "update_account_tool")
+
+    # Combine all possible sources of error text
+    error_string = f"{observation.human_message} {observation.error}".upper()
+
     assert any(
-        err in observation.human_message.upper()
+        err in error_string
         for err in [
             "INVALID_ACCOUNT_ID",
             "ACCOUNT_DELETED",
