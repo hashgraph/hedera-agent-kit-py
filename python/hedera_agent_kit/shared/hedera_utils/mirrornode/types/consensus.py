@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Optional
+from typing import TypedDict, List, Optional, Literal, Union, Dict, Any
 
 from hedera_agent_kit.shared.hedera_utils.mirrornode.types.common import (
     MirrornodeKeyInfo,
@@ -13,14 +13,15 @@ class TopicMessage(TypedDict):
 
 class TopicMessagesResponse(TypedDict):
     topic_id: str
-    messages: List[TopicMessage]
+    messages: Union[List[Dict[str, Any]], List[TopicMessage]]
 
 
-class TopicMessagesQueryParams(TypedDict):
+class TopicMessagesQueryParams(TypedDict, total=False):
     topic_id: str
     lowerTimestamp: str
     upperTimestamp: str
     limit: int
+    encoding: Literal["utf-8", "base64"]
 
 
 class TopicInfo(TypedDict, total=False):

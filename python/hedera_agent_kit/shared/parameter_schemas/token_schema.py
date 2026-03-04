@@ -1,9 +1,12 @@
 from typing import Optional, List, Union, Annotated, Dict
 
-from hiero_sdk_python import AccountId, PublicKey, TokenId, TokenNftAllowance
+from hiero_sdk_python import AccountId, TokenId, TokenNftAllowance
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
 from hiero_sdk_python.tokens.token_transfer import TokenTransfer
-from hiero_sdk_python.tokens.token_update_transaction import TokenUpdateKeys, TokenUpdateParams
+from hiero_sdk_python.tokens.token_update_transaction import (
+    TokenUpdateKeys,
+    TokenUpdateParams,
+)
 from pydantic import Field
 
 from hedera_agent_kit.shared.parameter_schemas import (
@@ -145,6 +148,39 @@ class TransferNonFungibleTokenWithAllowanceParametersNormalised(
     transaction_memo: Optional[str] = None
 
 
+class NftTransfer(BaseModelWithArbitraryTypes):
+    recipient: Annotated[str, Field(description="The recipient account ID.")]
+    serial_number: Annotated[int, Field(gt=0, description="The NFT serial number.")]
+
+
+class TransferNonFungibleTokenParameters(OptionalScheduledTransactionParams):
+    source_account_id: Annotated[
+        Optional[str],
+        Field(description="Account ID of the token owner (defaults to operator)."),
+    ] = None
+    token_id: Annotated[str, Field(description="The NFT token ID.")]
+    recipients: Annotated[
+        List[NftTransfer],
+        Field(min_length=1, description="Array of recipient and NFT serial pairs."),
+    ]
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo.")
+    ] = None
+
+
+class NftTransferNormalised(BaseModelWithArbitraryTypes):
+    sender_id: AccountId
+    receiver_id: AccountId
+    serial_number: int
+
+
+class TransferNonFungibleTokenParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    nft_transfers: Dict[TokenId, List[NftTransferNormalised]]
+    transaction_memo: Optional[str] = None
+
+
 class TokenTransferEntry(BaseModelWithArbitraryTypes):
     account_id: Annotated[
         str, Field(description="The recipient's account ID (e.g., '0.0.12345').")
@@ -221,35 +257,51 @@ class UpdateTokenParameters(OptionalScheduledTransactionParams):
     ] = None
     admin_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Admin key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Admin key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     supply_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Supply key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Supply key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     wipe_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Wipe key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Wipe key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     freeze_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Freeze key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Freeze key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     kyc_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="KYC key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="KYC key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     fee_schedule_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Fee schedule key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Fee schedule key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     pause_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Pause key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Pause key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
     metadata_key: Annotated[
         Optional[Union[bool, str]],
-        Field(description="Metadata key. Pass true to use operator key, or a public key string."),
+        Field(
+            description="Metadata key. Pass true to use operator key, or a public key string."
+        ),
     ] = None
 
 
@@ -343,3 +395,26 @@ class PendingAirdropQueryParameters(BaseModelWithArbitraryTypes):
         Optional[str],
         Field(description="The account ID to query for pending airdrops."),
     ] = None
+
+
+class DeleteNonFungibleTokenAllowanceParameters(OptionalScheduledTransactionParams):
+    token_id: Annotated[str, Field(description="The ID of the NFT token")]
+    serial_numbers: Annotated[
+        List[int], Field(description="List of serial numbers to remove allowance for")
+    ]
+    owner_account_id: Annotated[
+        Optional[str], Field(description="Owner account ID (defaults to operator)")
+    ] = None
+    transaction_memo: Annotated[
+        Optional[str], Field(description="Optional transaction memo")
+    ] = None
+    all_serials: Annotated[
+        bool, Field(description="Remove allowance for all serials")
+    ] = False
+
+
+class DeleteNftAllowanceParametersNormalised(
+    OptionalScheduledTransactionParamsNormalised
+):
+    nft_wipe: List[TokenNftAllowance]
+    transaction_memo: Optional[str] = None

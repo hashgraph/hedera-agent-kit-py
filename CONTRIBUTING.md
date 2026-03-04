@@ -51,19 +51,43 @@ Make sure the name and email match the identity you've set in Git. GitHub Action
 
 ## 3. Code Style & Testing
 
-### Linting
+### Pre-commit Hooks
+We use pre-commit to ensure code quality checks (linting, formatting, and unit tests) run automatically before every commit.
 
-This project uses **Ruff** for linting and formatting. Run the following to check for issues:
+To set up pre-commit locally:
+
+```bash
+poetry run pre-commit install
+```
+
+This will run checks like `ruff`, `black`, and unit tests whenever you run `git commit`.
+
+You can also trigger them manually at any time (from the `python/` directory):
+
+```bash
+poetry run pre-commit run --all-files --config ../.pre-commit-config.yaml
+```
+
+### Linting & Formatting
+
+This project uses **Ruff** for linting and **Black** for code formatting.
+
+To check for linting issues:
 
 ```bash
 poetry run ruff check .
-poetry run ruff format --check .
+```
+
+To check formatting without making changes:
+
+```bash
+poetry run black --check .
 ```
 
 To auto-fix formatting issues:
 
 ```bash
-poetry run ruff format .
+poetry run black .
 ```
 
 ### Testing
@@ -141,13 +165,17 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 1. Create a new tool file in the appropriate plugin directory (e.g., `hedera_agent_kit/plugins/core_token_plugin/`)
 2. Define the parameter schema in `hedera_agent_kit/shared/parameter_schemas/`
-3. Add parameter normalization logic in `hedera_agent_kit/shared/parameter_normaliser.py`
+3. Add parameter normalization logic in `hedera_agent_kit/shared/hedera_utils/hedera_parameter_normalizer.py`
 4. Register the tool in the plugin's `__init__.py`
 5. Write tests:
    - Unit tests in `test/unit/`
    - Integration tests in `test/integration/`
    - E2E tests in `test/e2e/`
-   - Tool matching tests in `test/tool_matching_tests/`
+   - Tool matching tests in `test/integration/tool_matching/`
+
+### Create a New Plugin
+
+For a detailed guide on how to create and register your own plugins, please refer to [docs/PLUGINS.md](docs/PLUGINS.md).
 
 ---
 

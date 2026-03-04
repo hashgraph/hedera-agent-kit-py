@@ -95,19 +95,7 @@ async def mint_erc721(
         )
 
         tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
-        result = await handle_transaction(tx, client, context)
-
-        if context.mode == AgentMode.RETURN_BYTES:
-            return result
-
-        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
-        human_message = post_process(raw_tx_data)
-
-        return ExecutedTransactionToolResponse(
-            human_message=human_message,
-            raw=raw_tx_data,
-            extra={"raw": raw_tx_data},
-        )
+        return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
         message = f"Failed to mint ERC721 token: {str(e)}"

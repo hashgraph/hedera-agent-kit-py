@@ -8,7 +8,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     AccountQueryParameters,
     CreateAccountParametersNormalised,
 )
-from test import HederaOperationsWrapper, wait
+from test import wait
 from test.utils.setup import (
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,

@@ -106,7 +106,7 @@ Add the following to the .env file:
 ```env
 # Required: Hedera credentials (get free testnet account at https://portal.hedera.com/dashboard)
 ACCOUNT_ID="0.0.xxxxx"
-PRIVATE_KEY="0x..." # ECDSA encoded private key
+PRIVATE_KEY="302..." # DER encoded private key (e.g. from Hedera Portal)
 
 # Optional: Add the API key for your chosen AI provider
 OPENAI_API_KEY="sk-proj-..."      # For OpenAI (https://platform.openai.com/api-keys)
@@ -114,6 +114,15 @@ ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
 GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
 # Ollama doesn't need an API key (runs locally)
 ```
+
+
+> NOTE:
+> **Using Hex Encoded Keys (ECDSA/ED25519)?**
+> The `PrivateKey.from_string()` method used in the examples expects a DER encoded key string.
+> If you are using a hex encoded private key (common in some wallets), you should update the code to use the specific factory method:
+> - `PrivateKey.from_ed25519(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
+> - `PrivateKey.from_ecdsa(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
+
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
 
@@ -299,7 +308,7 @@ _See more in [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-k
 
 ## Creating Plugins & Contributing
 
-- You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/HEDERAPLUGINS.md)
+- You can find a guide for creating plugins in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
 
 - If you would like to contribute and suggest improvements for the Python SDK, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 

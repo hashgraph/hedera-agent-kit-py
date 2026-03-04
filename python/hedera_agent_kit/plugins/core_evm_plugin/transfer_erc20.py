@@ -8,12 +8,10 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import cast
-
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
-from hedera_agent_kit.shared.configuration import Context, AgentMode
+from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
@@ -22,7 +20,6 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_servi
 from hedera_agent_kit.shared.models import (
     ToolResponse,
     RawTransactionResponse,
-    ExecutedTransactionToolResponse,
 )
 from hedera_agent_kit.shared.parameter_schemas import (
     TransferERC20Parameters,
@@ -65,16 +62,22 @@ Do NOT use this tool for:
 - Native Hedera Token Service (HTS) transfers.
 - Transferring tokens "on behalf of" another account (use the Allowance tool instead).
 
+**Address Format Rules**:
+- **EVM addresses** start with "0x" followed by 40 hexadecimal characters (e.g., "0x1111111111111111111111111111111111111111"). Keep them exactly as given.
+- **Hedera account IDs** use the format "0.0.XXXXX" with dots (e.g., "0.0.1234"). Keep them exactly as given.
+- NEVER convert between formats. Pass addresses exactly as the user provides them.
+
 Parameters:
-- contract_id (str, required): The id of the ERC20 contract. This can be the EVM address (0x???) or the Hedera account id (0.0.????).
-- recipient_address (str, required): The EVM or Hedera address to which the tokens will be transferred.
+- contract_id (str, required): The ERC20 contract identifier. Can be an EVM address (0x...) or Hedera account ID (0.0.XXXX). Pass exactly as provided.
+- recipient_address (str, required): The recipient's address. Can be an EVM address (0x...) or Hedera account ID (0.0.XXXX). Pass exactly as provided.
 - amount (number, required): The amount to be transferred. Given in base units!
 - {scheduled_desc}
 
 {usage_instructions}
 
-Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94..."
-Example: "Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678"
+Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94..." → contract_id="0.0.6473135", recipient_address="0xd94..."
+Example: "Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678" → contract_id="0.0.1234", recipient_address="0.0.5678"
+Example: "Transfer 10 from EVM contract 0x1111111111111111111111111111111111111111 to Hedera account 0.0.5678" → contract_id="0x1111111111111111111111111111111111111111", recipient_address="0.0.5678"
 """
 
 
@@ -86,7 +89,7 @@ def post_process(response: RawTransactionResponse) -> str:
             f"Transaction ID: {response.transaction_id}\n"
             f"Schedule ID: {response.schedule_id}"
         )
-    return f"ERC20 token transferred successfully."
+    return "ERC20 token transferred successfully."
 
 
 async def transfer_erc20(
@@ -112,18 +115,7 @@ async def transfer_erc20(
         )
 
         tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
-        result = await handle_transaction(tx, client, context)
-
-        if context.mode == AgentMode.RETURN_BYTES:
-            return result
-
-        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
-        human_message = post_process(raw_tx_data)
-
-        return ExecutedTransactionToolResponse(
-            human_message=human_message,
-            raw=raw_tx_data,
-        )
+        return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
         message = f"Failed to transfer ERC20: {str(e)}"

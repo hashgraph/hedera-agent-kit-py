@@ -14,6 +14,7 @@ from hiero_sdk_python import (
 )
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from hiero_sdk_python.tokens.token_create_transaction import (
     TokenParams,
     TokenKeys,
@@ -49,7 +50,9 @@ async def setup_environment(operator_client, operator_wrapper):
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=executor_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(10)),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])
+            ),
         )
     )
     executor_account_id = executor_resp.account_id
@@ -61,7 +64,9 @@ async def setup_environment(operator_client, operator_wrapper):
     creator_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             key=creator_key.public_key(),
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(8)),
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])
+            ),
         )
     )
     creator_account_id = creator_resp.account_id
@@ -175,10 +180,10 @@ def extract_tool_result(
 
 @pytest.mark.asyncio
 async def test_dissociate_single_token(setup_environment):
-    executor_client = setup_environment["executor_client"]
+
     executor_wrapper = setup_environment["executor_wrapper"]
     executor_account_id = setup_environment["executor_account_id"]
-    executor_key = setup_environment["executor_key"]
+
     creator_client = setup_environment["creator_client"]
     creator_wrapper = setup_environment["creator_wrapper"]
 
@@ -229,10 +234,10 @@ async def test_dissociate_single_token(setup_environment):
 
 @pytest.mark.asyncio
 async def test_dissociate_multiple_tokens(setup_environment):
-    executor_client = setup_environment["executor_client"]
+
     executor_wrapper = setup_environment["executor_wrapper"]
     executor_account_id = setup_environment["executor_account_id"]
-    executor_key = setup_environment["executor_key"]
+
     creator_client = setup_environment["creator_client"]
     creator_wrapper = setup_environment["creator_wrapper"]
 

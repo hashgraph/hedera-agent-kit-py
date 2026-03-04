@@ -33,9 +33,7 @@ async def test_normalise_topic_only(mock_context, mock_client):
     """Only topic_id provided."""
     params = UpdateTopicParameters(topic_id=TEST_TOPIC_ID)
 
-    with patch.object(
-        HederaParameterNormaliser, "resolve_key", return_value=None
-    ) as mock_resolve:
+    with patch.object(HederaParameterNormaliser, "resolve_key", return_value=None):
         res = await HederaParameterNormaliser.normalise_update_topic(
             params, mock_context, mock_client
         )

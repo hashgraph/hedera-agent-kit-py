@@ -57,7 +57,7 @@ Parameters:
 """
 
 
-def post_process(response: RawTransactionResponse, topic_id: str) -> str:
+def post_process(response: RawTransactionResponse) -> str:
     """Produce a human-readable summary for a topic deletion result.
 
     Args:
@@ -67,7 +67,7 @@ def post_process(response: RawTransactionResponse, topic_id: str) -> str:
     Returns:
         A concise message describing the status and transaction ID.
     """
-    return f"Topic with id {topic_id} deleted successfully. Transaction id {response.transaction_id}"
+    return f"Topic with id {response.topic_id} deleted successfully. Transaction id {response.transaction_id}"
 
 
 async def delete_topic(
@@ -103,18 +103,7 @@ async def delete_topic(
         tx: TopicDeleteTransaction = HederaBuilder.delete_topic(normalised_params)
 
         # Execute transaction and post-process result
-        result = await handle_transaction(tx, client, context)
-
-        if context.mode == AgentMode.RETURN_BYTES:
-            return result
-
-        raw_tx_data = cast(ExecutedTransactionToolResponse, result).raw
-        human_message = post_process(raw_tx_data, params["topic_id"])
-
-        return ExecutedTransactionToolResponse(
-            human_message=human_message,
-            raw=raw_tx_data,
-        )
+        return await handle_transaction(tx, client, context, post_process)
 
     except Exception as e:
         message: str = f"Failed to delete the topic: {str(e)}"

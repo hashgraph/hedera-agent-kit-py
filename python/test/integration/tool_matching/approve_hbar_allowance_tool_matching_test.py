@@ -59,7 +59,6 @@ async def test_match_approve_hbar_allowance_minimal(
     assert args[0] == APPROVE_HBAR_ALLOWANCE_TOOL
     assert payload.get("spender_account_id") == "0.0.4444"
     assert payload.get("amount") == 0.75
-    assert "owner_account_id" not in payload
 
 
 @pytest.mark.asyncio

@@ -9,6 +9,7 @@ from hiero_sdk_python import (
     Timestamp,
     Client,
     Hbar,
+    HbarUnit,
     TopicId,
     TokenId,
     SupplyType,
@@ -29,7 +30,10 @@ from hedera_agent_kit.shared.hedera_utils import to_tinybars, to_base_unit
 from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
-from hedera_agent_kit.shared.hedera_utils.mirrornode.types import TokenInfo
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
+    TokenInfo,
+    TopicMessagesQueryParams,
+)
 from hedera_agent_kit.shared.parameter_schemas import (
     TransferHbarParameters,
     TransferHbarParametersNormalised,
@@ -68,6 +72,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     UpdateTopicParametersNormalised,
     MintFungibleTokenParameters,
     MintFungibleTokenParametersNormalised,
+    TopicMessagesQueryParameters,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     AirdropFungibleTokenParameters,
@@ -89,6 +94,8 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     ScheduleDeleteTransactionParameters,
     ScheduleDeleteTransactionParametersNormalised,
     ApproveHbarAllowanceParameters,
+    SignScheduleTransactionToolParameters,
+    SignScheduleTransactionParametersNormalised,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     ApproveNftAllowanceParameters,
@@ -104,6 +111,11 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenWithAllowanceParametersNormalised,
     TransferNonFungibleTokenWithAllowanceParameters,
     TransferNonFungibleTokenWithAllowanceParametersNormalised,
+    TransferNonFungibleTokenParameters,
+    TransferNonFungibleTokenParametersNormalised,
+    NftTransferNormalised,
+    DeleteNonFungibleTokenAllowanceParameters,
+    DeleteNftAllowanceParametersNormalised,
     UpdateTokenParameters,
     UpdateTokenParametersNormalised,
     TokenUpdateKeys,
@@ -231,6 +243,64 @@ class HederaParameterNormaliser:
         )
 
     @staticmethod
+    async def normalise_transfer_non_fungible_token(
+        params: TransferNonFungibleTokenParameters,
+        context: Context,
+        client: Client,
+    ) -> TransferNonFungibleTokenParametersNormalised:
+        """Normalise NFT transfer parameters to a format compatible with Python SDK.
+
+        Args:
+            params: Raw NFT transfer parameters.
+            context: Application context for resolving accounts.
+            client: Hedera Client instance used for account resolution.
+
+        Returns:
+            TransferNonFungibleTokenParametersNormalised: Normalised NFT transfer parameters.
+        """
+        parsed_params: TransferNonFungibleTokenParameters = cast(
+            TransferNonFungibleTokenParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TransferNonFungibleTokenParameters
+            ),
+        )
+
+        source_account_id = AccountResolver.resolve_account(
+            parsed_params.source_account_id, context, client
+        )
+        sender_id = AccountId.from_string(source_account_id)
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        nft_transfers: List[NftTransferNormalised] = []
+
+        for recipient in parsed_params.recipients:
+            receiver_id_str = AccountResolver.resolve_account(
+                recipient.recipient, context, client
+            )
+            nft_transfers.append(
+                NftTransferNormalised(
+                    sender_id=sender_id,
+                    receiver_id=AccountId.from_string(receiver_id_str),
+                    serial_number=recipient.serial_number,
+                )
+            )
+
+        # Handle optional scheduling
+        scheduling_params = None
+        if getattr(parsed_params, "scheduling_params", None):
+            scheduling_params = (
+                await HederaParameterNormaliser.normalise_scheduled_transaction_params(
+                    parsed_params.scheduling_params, context, client
+                )
+            )
+
+        return TransferNonFungibleTokenParametersNormalised(
+            nft_transfers={token_id: nft_transfers},
+            scheduling_params=scheduling_params,
+            transaction_memo=getattr(parsed_params, "transaction_memo", None),
+        )
+
+    @staticmethod
     def normalise_schedule_delete_transaction(
         params: ScheduleDeleteTransactionParameters,
     ) -> ScheduleDeleteTransactionParametersNormalised:
@@ -250,6 +320,29 @@ class HederaParameterNormaliser:
         )
 
         return ScheduleDeleteTransactionParametersNormalised(
+            schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
+        )
+
+    @staticmethod
+    def normalise_sign_schedule_transaction(
+        params: SignScheduleTransactionToolParameters,
+    ) -> SignScheduleTransactionParametersNormalised:
+        """Normalise sign schedule transaction parameters.
+
+        Args:
+            params: Raw sign schedule transaction parameters.
+
+        Returns:
+            SignScheduleTransactionParametersNormalised: Normalised parameters with ScheduleId.
+        """
+        parsed_params: SignScheduleTransactionToolParameters = cast(
+            SignScheduleTransactionToolParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, SignScheduleTransactionToolParameters
+            ),
+        )
+
+        return SignScheduleTransactionParametersNormalised(
             schedule_id=ScheduleId.from_string(parsed_params.schedule_id)
         )
 
@@ -289,11 +382,14 @@ class HederaParameterNormaliser:
         )
 
         # Resolve expiration time
-        expiration_time: Optional[Timestamp] = (
-            Timestamp.from_date(scheduling.expiration_time)
-            if scheduling.expiration_time
-            else None
-        )
+        expiration_time: Optional[Timestamp] = None
+        if scheduling.expiration_time:
+            dt = (
+                datetime.fromisoformat(scheduling.expiration_time)
+                if isinstance(scheduling.expiration_time, str)
+                else scheduling.expiration_time
+            )
+            expiration_time = Timestamp.from_date(dt)
 
         return ScheduleCreateParams(
             admin_key=admin_key,
@@ -364,7 +460,7 @@ class HederaParameterNormaliser:
 
         # cast input to tinybars and build an instance of Hbar class
         initial_balance = Hbar(
-            to_tinybars(Decimal(parsed_params.initial_balance)), in_tinybars=True
+            to_tinybars(Decimal(parsed_params.initial_balance)), unit=HbarUnit.TINYBAR
         )
 
         # truncate memo if longer than 100 chars
@@ -1024,8 +1120,6 @@ class HederaParameterNormaliser:
         if parsed_params.account_memo is not None:
             account_params.account_memo = parsed_params.account_memo
 
-        # FIXME: commented out - SDK does not support these fields yet
-        """
         if parsed_params.max_automatic_token_associations is not None:
             account_params.max_automatic_token_associations = (
                 parsed_params.max_automatic_token_associations
@@ -1036,8 +1130,7 @@ class HederaParameterNormaliser:
             )
 
         if parsed_params.decline_staking_reward is not None:
-            account_params.decline_reward = parsed_params.decline_staking_reward
-        """
+            account_params.decline_staking_reward = parsed_params.decline_staking_reward
 
         # Normalize scheduling parameters (if present and is_scheduled = True)
         scheduling_params: ScheduleCreateParams | None = None
@@ -2214,6 +2307,107 @@ class HederaParameterNormaliser:
         return TransferNonFungibleTokenWithAllowanceParametersNormalised(
             nft_approved_transfer=nft_approved_transfer,
             transaction_memo=parsed_params.transaction_memo,
+        )
+
+    @staticmethod
+    def normalise_get_topic_messages(
+        params: TopicMessagesQueryParameters,
+    ) -> TopicMessagesQueryParams:
+        """
+        Normalizes and parses topic message query parameters into a standard format.
+
+        This static method is used to validate and process the input parameters for
+        retrieving messages related to a particular topic. It ensures adherence to
+        the expected schema, assigns default values where necessary, and formats the
+        parameters into a usable dictionary.
+
+        :param params: TopicMessagesQueryParameters object containing query parameters
+                       such as topic ID and optional limit and timestamp ranges.
+        :return: A dictionary formatted as TopicMessagesQueryParams with keys
+                 "topic_id", "limit", "lowerTimestamp", and "upperTimestamp".
+        """
+        # Validate and parse parameters
+        parsed_params: TopicMessagesQueryParameters = cast(
+            TopicMessagesQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, TopicMessagesQueryParameters
+            ),
+        )
+
+        limit: int = parsed_params.limit or 100
+
+        # Convert start_time and end_time to Hedera Mirror Node timestamp format
+        lower_timestamp: str = ""
+        if parsed_params.start_time:
+            start_dt = datetime.fromisoformat(
+                parsed_params.start_time.replace("Z", "+00:00")
+            )
+            lower_timestamp = f"{int(start_dt.timestamp())}.000000000"
+
+        upper_timestamp: str = ""
+        if parsed_params.end_time:
+            end_dt = datetime.fromisoformat(
+                parsed_params.end_time.replace("Z", "+00:00")
+            )
+            upper_timestamp = f"{int(end_dt.timestamp())}.000000000"
+
+        query_params: TopicMessagesQueryParams = {
+            "topic_id": parsed_params.topic_id,
+            "limit": limit,
+            "lowerTimestamp": lower_timestamp,
+            "upperTimestamp": upper_timestamp,
+        }
+        return query_params
+
+    @staticmethod
+    def normalise_delete_non_fungible_token_allowance(
+        params: DeleteNonFungibleTokenAllowanceParameters,
+        context: Context,
+        client: Client,
+    ) -> DeleteNftAllowanceParametersNormalised:
+        """Normalize delete NFT allowance parameters.
+
+        Maps deletion request to an 'approve' request with spender 0.0.0,
+        which effectively removes the allowance.
+
+        Args:
+            params: Raw delete parameters.
+            context: Application context.
+            client: Hedera Client.
+
+        Returns:
+            DeleteNftAllowanceParametersNormalised: Parameters to 'approve 0.0.0'.
+        """
+        parsed_params: DeleteNonFungibleTokenAllowanceParameters = cast(
+            DeleteNonFungibleTokenAllowanceParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, DeleteNonFungibleTokenAllowanceParameters
+            ),
+        )
+
+        owner_account_id = AccountResolver.resolve_account(
+            parsed_params.owner_account_id, context, client
+        )
+
+        token_id = TokenId.from_string(parsed_params.token_id)
+
+        # Validate that serial_numbers is provided
+        if not parsed_params.serial_numbers:
+            raise ValueError("serial_numbers must be provided")
+
+        # For delete transaction, we don't need spender.
+        # We pass None for spender_account_id.
+        nft_allowance = TokenNftAllowance(
+            token_id=token_id,
+            owner_account_id=AccountId.from_string(owner_account_id),
+            spender_account_id=None,
+            serial_numbers=parsed_params.serial_numbers,
+        )
+
+        return DeleteNftAllowanceParametersNormalised(
+            nft_wipe=[nft_allowance],
+            transaction_memo=parsed_params.transaction_memo,
+            scheduling_params=getattr(params, "scheduling_params", None),
         )
 
     @staticmethod

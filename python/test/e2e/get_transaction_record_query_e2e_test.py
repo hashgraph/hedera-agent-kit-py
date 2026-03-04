@@ -9,6 +9,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TransactionId
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -25,7 +26,7 @@ from test.utils.setup import (
 from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.25))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
@@ -189,7 +190,7 @@ async def test_fetch_record_sdk_at_style(
     human_message = parsed_data["humanMessage"]
     assert parsed_data.get("error") is None
     # Use the hyphenated format for assertion
-    assert f"Transaction Details for " in human_message
+    assert "Transaction Details for " in human_message
 
 
 @pytest.mark.asyncio
@@ -210,7 +211,7 @@ async def test_fetch_record_mirror_node_style(
     human_message = parsed_data["humanMessage"]
     assert parsed_data.get("error") is None
     # Use the hyphenated format for assertion
-    assert f"Transaction Details for " in human_message
+    assert "Transaction Details for " in human_message
 
 
 @pytest.mark.asyncio

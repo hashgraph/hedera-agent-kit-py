@@ -9,8 +9,8 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, TopicId
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
-import base64
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit.shared.parameter_schemas import (
@@ -27,7 +27,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 
 # Constants
 DEFAULT_EXECUTOR_BALANCE = Hbar(
-    UsdToHbarService.usd_to_hbar(0.25)
+    UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"])
 )  # Needs to cover account + topic ops
 
 
@@ -204,8 +204,7 @@ async def test_submit_message_to_pre_created_topic(
     assert len(topic_messages["messages"]) >= 1
     # Check that the submitted message content is present
     message_content_exists = any(
-        base64.b64decode(msg["message"]).decode("utf-8") == message
-        for msg in topic_messages["messages"]
+        msg["message"] == message for msg in topic_messages["messages"]
     )
     assert message_content_exists
 

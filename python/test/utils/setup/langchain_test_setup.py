@@ -14,7 +14,7 @@ from .langchain_test_config import (
     TOOLKIT_OPTIONS,
     DEFAULT_LLM_OPTIONS,
     LangchainTestOptions,
-    get_provider_api_key_map,
+    get_api_key_for_worker,
 )
 from .llm_factory import LLMFactory, LLMOptions
 
@@ -62,9 +62,9 @@ async def create_langchain_test_setup(
     provider = llm_options.provider or os.getenv("E2E_LLM_PROVIDER")
     model = llm_options.model or os.getenv("E2E_LLM_MODEL")
 
-    api_key_map = get_provider_api_key_map()
-
-    api_key = llm_options.api_key or api_key_map.get(provider)
+    # Use explicitly provided key, or select key based on xdist worker ID
+    # (supports multiple keys per provider for load balancing across parallel test workers)
+    api_key = llm_options.api_key or get_api_key_for_worker(provider)
 
     if not api_key:
         raise ValueError(f"Missing API key for provider: {provider}")

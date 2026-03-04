@@ -2,6 +2,7 @@ import pytest
 from hiero_sdk_python import Hbar, PrivateKey, AccountId, Client
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.shared.parameter_schemas import (
@@ -13,7 +14,7 @@ from test.utils.setup import get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.verification import extract_tool_response
 
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(0.50))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 
 # ============================================================================
@@ -147,7 +148,7 @@ async def test_update_max_auto_token_associations(
 
     observation = extract_tool_response(result, "update_account_tool")
     assert "updated" in observation.human_message.lower()
-    account_info = executor_wrapper.get_account_info(target_account_id)
+    executor_wrapper.get_account_info(target_account_id)
     # assert account_info.max_automatic_token_associations.to_number() == 10  # FIXME: not supported by the SDK - implemented for future use
 
 
@@ -173,7 +174,7 @@ async def test_update_decline_staking_rewards(
 
     observation = extract_tool_response(result, "update_account_tool")
     assert "updated" in observation.human_message.lower()
-    account_info = executor_wrapper.get_account_info(target_account_id)
+    executor_wrapper.get_account_info(target_account_id)
     # assert account_info.staking_info.decline_staking_reward is True  # FIXME: not supported by the SDK - implemented for future use
 
 
@@ -188,7 +189,7 @@ async def test_fail_update_non_existent_account(
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Update account {fake_account_id} memo to 'x'",
+                    "content": f"Update account {fake_account_id} memo to 'x'. Make sure to update this exact account ID",
                 }
             ]
         },
@@ -196,13 +197,8 @@ async def test_fail_update_non_existent_account(
     )
 
     observation = extract_tool_response(result, "update_account_tool")
-    assert any(
-        err in observation.human_message.upper()
-        for err in [
-            "INVALID_ACCOUNT_ID",
-            "ACCOUNT_DELETED",
-            "NOT_FOUND",
-            "INVALID_SIGNATURE",
-            "FAILED",
-        ]
-    )
+
+    # Combine all possible sources of error text
+    error_string = f"{observation.human_message} {observation.error}".upper()
+
+    assert "INVALID_ACCOUNT_ID" in error_string

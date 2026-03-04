@@ -41,9 +41,16 @@ Add your [Hedera API](https://portal.hedera.com/dashboard) and [OpenAI](https://
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=302e... # DER encoded private key
 OPENAI_API_KEY=sk-proj-...
 ```
+
+> [!NOTE]
+> **Using Hex Encoded Keys (ECDSA/ED25519)?**
+> The `PrivateKey.from_string()` method used in the examples expects a DER encoded key string.
+> If you are using a hex encoded private key, you should update the code to use the specific factory method:
+> - `PrivateKey.from_ed25519(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
+> - `PrivateKey.from_ecdsa(bytes.fromhex(os.getenv("PRIVATE_KEY")))`
 
 ### 3 – Choose an Example
 
@@ -53,6 +60,7 @@ Try out one or more of the example agents:
 * **Option B -** [Tool Calling Agent (LangChain Classic)](#option-b-run-the-tool-calling-agent-langchain-classic)
 * **Option C -** [Plugin Tool Calling Agent (LangChain Classic)](#option-c-run-the-plugin-tool-calling-agent-langchain-classic)
 * **Option D -** [Structured Chat Agent (LangChain Classic)](#option-d-run-the-structured-chat-agent-langchain-classic)
+* **Option E -** [Preconfigured MCPs Agent (LangChain v1)](#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
 
 > **Coming Soon:** Google ADK (Agents Development Kit) integration is planned for a future release.
 
@@ -178,6 +186,41 @@ poetry install
 
 ```bash
 poetry run python structured_chat_agent.py
+```
+
+---
+
+### Option E: Run the Preconfigured MCPs Agent (LangChain v1)
+
+This agent demonstrates how to integrate **Hederion MCP** and **Hgraph MCP** using a LangChain v1 agent and the Hedera Agent Kit SDK.
+
+Found at `python/examples/langchain/hedera_mcp_agent.py`.
+
+#### Key Features
+
+* **Hederion MCP:** Acts as a proxy, wrapping internal logic into a single query tool and processing requests on the backend.
+* **Hgraph MCP:** Exposes multiple granular query tools, allowing the LangChain agent to handle specific parameters directly.
+* **Integration:** Tools are fetched and adapted using the `langchain-mcp-adapters` library.
+
+#### Prerequisites & Notes
+
+* **Mainnet Only:** These MCPs are configured for Mainnet; all queries will be executed on the Hedera Mainnet.
+* **API Key:** Hgraph MCP requires a `HGRAPH_API_KEY`. Obtain one at the [Hgraph Dashboard](https://dashboard.hgraph.com/) and add it to your `.env` file.
+* **Documentation:**
+  * [Hgraph Agent Docs](https://docs.hgraph.com/agent)
+  * [Hederion Home](https://hederion.com/)
+
+1. First, go into the directory where the example is and install dependencies:
+
+```bash
+cd python/examples/langchain
+poetry install
+```
+
+2. Then, run the example:
+
+```bash
+poetry run python hedera_mcp_agent.py
 ```
 
 ---

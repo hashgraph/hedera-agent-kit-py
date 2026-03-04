@@ -3,15 +3,16 @@ import os
 from pprint import pprint
 
 from dotenv import load_dotenv
-from hiero_sdk_python import Network, AccountId, PrivateKey, Client
+from hiero_sdk_python import Client, Network, AccountId, PrivateKey
 from langchain.agents import create_agent
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
-from hedera_agent_kit.langchain import HederaAgentKitTool
+from hedera_agent_kit import Configuration, Context
+from hedera_agent_kit.langchain import HederaLangchainToolkit
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
-from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+from hedera_agent_kit.shared.configuration import AgentMode
 from hedera_agent_kit.plugins import (
     core_account_plugin,
     core_consensus_query_plugin,
@@ -24,72 +25,75 @@ from hedera_agent_kit.plugins import (
     core_token_plugin,
     core_evm_query_plugin,
 )
-from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
+# Load environment variables
 load_dotenv(".env")
 
 
+# This example demonstrates how to use the Hedera Agent Kit with a comprehensive set of core plugins.
+# It is configured for Testnet use with an autonomous agent mode.
 async def bootstrap():
-    # Initialize LLM
-    model: ChatOpenAI = ChatOpenAI(model="gpt-4o-mini")
+    # 1. Initialize Hedera Client
+    client = Client(Network("testnet"))
 
-    # Hedera Client setup (Testnet)
+    # Set operator credentials
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
 
-    network: Network = Network(
-        network="testnet"
-    )  # ensure this matches SDK expectations
-    client: Client = Client(network)
-    client.set_operator(operator_id, operator_key)
+    if operator_id and operator_key:
+        client.set_operator(operator_id, operator_key)
 
-    # Configuration placeholder
+    # 2. Define Configuration with Plugins
+    # We load the full suite of Hedera core plugins for account, token, and consensus management.
     configuration: Configuration = Configuration(
-        tools=[],
         plugins=[
-            core_consensus_plugin,
-            core_account_query_plugin,
-            core_consensus_query_plugin,
-            core_misc_query_plugin,
-            core_evm_plugin,
             core_account_plugin,
+            core_account_query_plugin,
+            core_consensus_plugin,
+            core_consensus_query_plugin,
             core_token_plugin,
-            core_transaction_query_plugin,
             core_token_query_plugin,
+            core_evm_plugin,
             core_evm_query_plugin,
+            core_transaction_query_plugin,
+            core_misc_query_plugin,
         ],
-        context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
+        tools=[],  # will load all tools from selected plugins automatically
+        context=Context(
+            mode=AgentMode.AUTONOMOUS,
+            account_id=str(operator_id),
+            account_public_key=str(operator_key),  # optional
+        ),
     )
 
-    # Prepare Hedera LangChain toolkit
-    hedera_toolkit: HederaLangchainToolkit = HederaLangchainToolkit(
-        client=client, configuration=configuration
-    )
+    # 3. Initialize Toolkit
+    hedera_toolkit = HederaLangchainToolkit(client, configuration)
 
-    # Fetch LangChain tools from toolkit
-    tools: list[HederaAgentKitTool] = hedera_toolkit.get_tools()
+    # 4. Fetch Tools
+    # Standard Hedera Tools from the plugins defined above
+    all_tools = hedera_toolkit.get_tools()
+    print(f"Loaded {len(all_tools)} Hedera Agent Kit tools.")
+    print(f"Total tools: {len(all_tools)}")
 
-    # Create the underlying tool-calling agent
+    # 5. Create Agent
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
     agent = create_agent(
-        model,
-        tools=tools,
-        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and plugin tools",
+        model=llm,
+        tools=all_tools,
+        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and plugin tools.",
         checkpointer=InMemorySaver(),
     )
 
-    response_parsing_service: ResponseParserService = ResponseParserService(tools=tools)
+    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
+    response_parsing_service: ResponseParserService = ResponseParserService(
+        tools=all_tools
+    )
 
     print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
-    print("Available plugin tools:")
-    print("- example_greeting_tool: Generate personalized greetings")
-    print(
-        "- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)"
-    )
-    print("")
+    print("Ready to handle HBAR transfers, token queries, and consensus topics.")
 
-    config: RunnableConfig = {"configurable": {"thread_id": "1"}}
-
-    # CLI loop
+    # 6. Run Agent CLI loop
     while True:
         user_input = input("You: ").strip()
         if not user_input or user_input.lower() in ["exit", "quit"]:
@@ -110,6 +114,7 @@ async def bootstrap():
                 config=config,
             )
 
+            # Parse the response to extract tool execution data
             parsed_data = response_parsing_service.parse_new_tool_messages(response)
 
             ## 1. Handle case when NO tool was called (simple chat)
@@ -124,12 +129,15 @@ async def bootstrap():
                 )  # <- agent response text generated based on the tool call response
                 print("\n=== Tool Data ===")
                 print(
-                    "= Direct tool response =\n", tool_call.parsedData["humanMessage"]
-                )  # <- you can use this string for a deterministic tool human-readable response.
+                    "= Direct tool response =\n",
+                    tool_call.parsedData.get(
+                        "humanMessage", "No human message available"
+                    ),
+                )  # <- deterministic tool human-readable response.
                 print("\n= Full tool response =")
                 pprint(
                     tool_call.parsedData
-                )  # <- you can use this object for convenient tool response extraction
+                )  # <- full object for convenient tool response extraction
 
         except Exception as e:
             print("Error:", e)

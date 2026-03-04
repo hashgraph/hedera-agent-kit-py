@@ -1,7 +1,7 @@
 # **ADR 0001: Dynamic USD-to-HBAR Test Account Funding**
 
-**Date:** 2025-12-12  
-**Status:** Accepted  
+**Date:** 2025-12-12
+**Status:** Accepted
 **Context:** Python test suite for Hedera Agent Kit requires reliable test account funding that remains stable across
 HBAR price fluctuations.
 
@@ -77,6 +77,30 @@ A centralized reference document listing USD costs for all Hedera operations use
 | Contract  | ContractCreate       | $1.00    |
 
 ---
+
+### 2.3 Standardized Balance Tiers
+
+**Decision:** ✅ **Introduce `BALANCE_TIERS` for consistent funding levels**
+
+**Implementation:** [`python/test/utils/setup/langchain_test_config.py`](file:///python/test/utils/setup/langchain_test_config.py)
+
+To further standardize test funding and avoid "magic numbers" scattered throughout the codebase, we introduced named tiers for funding amounts.
+
+**Tiers:**
+- **MINIMAL** ($0.50): Basic operations (single transfer, simple query)
+- **STANDARD** ($5.00): Most common test scenarios (token operations, multiple transfers)
+- **ELEVATED** ($10.00): Complex operations (NFT minting, multiple token operations)
+- **MAXIMUM** ($20.00): Heavy operations (contract deployments, extensive token operations)
+
+**Usage Pattern:**
+
+```python
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
+from test.utils.usd_to_hbar_service import UsdToHbarService
+
+# Test account funding using a tier
+initial_balance = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
+```
 
 ## **3. Implementation Details**
 

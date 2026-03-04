@@ -146,10 +146,22 @@ class AccountTokenBalancesQueryParametersNormalised(BaseModelWithArbitraryTypes)
     token_id: Optional[str] = None
 
 
-class SignScheduleTransactionParameters(BaseModelWithArbitraryTypes):
+class SignScheduleTransactionToolParameters(BaseModelWithArbitraryTypes):
+    """Tool input parameters for signing a scheduled transaction (LLM-facing)."""
+
+    schedule_id: str = Field(description="The ID of the scheduled transaction to sign.")
+
+
+class SignScheduleTransactionParametersNormalised(BaseModelWithArbitraryTypes):
+    """Normalised parameters for signing a scheduled transaction (SDK-facing)."""
+
     schedule_id: ScheduleId = Field(
         description="The ID of the scheduled transaction to sign."
     )
+
+
+# Legacy alias for backward compatibility with HederaBuilder
+SignScheduleTransactionParameters = SignScheduleTransactionParametersNormalised
 
 
 class ScheduleDeleteTransactionParameters(BaseModelWithArbitraryTypes):
