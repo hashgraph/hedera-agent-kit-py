@@ -4,6 +4,8 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, List, TypeVar
 
+from hiero_sdk_python import Client
+
 if TYPE_CHECKING:
     from .configuration import Context
 
@@ -15,6 +17,7 @@ TNormalizedParams = TypeVar("TNormalizedParams")
 class PreToolExecutionParams(Generic[TParams]):
     context: Context
     raw_params: TParams
+    client: Client
 
 
 @dataclass
@@ -22,6 +25,7 @@ class PostParamsNormalizationParams(Generic[TParams, TNormalizedParams]):
     context: Context
     raw_params: TParams
     normalized_params: TNormalizedParams
+    client: Client
 
 
 @dataclass
@@ -30,6 +34,7 @@ class PostCoreActionParams(Generic[TParams, TNormalizedParams]):
     raw_params: TParams
     normalized_params: TNormalizedParams
     core_action_result: Any
+    client: Client
 
 
 @dataclass
@@ -39,6 +44,7 @@ class PostSecondaryActionParams(Generic[TParams, TNormalizedParams]):
     normalized_params: TNormalizedParams
     core_action_result: Any
     tool_result: Any
+    client: Client
 
 
 class AbstractHook(ABC):
