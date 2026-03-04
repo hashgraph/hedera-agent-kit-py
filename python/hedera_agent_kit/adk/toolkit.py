@@ -18,6 +18,8 @@ from hedera_agent_kit.shared.configuration import Context
 
 
 # Type alias for ADK tool functions
+# We use a Callable because Google ADK natively inspects Python functions
+# and automatically constructs a `FunctionTool` object internally.
 ADKToolFunction = Callable[..., Coroutine[Any, Any, Dict[str, Any]]]
 
 

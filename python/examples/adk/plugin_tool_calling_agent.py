@@ -16,18 +16,6 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from hedera_agent_kit.adk import HederaADKToolkit
-from hedera_agent_kit.plugins import (
-    core_account_plugin,
-    core_consensus_query_plugin,
-    core_account_query_plugin,
-    core_consensus_plugin,
-    core_evm_plugin,
-    core_misc_query_plugin,
-    core_transaction_query_plugin,
-    core_token_query_plugin,
-    core_token_plugin,
-    core_evm_query_plugin,
-)
 from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -51,19 +39,8 @@ async def bootstrap():
 
     # Configuration with all plugins
     configuration: Configuration = Configuration(
-        tools=[],
-        plugins=[
-            core_consensus_plugin,
-            core_account_query_plugin,
-            core_consensus_query_plugin,
-            core_misc_query_plugin,
-            core_evm_plugin,
-            core_account_plugin,
-            core_token_plugin,
-            core_transaction_query_plugin,
-            core_token_query_plugin,
-            core_evm_query_plugin,
-        ],
+        tools=[],  # load all tools
+        plugins=[],  # load all plugins
         context=Context(mode=AgentMode.AUTONOMOUS, account_id=str(operator_id)),
     )
 
@@ -77,7 +54,7 @@ async def bootstrap():
 
     # Create ADK agent with Gemini model
     hedera_agent = Agent(
-        model="gemini-2.0-flash",
+        model="gemini-3.1-flash-lite-preview",
         name="hedera_agent",
         instruction=(
             "You are a helpful assistant with access to Hedera blockchain tools. "
@@ -123,9 +100,7 @@ async def bootstrap():
 
         try:
             # Create user message
-            content = types.Content(
-                role="user", parts=[types.Part(text=user_input)]
-            )
+            content = types.Content(role="user", parts=[types.Part(text=user_input)])
 
             # Run the agent
             events = runner.run_async(
@@ -142,7 +117,7 @@ async def bootstrap():
                             continue
                         if part.text:
                             text_parts.append(part.text)
-                    
+
                     if text_parts:
                         final_response = " ".join(text_parts)
                         print(f"Agent: {final_response}")
@@ -150,6 +125,7 @@ async def bootstrap():
         except Exception as e:
             print(f"Error: {e}")
             import traceback
+
             traceback.print_exc()
 
 

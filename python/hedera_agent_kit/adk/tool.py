@@ -28,6 +28,12 @@ def create_adk_tool_function(
     - Extracts parameter types from the Pydantic schema
     - Returns results as a dictionary
 
+    Note: We return a dynamically constructed `Callable` rather than a class instance
+    because Google ADK natively inspects Python functions (using `inspect.isfunction`,
+    `__annotations__`, and `__doc__`) and automatically wraps them into a `FunctionTool`
+    object internally. This approach perfectly perfectly matches ADK's intended design
+    pattern without the need for an extra wrapper class.
+
     Args:
         hedera_api: A configured HederaAgentAPI instance.
         tool: The Hedera tool to wrap.

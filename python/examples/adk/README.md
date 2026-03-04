@@ -43,7 +43,7 @@ Once running, you can interact with the agent:
 
 ```
 You: What's my HBAR balance?
-You: Create a new topic called "My Updates"
+You: Create a new topic with memo "My Updates"
 You: Transfer 1 HBAR to account 0.0.12345
 You: Create a fungible token called "TestToken" with symbol "TTK"
 You: exit
@@ -51,17 +51,4 @@ You: exit
 
 ## Available Plugins
 
-This example loads all available plugins:
-
-| Plugin                          | Description                                         |
-|---------------------------------|-----------------------------------------------------|
-| `core_account_plugin`           | Account creation, deletion, updates, HBAR transfers |
-| `core_account_query_plugin`     | Query HBAR balance, account info                    |
-| `core_consensus_plugin`         | Topic creation, deletion, message submission        |
-| `core_consensus_query_plugin`   | Query topic info and messages                       |
-| `core_token_plugin`             | Token creation, transfers, minting, airdrops        |
-| `core_token_query_plugin`       | Query token info and balances                       |
-| `core_evm_plugin`               | ERC20/ERC721 smart contract interactions            |
-| `core_evm_query_plugin`         | Query EVM contract info                             |
-| `core_misc_query_plugin`        | Exchange rates and misc queries                     |
-| `core_transaction_query_plugin` | Transaction record queries                          |
+This example loads all available plugins. For more information about the available plugins, see the [plugins](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md) directory.
