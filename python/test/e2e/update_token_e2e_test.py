@@ -17,8 +17,6 @@ from hiero_sdk_python import (
     TokenType,
 )
 from hiero_sdk_python.tokens.token_create_transaction import TokenParams, TokenKeys
-
-from test.utils.usd_to_hbar_service import UsdToHbarService
 from langchain_core.runnables import RunnableConfig
 
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
@@ -34,8 +32,12 @@ from test.utils.setup import (
     get_custom_client,
     MIRROR_NODE_WAITING_TIME,
 )
+from test.utils.setup.langchain_test_config import BALANCE_TIERS
 from test.utils.teardown import return_hbars_and_delete_account
+from test.utils.usd_to_hbar_service import UsdToHbarService
 
+# Constants
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
 
 # ============================================================================
 # MODULE-LEVEL FIXTURES
@@ -50,7 +52,7 @@ async def setup_module_resources(operator_wrapper, operator_client):
     executor_key = PrivateKey.generate_ed25519()
     executor_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(UsdToHbarService.usd_to_hbar(10)),
+            initial_balance=DEFAULT_EXECUTOR_BALANCE,
             key=executor_key.public_key(),
         )
     )
@@ -109,6 +111,7 @@ def agent_executor(setup_module_resources):
 @pytest.fixture(scope="module")
 def response_parser(setup_module_resources):
     return setup_module_resources["response_parser"]
+
 
 @pytest.fixture
 def langchain_config():
@@ -265,6 +268,7 @@ async def test_update_token_memo_e2e(
     token_info = executor_wrapper.get_token_info(token_id_str)
     assert token_info.memo == "E2E updated memo"
 
+
 # FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
 @pytest.mark.asyncio
 async def test_update_token_supply_key_with_my_key(
@@ -293,6 +297,7 @@ async def test_update_token_supply_key_with_my_key(
     assert str(token_info.supply_key.to_string()) == str(
         executor_client.operator_private_key.public_key().to_string()
     )
+
 
 # FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
 @pytest.mark.asyncio
@@ -397,7 +402,10 @@ async def test_reject_unauthorized_update(
     outsider_key = PrivateKey.generate_ed25519()
     outsider_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
-            initial_balance=Hbar(5), key=outsider_key.public_key()
+            initial_balance=Hbar(
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])
+            ),
+            key=outsider_key.public_key(),
         )
     )
     outsider_id = outsider_resp.account_id

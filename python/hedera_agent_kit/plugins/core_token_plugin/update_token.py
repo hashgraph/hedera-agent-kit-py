@@ -17,7 +17,9 @@ from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
     HederaParameterNormaliser,
 )
 from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_service
-from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import IHederaMirrornodeService
+from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
+    IHederaMirrornodeService,
+)
 from hedera_agent_kit.shared.hedera_utils.mirrornode.types import TokenInfo
 
 from hedera_agent_kit.shared.models import (
@@ -31,7 +33,9 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import handle_transaction
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
-from hedera_agent_kit.shared.utils.default_tool_output_parsing import transaction_tool_output_parser
+from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
+    transaction_tool_output_parser,
+)
 from hedera_agent_kit.shared.utils.prompt_generator import PromptGenerator
 from hedera_agent_kit.shared.tool import Tool
 
@@ -152,7 +156,12 @@ Examples:
 - If the user does not mention the key → do not set the field.
 - If the user provides a key → set the field to the provided public key string.
 
-*IMPORTANT:* If the user provides multiple fields in a single request, combine them into **one tool call** with all parameters together.
+**CRITICAL: When updating multiple fields (e.g., name AND symbol AND memo), you MUST make exactly ONE tool call with ALL fields specified together. DO NOT make separate tool calls for each field. Combine all updates into a single invocation.**
+
+Example of CORRECT usage for multiple updates:
+User: "Update token 0.0.7777 name to 'Multi Updated Token' and symbol to 'MUT' and memo to 'Multiple updates'"
+CORRECT: ONE call with {{token_id: "0.0.7777", token_name: "Multi Updated Token", token_symbol: "MUT", token_memo: "Multiple updates"}}
+INCORRECT: Three separate calls
 
 {usage_instructions}
 """
@@ -194,7 +203,9 @@ async def update_token(
     try:
         # Normalize parameters
         normalised_params: UpdateTokenParametersNormalised = (
-            await HederaParameterNormaliser.normalise_update_token(params, context, client)
+            await HederaParameterNormaliser.normalise_update_token(
+                params, context, client
+            )
         )
 
         # Check validity of updates
