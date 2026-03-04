@@ -38,9 +38,7 @@ async def test_resolves_account_id_and_includes_only_supported_fields():
     assert result.account_params.account_id == AccountId.from_string("0.0.1001")
     assert result.account_params.account_memo == "hello"
     # Fields not supported by SDK should not exist
-    assert not hasattr(result.account_params, "max_automatic_token_associations")
     assert not hasattr(result.account_params, "decline_reward")
-    assert not hasattr(result.account_params, "staked_account_id")
     mock_account_resolver.resolve_account.assert_called_once_with(
         None, mock_context, mock_client
     )
@@ -97,9 +95,7 @@ async def test_omits_all_unsupported_fields_when_not_provided():
         )
 
     assert result.account_params.account_memo is None
-    assert not hasattr(result.account_params, "max_automatic_token_associations")
     assert not hasattr(result.account_params, "decline_reward")
-    assert not hasattr(result.account_params, "staked_account_id")
 
 
 @pytest.mark.asyncio

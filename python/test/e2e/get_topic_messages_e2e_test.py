@@ -273,14 +273,25 @@ async def test_fetch_50_messages(
 ):
     """Should fetch all topic messages from a topic with 50 messages."""
     _, _, executor_client, _ = executor_account
-    
+
     topic_id = (
-        await executor_wrapper.create_topic(CreateTopicParametersNormalised(submit_key=executor_client.operator_private_key.public_key()))
+        await executor_wrapper.create_topic(
+            CreateTopicParametersNormalised(
+                submit_key=executor_client.operator_private_key.public_key()
+            )
+        )
     ).topic_id
 
     for batch in range(2):
-        params: List[SubmitTopicMessageParametersNormalised] = [SubmitTopicMessageParametersNormalised(topic_id=topic_id, message=f"Message {index}, Batch {batch}") for index in range(25)]
-        await executor_wrapper.batch_submit_topic_message(params, batch_key=executor_client.operator_private_key)
+        params: List[SubmitTopicMessageParametersNormalised] = [
+            SubmitTopicMessageParametersNormalised(
+                topic_id=topic_id, message=f"Message {index}, Batch {batch}"
+            )
+            for index in range(25)
+        ]
+        await executor_wrapper.batch_submit_topic_message(
+            params, batch_key=executor_client.operator_private_key
+        )
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
@@ -288,6 +299,5 @@ async def test_fetch_50_messages(
     parsed_data = await execute_get_topic_messages_query(
         agent_executor, input_text, langchain_config, response_parser
     )
-    
-    assert len(parsed_data["raw"]["messages"]) == 50
 
+    assert len(parsed_data["raw"]["messages"]) == 50

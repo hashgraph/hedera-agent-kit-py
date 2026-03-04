@@ -313,9 +313,9 @@ async def test_should_schedule_nft_transfer(
     expiry = (datetime.now() + timedelta(minutes=10)).isoformat()
 
     input_text = (
-        f"Transfer NFT {nft_token_id} serial {serial_to_transfer} "
+        f"Schedule Transfer NFT {nft_token_id} serial {serial_to_transfer} "
         f"from {owner_id} to {receiver_id} with memo '{random_memo}'. "
-        f"wait for the expiration time to pass and set expiration time to '{expiry}'."
+        f"Set waitForExpiry to true and set expirationTime to '{expiry}'."
     )
     result = await execute_agent_request(agent_executor, input_text, langchain_config)
     print(result)

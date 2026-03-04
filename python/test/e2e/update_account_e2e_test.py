@@ -189,7 +189,7 @@ async def test_fail_update_non_existent_account(
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Update account {fake_account_id} memo to 'x'",
+                    "content": f"Update account {fake_account_id} memo to 'x'. Make sure to update this exact account ID",
                 }
             ]
         },
@@ -197,13 +197,8 @@ async def test_fail_update_non_existent_account(
     )
 
     observation = extract_tool_response(result, "update_account_tool")
-    assert any(
-        err in observation.human_message.upper()
-        for err in [
-            "INVALID_ACCOUNT_ID",
-            "ACCOUNT_DELETED",
-            "NOT_FOUND",
-            "INVALID_SIGNATURE",
-            "FAILED",
-        ]
-    )
+
+    # Combine all possible sources of error text
+    error_string = f"{observation.human_message} {observation.error}".upper()
+
+    assert "INVALID_ACCOUNT_ID" in error_string

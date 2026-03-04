@@ -42,17 +42,17 @@ def get_topic_messages_query_prompt(context: Context = {}) -> str:
     context_snippet: str = PromptGenerator.get_context_snippet(context)
     usage_instructions: str = PromptGenerator.get_parameter_usage_instructions()
 
-    return f"""  
-{context_snippet}  
+    return f"""
+{context_snippet}
 
-This tool will return the messages for a given Hedera topic.  
+This tool will return the messages for a given Hedera topic.
 
-Parameters:  
-- topic_id (str, required): The topic ID to query  
-- start_time (datetime, optional): The start datetime to query. If set, the messages will be returned after this datetime  
-- end_time (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime  
+Parameters:
+- topic_id (str, required): The topic ID to query
+- start_time (datetime, optional): The start datetime to query. If set, the messages will be returned after this datetime
+- end_time (datetime, optional): The end datetime to query. If set, the messages will be returned before this datetime
 - limit: (Optional) Max number of messages to return. Defaults to 100. Max value is 100.
-{usage_instructions}  
+{usage_instructions}
 
 Note: When limit is set, the most recent messages up to the limit will be returned within the specified time range.
 """
@@ -73,15 +73,14 @@ def post_process(messages: List[Dict[str, Any]], topic_id: str) -> str:
     for message in messages:
         content = message.get("message", "")
         consensus_timestamp = message.get("consensus_timestamp", "N/A")
-        messages_text_list.append(
-            f"{content} - posted at: {consensus_timestamp}\n"
-        )
+        messages_text_list.append(f"{content} - posted at: {consensus_timestamp}\n")
 
     messages_text = "".join(messages_text_list)
 
-    return f"""Messages for topic {topic_id}:  
-  --- Messages ---  {messages_text}  
+    return f"""Messages for topic {topic_id}:
+  --- Messages ---  {messages_text}
   """
+
 
 async def get_topic_messages_query(
     client: Client,
