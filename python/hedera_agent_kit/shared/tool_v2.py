@@ -70,7 +70,7 @@ class BaseToolV2(Tool, ABC):
             result = core_action_result
             if await self.should_secondary_action(core_action_result, context):
                 result = await self.secondary_action(
-                    core_result=core_action_result, client=client, context=context
+                    core_action_result, client=client, context=context
                 )
 
             # 7. Post-Tool-Execution Hook (Returns a final result)
