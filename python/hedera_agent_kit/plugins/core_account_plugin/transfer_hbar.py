@@ -27,7 +27,8 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from typing import Any
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -90,54 +91,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"HBAR successfully transferred.\nTransaction ID: {response.transaction_id}"
 
 
-async def transfer_hbar(
-    client: Client,
-    context: Context,
-    params: TransferHbarParameters,
-) -> ToolResponse:
-    """Execute an HBAR transfer using normalized parameters and a built transaction.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the transfer(s) to perform.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-        It accepts raw params, validates, and normalizes them before performing the transaction.
-    """
-    try:
-        # Normalize parameters
-        normalised_params: TransferHbarParametersNormalised = (
-            await HederaParameterNormaliser.normalise_transfer_hbar(
-                params, context, client
-            )
-        )
-
-        # Build transaction
-        tx: Transaction = HederaBuilder.transfer_hbar(normalised_params)
-
-        # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        message: str = f"Failed to transfer HBAR: {str(e)}"
-        print("[transfer_hbar_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 TRANSFER_HBAR_TOOL: str = "transfer_hbar_tool"
 
 
-class TransferHbarTool(Tool):
+class TransferHbarTool(BaseToolV2):
     """Tool wrapper that exposes the HBAR transfer capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -152,18 +109,30 @@ class TransferHbarTool(Tool):
         self.parameters: type[TransferHbarParameters] = TransferHbarParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: TransferHbarParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> TransferHbarParametersNormalised:
+        return await HederaParameterNormaliser.normalise_transfer_hbar(
+            params, context, client
+        )
+
+    async def core_action(
+        self,
+        normalized_params: TransferHbarParametersNormalised,
+        context: Context,
+        client: Client,
+    ) -> Transaction:
+        return HederaBuilder.transfer_hbar(normalized_params)
+
+    async def secondary_action(
+        self, transaction: Transaction, client: Client, context: Context
     ) -> ToolResponse:
-        """Execute the HBAR transfer using the provided client, context, and params.
+        return await handle_transaction(transaction, client, context, post_process)
 
-        Args:
-            client: Hedera client used to execute transactions.
-            context: Runtime context providing configuration and defaults.
-            params: Transfer parameters accepted by this tool.
-
-        Returns:
-            The result of the transfer as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await transfer_hbar(client, context, params)
+    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
+        message: str = f"Failed to transfer HBAR: {str(error)}"
+        print("[transfer_hbar_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )

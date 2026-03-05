@@ -18,10 +18,11 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_servi
 from hedera_agent_kit.shared.hedera_utils.mirrornode.types import AccountResponse
 from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas import AccountQueryParameters
+from typing import Any
 from hedera_agent_kit.shared.parameter_schemas.account_schema import (
     AccountQueryParametersNormalised,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -68,51 +69,10 @@ EVM address: {account['evm_address']}
 """
 
 
-async def get_account_query(
-    client: Client,
-    context: Context,
-    params: AccountQueryParameters,
-) -> ToolResponse:
-    """Execute an account query using the Mirror Node service.
-
-    Args:
-        client: Hedera client used to determine the network.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the account to query.
-
-    Returns:
-        A ToolResponse wrapping the raw account response and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-    """
-    try:
-        parsed_params: AccountQueryParametersNormalised = (
-            HederaParameterNormaliser.normalise_get_account_query(params)
-        )
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        account = await mirrornode_service.get_account(parsed_params.account_id)
-        return ToolResponse(
-            extra={"account_id": parsed_params.account_id, "account": account},
-            human_message=post_process(account),
-        )
-    except Exception as e:
-        message: str = f"Failed to get account query: {str(e)}"
-        print("[get_account_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_ACCOUNT_QUERY_TOOL: str = "get_account_query_tool"
 
 
-class GetAccountQueryTool(Tool):
+class GetAccountQueryTool(BaseToolV2):
     """Tool wrapper that exposes the account query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -127,18 +87,39 @@ class GetAccountQueryTool(Tool):
         self.parameters: type[AccountQueryParameters] = AccountQueryParameters
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: AccountQueryParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> AccountQueryParametersNormalised:
+        return HederaParameterNormaliser.normalise_get_account_query(params)
+
+    async def core_action(
+        self,
+        normalized_params: AccountQueryParametersNormalised,
+        context: Context,
+        client: Client,
     ) -> ToolResponse:
-        """Execute the account query using the provided client, context, and params.
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        account = await mirrornode_service.get_account(normalized_params.account_id)
+        return ToolResponse(
+            human_message=post_process(account),
+            extra={"account_id": normalized_params.account_id, "account": account},
+        )
 
-        Args:
-            client: Hedera client used to determine the network.
-            context: Runtime context providing configuration and defaults.
-            params: Account query parameters accepted by this tool.
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
 
-        Returns:
-            The result of the account query as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await get_account_query(client, context, params)
+    async def secondary_action(
+        self, core_result: Any, client: Client, context: Context
+    ) -> Any:
+        return core_result
+
+    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
+        desc = "Failed to get account query"
+        message = f"{desc}: {str(error)}"
+        print("[get_account_query_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
