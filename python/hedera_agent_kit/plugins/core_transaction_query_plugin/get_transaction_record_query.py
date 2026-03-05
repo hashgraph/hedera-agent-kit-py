@@ -9,6 +9,8 @@ This module exposes:
 from __future__ import annotations
 
 
+from typing import Any
+
 from hiero_sdk_python import Client
 
 from hedera_agent_kit.shared.configuration import Context
@@ -24,7 +26,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     TransactionRecordQueryParameters,
     TransactionRecordQueryParametersNormalised,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -126,65 +128,10 @@ Entity ID: {tx.get('entity_id', 'N/A')}{transfers_info}"""
     return "\n\n" + "=" * 50 + "\n\n".join([""] + results)
 
 
-async def get_transaction_record_query(
-    client: Client, context: Context, params: TransactionRecordQueryParameters
-) -> ToolResponse:
-    """Execute a transaction record query using the mirror node service.
-
-    Args:
-        client: Hedera client used for network information.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the transaction to query.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction record data and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-    """
-    try:
-        normalised_params: TransactionRecordQueryParametersNormalised = (
-            HederaParameterNormaliser.normalise_get_transaction_record_params(params)
-        )
-
-        # Get mirrornode service
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # Query transaction record
-        transaction_record: TransactionDetailsResponse = (
-            await mirrornode_service.get_transaction_record(
-                normalised_params.transaction_id,
-                normalised_params.nonce,
-            )
-        )
-
-        return ToolResponse(
-            human_message=post_process(
-                transaction_record, params.get("transaction_id")
-            ),
-            extra={
-                "transaction_id": params["transaction_id"],
-                "transaction_record": transaction_record,
-            },
-        )
-
-    except Exception as e:
-        message: str = f"Failed to get transaction record: {str(e)}"
-        print("[get_transaction_record_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_TRANSACTION_RECORD_QUERY_TOOL: str = "get_transaction_record_query_tool"
 
 
-class GetTransactionRecordQueryTool(Tool):
+class GetTransactionRecordQueryTool(BaseToolV2):
     """Tool wrapper that exposes the transaction record query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -201,18 +148,43 @@ class GetTransactionRecordQueryTool(Tool):
         )
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: TransactionRecordQueryParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> TransactionRecordQueryParametersNormalised:
+        return HederaParameterNormaliser.normalise_get_transaction_record_params(params)
+
+    async def core_action(
+        self,
+        normalized_params: TransactionRecordQueryParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> dict:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        transaction_record: TransactionDetailsResponse = (
+            await mirrornode_service.get_transaction_record(
+                normalized_params.transaction_id,
+                normalized_params.nonce,
+            )
+        )
+        return {
+            "transaction_id": normalized_params.transaction_id,
+            "transaction_record": transaction_record,
+        }
+
+    async def secondary_action(
+        self,
+        core_result: dict,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the transaction record query using the provided client, context, and params.
-
-        Args:
-            client: Hedera client used for network information.
-            context: Runtime context providing configuration and defaults.
-            params: Transaction record query parameters accepted by this tool.
-
-        Returns:
-            The result of the transaction record query as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await get_transaction_record_query(client, context, params)
+        transaction_id = core_result["transaction_id"]
+        transaction_record = core_result["transaction_record"]
+        return ToolResponse(
+            human_message=post_process(transaction_record, transaction_id),
+            extra={
+                "transaction_id": transaction_id,
+                "transaction_record": transaction_record,
+            },
+        )
