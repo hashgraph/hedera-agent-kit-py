@@ -8,7 +8,7 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from hiero_sdk_python import Client, PublicKey
 from hiero_sdk_python.consensus.topic_update_transaction import TopicUpdateTransaction
@@ -35,7 +35,7 @@ from hedera_agent_kit.shared.parameter_schemas.consensus_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -153,56 +153,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Topic successfully updated. Transaction ID: {response.transaction_id}"
 
 
-async def update_topic(
-    client: Client,
-    context: Context,
-    params: UpdateTopicParameters,
-) -> ToolResponse:
-    """Execute a topic update using normalized parameters and a built transaction.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the update.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-    """
-    try:
-        normalised_params = await HederaParameterNormaliser.normalise_update_topic(
-            params, context, client
-        )
-
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        user_public_key = client.operator_private_key.public_key()
-
-        await check_validity_of_updates(
-            normalised_params, mirrornode_service, user_public_key
-        )
-
-        tx: TopicUpdateTransaction = HederaBuilder.update_topic(normalised_params)
-
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        desc = "Failed to update topic"
-        message = f"{desc}: {str(e)}"
-        print("[update_topic_tool]", message)
-        return ExecutedTransactionToolResponse(
-            human_message=message,
-            error=message,
-            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
-        )
-
-
 UPDATE_TOPIC_TOOL: str = "update_topic_tool"
 
 
-class UpdateTopicTool(Tool):
+class UpdateTopicTool(BaseToolV2):
     """Tool wrapper that exposes the topic update capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -217,17 +171,47 @@ class UpdateTopicTool(Tool):
         self.parameters: type[UpdateTopicParameters] = UpdateTopicParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: UpdateTopicParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> UpdateTopicParametersNormalised:
+        return await HederaParameterNormaliser.normalise_update_topic(
+            params, context, client
+        )
+
+    async def core_action(
+        self,
+        normalized_params: UpdateTopicParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> TopicUpdateTransaction:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        user_public_key = client.operator_private_key.public_key()
+
+        await check_validity_of_updates(
+            normalized_params, mirrornode_service, user_public_key
+        )
+
+        return HederaBuilder.update_topic(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: TopicUpdateTransaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the topic update using the provided client, context, and params.
+        return await handle_transaction(transaction, client, context, post_process)
 
-        Args:
-            client: Hedera client.
-            context: Runtime context.
-            params: Topic update parameters.
-
-        Returns:
-            The result of the update as a ToolResponse.
-        """
-        return await update_topic(client, context, params)
+    async def handle_error(
+        self, error: Exception, context: Context | None = None
+    ) -> ToolResponse:
+        desc = "Failed to update topic"
+        message = f"{desc}: {str(error)}"
+        print("[update_topic_tool]", message)
+        return ExecutedTransactionToolResponse(
+            human_message=message,
+            error=message,
+            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
+        )

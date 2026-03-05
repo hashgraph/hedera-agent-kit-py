@@ -9,7 +9,7 @@ This module exposes:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from hiero_sdk_python import Client
 
@@ -26,7 +26,7 @@ from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas.consensus_schema import (
     GetTopicInfoParameters,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -132,59 +132,10 @@ def post_process(topic: TopicInfo) -> str:
 """
 
 
-async def get_topic_info_query(
-    client: Client,
-    context: Context,
-    params: GetTopicInfoParameters,
-) -> ToolResponse:
-    """Execute a topic info query using the mirrornode service.
-
-    Args:
-        client: Hedera client used to determine network/ledger ID.
-        context: Runtime context providing configuration and defaults.
-        params: Query parameters containing the topic ID to query.
-
-    Returns:
-        A ToolResponse wrapping the raw topic info and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-    """
-    try:
-        parsed_params: GetTopicInfoParameters = (
-            HederaParameterNormaliser.normalise_get_topic_info(params)
-        )
-
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        topic_info: TopicInfo = await mirrornode_service.get_topic_info(
-            parsed_params.topic_id
-        )
-        # Add the topic_id to the response if not present
-        if "topic_id" not in topic_info:
-            topic_info["topic_id"] = parsed_params.topic_id
-
-        return ToolResponse(
-            human_message=post_process(topic_info),
-            extra={"topic_info": topic_info, "topic_id": parsed_params.topic_id},
-        )
-
-    except Exception as e:
-        message: str = f"Failed to get topic info: {str(e)}"
-        print("[get_topic_info_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_TOPIC_INFO_QUERY_TOOL: str = "get_topic_info_query_tool"
 
 
-class GetTopicInfoQueryTool(Tool):
+class GetTopicInfoQueryTool(BaseToolV2):
     """Tool wrapper that exposes the topic info query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -199,18 +150,36 @@ class GetTopicInfoQueryTool(Tool):
         self.parameters: type[GetTopicInfoParameters] = GetTopicInfoParameters
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: GetTopicInfoParameters
+    async def core_action(
+        self,
+        normalized_params: GetTopicInfoParameters,
+        context: Context,
+        client: Client,
     ) -> ToolResponse:
-        """Execute the topic info query using the provided client, context, and params.
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        topic_info: TopicInfo = await mirrornode_service.get_topic_info(
+            normalized_params.topic_id
+        )
+        # Add the topic_id to the response if not present
+        if "topic_id" not in topic_info:
+            topic_info["topic_id"] = normalized_params.topic_id
 
-        Args:
-            client: Hedera client used to determine network/ledger ID.
-            context: Runtime context providing configuration and defaults.
-            params: Topic info query parameters accepted by this tool.
+        return ToolResponse(
+            human_message=post_process(topic_info),
+            extra={"topic_info": topic_info, "topic_id": normalized_params.topic_id},
+        )
 
-        Returns:
-            The result of the topic info query as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await get_topic_info_query(client, context, params)
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> GetTopicInfoParameters:
+        return HederaParameterNormaliser.normalise_get_topic_info(params)
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
+
+    async def secondary_action(
+        self, core_result: Any, client: Client, context: Context
+    ) -> ToolResponse:
+        return core_result

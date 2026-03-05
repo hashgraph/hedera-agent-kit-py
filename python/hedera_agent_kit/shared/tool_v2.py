@@ -36,7 +36,9 @@ class BaseToolV2(Tool, ABC):
             )
 
             # 2. Normalize Parameters
-            normalized_params = await self.normalize_params(params, context, client)
+            normalized_params = await self.normalize_params(
+                params=params, context=context, client=client
+            )
 
             # 3. Post-Normalization Hook
             await self.post_params_normalization_hook(
@@ -50,7 +52,7 @@ class BaseToolV2(Tool, ABC):
 
             # 4. Core Action
             core_action_result = await self.core_action(
-                normalized_params, context, client
+                normalized_params=normalized_params, context=context, client=client
             )
 
             # 5. Post-Core-Action Hook
@@ -68,7 +70,7 @@ class BaseToolV2(Tool, ABC):
             result = core_action_result
             if await self.should_secondary_action(core_action_result, context):
                 result = await self.secondary_action(
-                    core_action_result, client, context
+                    core_result=core_action_result, client=client, context=context
                 )
 
             # 7. Post-Tool-Execution Hook (Returns a final result)
