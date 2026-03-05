@@ -8,7 +8,10 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import Any
+
 from hiero_sdk_python import Client
+from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -27,7 +30,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -94,57 +97,10 @@ Transaction ID: {response.transaction_id}
 Token ID: {token_id_str}"""
 
 
-async def create_fungible_token(
-    client: Client,
-    context: Context,
-    params: CreateFungibleTokenParameters,
-) -> ToolResponse:
-    """Execute a fungible token creation using normalized parameters and a built transaction.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the token to create.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-    """
-    try:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # Normalize parameters
-        normalised_params: CreateFungibleTokenParametersNormalised = (
-            await HederaParameterNormaliser.normalise_create_fungible_token_params(
-                params, context, client, mirrornode_service
-            )
-        )
-
-        # Build transaction
-        tx = HederaBuilder.create_fungible_token(normalised_params)
-
-        # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        message: str = f"Failed to create fungible token: {str(e)}"
-        print("[create_fungible_token_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 CREATE_FUNGIBLE_TOKEN_TOOL: str = "create_fungible_token_tool"
 
 
-class CreateFungibleTokenTool(Tool):
+class CreateFungibleTokenTool(BaseToolV2):
     """Tool wrapper that exposes the fungible token creation capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -161,17 +117,28 @@ class CreateFungibleTokenTool(Tool):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: CreateFungibleTokenParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> CreateFungibleTokenParametersNormalised:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        return await HederaParameterNormaliser.normalise_create_fungible_token_params(
+            params, context, client, mirrornode_service
+        )
+
+    async def core_action(
+        self,
+        normalized_params: CreateFungibleTokenParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> Transaction:
+        return HederaBuilder.create_fungible_token(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: Transaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the token creation using the provided client, context, and params.
-
-        Args:
-            client: Hedera client used to execute transactions.
-            context: Runtime context providing configuration and defaults.
-            params: Token creation parameters accepted by this tool.
-
-        Returns:
-            The result of the creation as a ToolResponse.
-        """
-        return await create_fungible_token(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)

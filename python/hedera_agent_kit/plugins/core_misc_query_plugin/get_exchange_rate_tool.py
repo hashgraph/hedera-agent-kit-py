@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from typing import Any
+
 from hiero_sdk_python import Client
 
 from hedera_agent_kit.shared.configuration import Context
@@ -27,7 +29,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
 )
 from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas import ExchangeRateQueryParameters
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -109,52 +111,10 @@ def post_process(rates: ExchangeRateResponse) -> str:
 """
 
 
-async def get_exchange_rate_query(
-    client: Client,
-    context: Context,
-    params: ExchangeRateQueryParameters,
-) -> ToolResponse:
-    """Execute an exchange rate query using the mirror node service.
-
-    Args:
-        client: Hedera client used to determine network/ledger ID.
-        context: Runtime context providing configuration and defaults.
-        params: Query parameters containing the timestamp to query.
-
-    Returns:
-        A ToolResponse wrapping the raw exchange rate data and a human-friendly message.
-    """
-    try:
-        parsed_params: ExchangeRateQueryParameters = (
-            HederaParameterNormaliser.normalise_get_exchange_rate(params)
-        )
-
-        mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        rates: ExchangeRateResponse = await mirrornode_service.get_exchange_rate(
-            parsed_params.timestamp
-        )
-
-        return ToolResponse(
-            human_message=post_process(rates),
-            extra={"exchange_rate": rates},
-        )
-
-    except Exception as e:
-        message: str = f"Failed to get exchange rate: {str(e)}"
-        print("[get_exchange_rate_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_EXCHANGE_RATE_TOOL: str = "get_exchange_rate_tool"
 
 
-class GetExchangeRateTool(Tool):
+class GetExchangeRateTool(BaseToolV2):
     """Tool wrapper that exposes the exchange rate query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -169,10 +129,34 @@ class GetExchangeRateTool(Tool):
         self.parameters: type[ExchangeRateQueryParameters] = ExchangeRateQueryParameters
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: ExchangeRateQueryParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> ExchangeRateQueryParameters:
+        return HederaParameterNormaliser.normalise_get_exchange_rate(params)
+
+    async def core_action(
+        self,
+        normalized_params: ExchangeRateQueryParameters,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the exchange rate query using the provided client, context, and params."""
-        if isinstance(params, dict):
-            params = ExchangeRateQueryParameters(**params)
-        return await get_exchange_rate_query(client, context, params)
+        mirrornode_service: IHederaMirrornodeService = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        rates: ExchangeRateResponse = await mirrornode_service.get_exchange_rate(
+            normalized_params.timestamp
+        )
+
+        return ToolResponse(
+            human_message=post_process(rates),
+            extra={"exchange_rate": rates},
+        )
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
+
+    async def secondary_action(
+        self, core_result: Any, client: Client, context: Context
+    ) -> ToolResponse:
+        return core_result

@@ -8,6 +8,8 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import Any
+
 from hiero_sdk_python import Client
 from hiero_sdk_python.tokens.token_associate_transaction import (
     TokenAssociateTransaction,
@@ -29,7 +31,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -80,52 +82,10 @@ def post_process(response: RawTransactionResponse) -> str:
     )
 
 
-async def associate_token(
-    client: Client,
-    context: Context,
-    params: AssociateTokenParameters,
-) -> ToolResponse:
-    """Execute a token association using normalized parameters and a built transaction.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the token association to perform.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-        It accepts raw params, validates, and normalizes them before performing the transaction.
-    """
-    try:
-        # Normalize parameters
-        normalised_params: AssociateTokenParametersNormalised = (
-            HederaParameterNormaliser.normalise_associate_token(params, context, client)
-        )
-
-        # Build transaction
-        tx: TokenAssociateTransaction = HederaBuilder.associate_token(normalised_params)
-
-        # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        message: str = f"Failed to associate token(s): {str(e)}"
-        print("[associate_token_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 ASSOCIATE_TOKEN_TOOL: str = "associate_token_tool"
 
 
-class AssociateTokenTool(Tool):
+class AssociateTokenTool(BaseToolV2):
     """Tool wrapper that exposes the token association capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -140,18 +100,25 @@ class AssociateTokenTool(Tool):
         self.parameters: type[AssociateTokenParameters] = AssociateTokenParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: AssociateTokenParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> AssociateTokenParametersNormalised:
+        return HederaParameterNormaliser.normalise_associate_token(
+            params, context, client
+        )
+
+    async def core_action(
+        self,
+        normalized_params: AssociateTokenParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> TokenAssociateTransaction:
+        return HederaBuilder.associate_token(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: TokenAssociateTransaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the token association using the provided client, context, and params.
-
-        Args:
-            client: Hedera client used to execute transactions.
-            context: Runtime context providing configuration and defaults.
-            params: Token association parameters accepted by this tool.
-
-        Returns:
-            The result of the association as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await associate_token(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)

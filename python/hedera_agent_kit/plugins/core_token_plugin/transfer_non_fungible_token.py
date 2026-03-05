@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
 from hiero_sdk_python import Client
+from hiero_sdk_python.transaction.transaction import Transaction
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -17,7 +20,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -57,33 +60,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Non-fungible tokens successfully transferred. Transaction ID: {response.transaction_id}"
 
 
-async def transfer_nft(
-    client: Client,
-    context: Context,
-    params: TransferNonFungibleTokenParameters,
-) -> ToolResponse:
-    try:
-        normalised_params: TransferNonFungibleTokenParametersNormalised = (
-            await HederaParameterNormaliser.normalise_transfer_non_fungible_token(
-                params, context, client
-            )
-        )
-        tx = HederaBuilder.transfer_non_fungible_token(normalised_params)
-        return await handle_transaction(tx, client, context, post_process)
-    except Exception as e:
-        desc = "Failed to transfer non-fungible token"
-        message = f"{desc}: {str(e)}"
-        print(f"[transfer_non_fungible_token_tool] {message}")
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 TRANSFER_NON_FUNGIBLE_TOKEN_TOOL = "transfer_non_fungible_token_tool"
 
 
-class TransferNonFungibleTokenTool(Tool):
+class TransferNonFungibleTokenTool(BaseToolV2):
     def __init__(self, context: Context):
         self.method = TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
         self.name = "Transfer Non Fungible Token"
@@ -91,10 +71,25 @@ class TransferNonFungibleTokenTool(Tool):
         self.parameters = TransferNonFungibleTokenParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> TransferNonFungibleTokenParametersNormalised:
+        return await HederaParameterNormaliser.normalise_transfer_non_fungible_token(
+            params, context, client
+        )
+
+    async def core_action(
         self,
+        normalized_params: TransferNonFungibleTokenParametersNormalised,
         client: Client,
         context: Context,
-        params: TransferNonFungibleTokenParameters,
+    ) -> Transaction:
+        return HederaBuilder.transfer_non_fungible_token(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: Transaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        return await transfer_nft(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)
