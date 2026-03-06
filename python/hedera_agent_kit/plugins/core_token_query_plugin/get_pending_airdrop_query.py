@@ -162,7 +162,7 @@ class GetPendingAirdropQueryTool(BaseToolV2):
         normalized_params: dict,
         client: Client,
         context: Context,
-    ) -> EnrichedTokenAirdropsResponse:
+    ):
         account_id = normalized_params["account_id"]
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
@@ -175,24 +175,16 @@ class GetPendingAirdropQueryTool(BaseToolV2):
             enrich_single_airdrop(airdrop, mirrornode_service)
             for airdrop in raw_airdrops
         ]
+
         gathered_airdrops = await asyncio.gather(*tasks)
-        return {
-            "account_id": account_id,
-            "enriched": list(gathered_airdrops),
+        enriched_response: EnrichedTokenAirdropsResponse = {
+            "airdrops": gathered_airdrops,
         }
 
-    async def secondary_action(
-        self,
-        core_result: Any,
-        client: Client,
-        context: Context,
-    ) -> ToolResponse:
-        account_id = core_result["account_id"]
-        enriched_airdrops = core_result["enriched"]
-        enriched_response: EnrichedTokenAirdropsResponse = {
-            "airdrops": enriched_airdrops,
-        }
         return ToolResponse(
-            human_message=post_process(account_id, enriched_airdrops),
+            human_message=post_process(account_id, gathered_airdrops),
             extra={"accountId": account_id, "pending_airdrops": enriched_response},
         )
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False

@@ -178,8 +178,3 @@ class GetTopicInfoQueryTool(BaseToolV2):
 
     async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
         return False
-
-    async def secondary_action(
-        self, core_result: Any, client: Client, context: Context
-    ) -> ToolResponse:
-        return core_result

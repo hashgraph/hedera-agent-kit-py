@@ -195,7 +195,7 @@ class GetTokenInfoQueryTool(BaseToolV2):
         normalized_params: Any,
         client: Client,
         context: Context,
-    ) -> TokenInfo:
+    ):
         mirrornode_service = get_mirrornode_service(
             context.mirrornode_service, ledger_id_from_network(client.network)
         )
@@ -204,15 +204,11 @@ class GetTokenInfoQueryTool(BaseToolV2):
         )
         if token_info["token_id"] is None:
             token_info["token_id"] = normalized_params.token_id
-        return token_info
 
-    async def secondary_action(
-        self,
-        token_info: TokenInfo,
-        client: Client,
-        context: Context,
-    ) -> ToolResponse:
         return ToolResponse(
             human_message=post_process(token_info),
             extra={"tokenInfo": token_info, "tokenId": token_info.get("token_id")},
         )
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False

@@ -105,18 +105,17 @@ class BaseToolV2(Tool, ABC):
         """Execute the core logic of the tool."""
         pass
 
-    @abstractmethod
-    async def secondary_action(
-        self, core_result: Any, client: Client, context: Context
-    ) -> Any:
-        """Execute optional secondary actions (e.g., signing)."""
-        pass
-
     # --- Virtual Methods (Can be overridden) ---
 
     async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
         """Determine if a secondary action should run. Defaults to True."""
         return True
+
+    async def secondary_action(
+        self, core_result: Any, client: Client, context: Context
+    ) -> Any:
+        """Execute optional secondary actions (e.g., signing transactions created in core_action)."""
+        pass
 
     async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
         """Handle execution errors."""

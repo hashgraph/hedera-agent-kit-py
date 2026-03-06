@@ -110,11 +110,6 @@ class GetAccountQueryTool(BaseToolV2):
     async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
         return False
 
-    async def secondary_action(
-        self, core_result: Any, client: Client, context: Context
-    ) -> Any:
-        return core_result
-
     async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
         desc = "Failed to get account query"
         message = f"{desc}: {str(error)}"
