@@ -157,6 +157,7 @@ class MaxRecipientsPolicy(Policy):
     ) -> bool:
         try:
             params = all_params.normalized_params
+            recipient_count: int = 0
 
             match method:
                 case m if m in self._custom_strategies:
