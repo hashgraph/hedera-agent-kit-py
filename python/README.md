@@ -56,6 +56,8 @@ First follow instructions in the [Developer Examples to clone and configure the 
 - **Option B -** [Tool Calling Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-tool-calling-agent-langchain-classic)
 - **Option C -** [Plugin Tool Calling Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-c-run-the-plugin-tool-calling-agent-langchain-classic)
 - **Option D -** [Structured Chat Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-d-run-the-structured-chat-agent-langchain-classic)
+- **Option E -** [Preconfigured MCPs Agent (LangChain v1)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
+- **Option F -** [Plugin Tool Calling Agent (Google ADK)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-f-run-the-plugin-tool-calling-agent-google-adk)
 
 ---
 
