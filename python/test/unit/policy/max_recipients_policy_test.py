@@ -316,7 +316,7 @@ class TestErrorHandling:
 
 
 # ---------------------------------------------------------------------------
-# Constructor / relevant_tools
+# Constructor / custom strategies
 # ---------------------------------------------------------------------------
 
 
@@ -332,3 +332,30 @@ class TestConstructor:
     def test_description_reflects_max_recipients(self):
         policy = MaxRecipientsPolicy(5)
         assert "5" in policy.description
+
+    def test_uses_custom_strategy_for_unhandled_tool(self):
+        # A custom strategy that just counts the length of a 'custom_recipients' list
+        def my_strategy(normalized) -> int:
+            return len(normalized.custom_recipients)
+
+        policy = MaxRecipientsPolicy(
+            max_recipients=2,
+            additional_tools=["my_custom_tool"],
+            custom_strategies={"my_custom_tool": my_strategy},
+        )
+
+        context = _make_context()
+
+        # Test case 1: Should block (3 recipients > 2)
+        normalized_block = MagicMock()
+        normalized_block.custom_recipients = [1, 2, 3]
+        params_block = _make_params(normalized_block)
+
+        assert _block(policy, context, params_block, "my_custom_tool") is True
+
+        # Test case 2: Should not block (2 recipients <= 2)
+        normalized_allow = MagicMock()
+        normalized_allow.custom_recipients = [1, 2]
+        params_allow = _make_params(normalized_allow)
+
+        assert _block(policy, context, params_allow, "my_custom_tool") is False

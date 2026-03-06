@@ -67,3 +67,36 @@ async def test_allows_transfer_hbar_tool_when_recipients_within_limit(operator_c
     result: ToolResponse = await tool.execute(operator_client, context, params)
 
     assert result.error is None or "blocked by policy" not in result.error
+
+
+@pytest.mark.asyncio
+async def test_uses_custom_strategy_for_existing_tool(operator_client):
+    """Policy must use the provided custom strategy, even for built-in tools."""
+
+    # A strategy that artificially inflates the recipient count to 99
+    def inflated_strategy(normalized) -> int:
+        return 99
+
+    policy = MaxRecipientsPolicy(
+        5, custom_strategies={"transfer_hbar_tool": inflated_strategy}
+    )
+    context = Context(
+        mode=AgentMode.AUTONOMOUS,
+        account_id=str(operator_client.operator_account_id),
+        hooks=[policy],
+    )
+
+    tool = TransferHbarTool(context)
+    params = TransferHbarParameters(
+        transfers=[
+            TransferHbarEntry(account_id="0.0.1", amount=0.1),
+        ]
+    )
+
+    # Even though there is only 1 real recipient, the strategy returns 99,
+    # which exceeds the max of 5, so it should be blocked.
+    result: ToolResponse = await tool.execute(operator_client, context, params)
+
+    assert result.error is not None
+    assert "blocked by policy: Max Recipients Policy" in result.error
+    assert "Limits the maximum number of recipients to 5" in result.error

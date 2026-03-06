@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, cast
+from typing import TYPE_CHECKING, List, cast, Dict, Callable, Any
 
 from hedera_agent_kit.shared.parameter_schemas import (
     TransferHbarParametersNormalised,
@@ -38,6 +38,32 @@ class MaxRecipientsPolicy(Policy):
     Works for HBAR transfers, fungible-token transfers, NFT transfers and airdrops.
     The policy is evaluated *after* parameter normalization so it operates on the
     already-parsed SDK objects rather than raw LLM text.
+
+    If you are adding custom tools using the `additional_tools` parameter, you must
+    also provide a strategy to count the recipients using the `custom_strategies` parameter.
+
+    Args:
+        max_recipients (int): The maximum number of recipients allowed.
+        additional_tools (List[str] | None): Optional list of tool names to apply the
+            policy to, in addition to the default tools.
+        custom_strategies (Dict[str, Callable[[Any], int]] | None): Optional dictionary
+            mapping tool names to functions that calculate the number of recipients
+            for the tool. Required for any tools provided in `additional_tools`.
+
+    Example:
+        ```python
+        def my_custom_tool_strategy(normalized_params: Any) -> int:
+            # Custom logic to count recipients from the normalized params
+            return len(normalized_params.custom_recipients)
+
+        policy = MaxRecipientsPolicy(
+            max_recipients=5,
+            additional_tools=["my_custom_tool"],
+            custom_strategies={
+                "my_custom_tool": my_custom_tool_strategy
+            }
+        )
+        ```
     """
 
     @property
@@ -53,7 +79,10 @@ class MaxRecipientsPolicy(Policy):
         return self._relevant_tools
 
     def __init__(
-        self, max_recipients: int, additional_tools: List[str] | None = None
+        self,
+        max_recipients: int,
+        additional_tools: List[str] | None = None,
+        custom_strategies: Dict[str, Callable[[Any], int]] | None = None,
     ) -> None:
         self._max_recipients: int = max_recipients
         self._description: str = (
@@ -62,6 +91,8 @@ class MaxRecipientsPolicy(Policy):
         self._relevant_tools: List[str] = list(_DEFAULT_RELEVANT_TOOLS)
         if additional_tools:
             self._relevant_tools.extend(additional_tools)
+
+        self._custom_strategies = custom_strategies or {}
 
     async def should_block_post_params_normalization(
         self,
@@ -73,7 +104,11 @@ class MaxRecipientsPolicy(Policy):
             normalized = params.normalized_params
             recipient_count = 0
 
-            if method == core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]:
+            # 1. Custom Strategy override
+            if method in self._custom_strategies:
+                recipient_count = self._custom_strategies[method](normalized)
+            # 2. Built-in tools
+            elif method == core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]:
                 normalized = cast(TransferHbarParametersNormalised, normalized)
                 recipient_count += sum(
                     1 for v in normalized.hbar_transfers.values() if v > 0
@@ -124,7 +159,8 @@ class MaxRecipientsPolicy(Policy):
             else:
                 raise ValueError(
                     f"MaxRecipientsPolicy: unhandled tool '{method}'. "
-                    "Override should_block_post_params_normalization for custom tools."
+                    "Please provide a custom counting strategy for this tool via the "
+                    "'custom_strategies' constructor parameter."
                 )
 
             if recipient_count > self._max_recipients:
