@@ -33,7 +33,7 @@ class Policy(AbstractHook, ABC):
         raise NotImplementedError
 
     async def should_block_pre_tool_execution(
-        self, context: Context, params: PreToolExecutionParams
+        self, context: Context, params: PreToolExecutionParams, method: str
     ) -> bool:
         """
         Default implementation - no validation at PreToolExecution.
@@ -42,7 +42,7 @@ class Policy(AbstractHook, ABC):
         return False
 
     async def should_block_post_params_normalization(
-        self, context: Context, params: PostParamsNormalizationParams
+        self, context: Context, params: PostParamsNormalizationParams, method: str
     ) -> bool:
         """
         Default implementation - no validation at PostParamsNormalization.
@@ -51,7 +51,7 @@ class Policy(AbstractHook, ABC):
         return False
 
     async def should_block_post_core_action(
-        self, context: Context, params: PostCoreActionParams
+        self, context: Context, params: PostCoreActionParams, method: str
     ) -> bool:
         """
         Default implementation - no validation at PostCoreAction.
@@ -60,7 +60,7 @@ class Policy(AbstractHook, ABC):
         return False
 
     async def should_block_post_secondary_action(
-        self, context: Context, params: PostSecondaryActionParams
+        self, context: Context, params: PostSecondaryActionParams, method: str
     ) -> bool:
         """
         Default implementation - no validation at PostSecondaryAction.
@@ -74,7 +74,9 @@ class Policy(AbstractHook, ABC):
         if method not in self.relevant_tools:
             return
 
-        should_block = await self.should_block_pre_tool_execution(context, params)
+        should_block = await self.should_block_pre_tool_execution(
+            context, params, method
+        )
         if should_block:
             desc = f" ({self.description})" if self.description else ""
             raise ValueError(f"Action blocked by policy: {self.name}{desc}")
@@ -86,7 +88,7 @@ class Policy(AbstractHook, ABC):
             return
 
         should_block = await self.should_block_post_params_normalization(
-            context, params
+            context, params, method
         )
         if should_block:
             desc = f" ({self.description})" if self.description else ""
@@ -98,7 +100,7 @@ class Policy(AbstractHook, ABC):
         if method not in self.relevant_tools:
             return
 
-        should_block = await self.should_block_post_core_action(context, params)
+        should_block = await self.should_block_post_core_action(context, params, method)
         if should_block:
             desc = f" ({self.description})" if self.description else ""
             raise ValueError(f"Action blocked by policy: {self.name}{desc}")
@@ -109,7 +111,9 @@ class Policy(AbstractHook, ABC):
         if method not in self.relevant_tools:
             return
 
-        should_block = await self.should_block_post_secondary_action(context, params)
+        should_block = await self.should_block_post_secondary_action(
+            context, params, method
+        )
         if should_block:
             desc = f" ({self.description})" if self.description else ""
             raise ValueError(f"Action blocked by policy: {self.name}{desc}")
