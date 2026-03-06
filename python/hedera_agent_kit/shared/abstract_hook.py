@@ -18,6 +18,7 @@ class PreToolExecutionParams(Generic[TParams]):
     context: Context
     raw_params: TParams
     client: Client
+    method: str
 
 
 @dataclass
@@ -26,6 +27,7 @@ class PostParamsNormalizationParams(Generic[TParams, TNormalizedParams]):
     raw_params: TParams
     normalized_params: TNormalizedParams
     client: Client
+    method: str
 
 
 @dataclass
@@ -35,6 +37,7 @@ class PostCoreActionParams(Generic[TParams, TNormalizedParams]):
     normalized_params: TNormalizedParams
     core_action_result: Any
     client: Client
+    method: str
 
 
 @dataclass
@@ -45,6 +48,7 @@ class PostSecondaryActionParams(Generic[TParams, TNormalizedParams]):
     core_action_result: Any
     tool_result: Any
     client: Client
+    method: str
 
 
 class AbstractHook(ABC):

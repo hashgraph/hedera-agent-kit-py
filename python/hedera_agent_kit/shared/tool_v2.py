@@ -31,7 +31,10 @@ class BaseToolV2(Tool, ABC):
             # 1. Pre-Execution Hook
             await self.pre_tool_execution_hook(
                 PreToolExecutionParams(
-                    context=context, raw_params=params, client=client
+                    context=context,
+                    raw_params=params,
+                    client=client,
+                    method=self.method,
                 )
             )
 
@@ -47,6 +50,7 @@ class BaseToolV2(Tool, ABC):
                     raw_params=params,
                     normalized_params=normalized_params,
                     client=client,
+                    method=self.method,
                 )
             )
 
@@ -63,6 +67,7 @@ class BaseToolV2(Tool, ABC):
                     normalized_params=normalized_params,
                     core_action_result=core_action_result,
                     client=client,
+                    method=self.method,
                 )
             )
 
@@ -82,6 +87,7 @@ class BaseToolV2(Tool, ABC):
                     core_action_result=core_action_result,
                     tool_result=result,
                     client=client,
+                    method=self.method,
                 )
             )
 

@@ -1,3 +1,3 @@
-__all__ = ["RequiredAccountMemoPolicy"]
+__all__ = ["MaxRecipientsPolicy"]
 
-from hedera_agent_kit.policies.basic_policies import RequiredAccountMemoPolicy
+from hedera_agent_kit.policies.max_recipients_policy import MaxRecipientsPolicy
