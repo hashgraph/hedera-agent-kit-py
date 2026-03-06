@@ -31,6 +31,61 @@ _DEFAULT_RELEVANT_TOOLS: List[str] = [
 ]
 
 
+def _count_transfer_hbar(params: Any) -> int:
+    normalized = cast(TransferHbarParametersNormalised, params)
+    return sum(1 for v in normalized.hbar_transfers.values() if v > 0)
+
+
+def _count_transfer_hbar_with_allowance(params: Any) -> int:
+    normalized = cast(TransferHbarWithAllowanceParametersNormalised, params)
+    return sum(1 for v in normalized.hbar_approved_transfers.values() if v > 0)
+
+
+def _count_airdrop_fungible_token(params: Any) -> int:
+    normalized = cast(AirdropFungibleTokenParametersNormalised, params)
+    return len(normalized.token_transfers)
+
+
+def _count_transfer_fungible_token_with_allowance(params: Any) -> int:
+    normalized = cast(TransferFungibleTokenWithAllowanceParametersNormalised, params)
+    return sum(
+        sum(1 for v in transfers.values() if v > 0)
+        for transfers in normalized.ft_approved_transfer.values()
+    )
+
+
+def _count_transfer_nft_with_allowance(params: Any) -> int:
+    normalized = cast(TransferNonFungibleTokenWithAllowanceParametersNormalised, params)
+    return sum(
+        len(transfers) for transfers in normalized.nft_approved_transfer.values()
+    )
+
+
+def _count_transfer_non_fungible_token(params: Any) -> int:
+    normalized = cast(TransferNonFungibleTokenParametersNormalised, params)
+    return sum(len(transfers) for transfers in normalized.nft_transfers.values())
+
+
+_BUILTIN_STRATEGIES: Dict[str, Callable[[Any], int]] = {
+    core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]: _count_transfer_hbar,
+    core_account_plugin_tool_names[
+        "TRANSFER_HBAR_WITH_ALLOWANCE_TOOL"
+    ]: _count_transfer_hbar_with_allowance,
+    core_token_plugin_tool_names[
+        "AIRDROP_FUNGIBLE_TOKEN_TOOL"
+    ]: _count_airdrop_fungible_token,
+    core_token_plugin_tool_names[
+        "TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL"
+    ]: _count_transfer_fungible_token_with_allowance,
+    core_token_plugin_tool_names[
+        "TRANSFER_NFT_WITH_ALLOWANCE_TOOL"
+    ]: _count_transfer_nft_with_allowance,
+    core_token_plugin_tool_names[
+        "TRANSFER_NON_FUNGIBLE_TOKEN_TOOL"
+    ]: _count_transfer_non_fungible_token,
+}
+
+
 class MaxRecipientsPolicy(Policy):
     """
     Limits the maximum number of recipients allowed in a single transfer / airdrop call.
@@ -97,71 +152,23 @@ class MaxRecipientsPolicy(Policy):
     async def should_block_post_params_normalization(
         self,
         context: Context,
-        params: PostParamsNormalizationParams,
+        all_params: PostParamsNormalizationParams,
         method: str,
     ) -> bool:
         try:
-            normalized = params.normalized_params
-            recipient_count = 0
+            params = all_params.normalized_params
 
-            # 1. Custom Strategy override
-            if method in self._custom_strategies:
-                recipient_count = self._custom_strategies[method](normalized)
-            # 2. Built-in tools
-            elif method == core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]:
-                normalized = cast(TransferHbarParametersNormalised, normalized)
-                recipient_count += sum(
-                    1 for v in normalized.hbar_transfers.values() if v > 0
-                )
-            elif (
-                method
-                == core_account_plugin_tool_names["TRANSFER_HBAR_WITH_ALLOWANCE_TOOL"]
-            ):
-                normalized = cast(
-                    TransferHbarWithAllowanceParametersNormalised, normalized
-                )
-                recipient_count += sum(
-                    1 for v in normalized.hbar_approved_transfers.values() if v > 0
-                )
-            elif method == core_token_plugin_tool_names["AIRDROP_FUNGIBLE_TOKEN_TOOL"]:
-                normalized = cast(AirdropFungibleTokenParametersNormalised, normalized)
-                recipient_count += len(normalized.token_transfers)
-            elif (
-                method
-                == core_token_plugin_tool_names[
-                    "TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL"
-                ]
-            ):
-                normalized = cast(
-                    TransferFungibleTokenWithAllowanceParametersNormalised, normalized
-                )
-                for transfers in normalized.ft_approved_transfer.values():
-                    recipient_count += sum(1 for v in transfers.values() if v > 0)
-            elif (
-                method
-                == core_token_plugin_tool_names["TRANSFER_NFT_WITH_ALLOWANCE_TOOL"]
-            ):
-                normalized = cast(
-                    TransferNonFungibleTokenWithAllowanceParametersNormalised,
-                    normalized,
-                )
-                for transfers in normalized.nft_approved_transfer.values():
-                    recipient_count += len(transfers)
-            elif (
-                method
-                == core_token_plugin_tool_names["TRANSFER_NON_FUNGIBLE_TOKEN_TOOL"]
-            ):
-                normalized = cast(
-                    TransferNonFungibleTokenParametersNormalised, normalized
-                )
-                for transfers in normalized.nft_transfers.values():
-                    recipient_count += len(transfers)
-            else:
-                raise ValueError(
-                    f"MaxRecipientsPolicy: unhandled tool '{method}'. "
-                    "Please provide a custom counting strategy for this tool via the "
-                    "'custom_strategies' constructor parameter."
-                )
+            match method:
+                case m if m in self._custom_strategies:
+                    recipient_count = self._custom_strategies[method](params)
+                case m if m in _BUILTIN_STRATEGIES:
+                    recipient_count = _BUILTIN_STRATEGIES[method](params)
+                case _:
+                    raise ValueError(
+                        f"MaxRecipientsPolicy: unhandled tool '{method}'. "
+                        "Please provide a custom counting strategy for this tool via the "
+                        "'custom_strategies' constructor parameter."
+                    )
 
             if recipient_count > self._max_recipients:
                 logger.info(
