@@ -192,34 +192,10 @@ class HederaOperationsWrapper:
     # ---------------------------
     # TOPIC (CONSENSUS) OPERATIONS
     # ---------------------------
-    async def create_topic(self, params: Any) -> RawTransactionResponse:
-        """Create a topic, accepting either normalised params or a simple dict."""
-        normalised: CreateTopicParametersNormalised
-
-        if isinstance(params, CreateTopicParametersNormalised):
-            normalised = params
-        elif isinstance(params, dict):
-            normalised = CreateTopicParametersNormalised(
-                memo=params.get("memo")
-                or params.get("topic_memo")
-                or params.get("topicMemo"),
-                submit_key=params.get("submit_key") or params.get("submitKey"),
-                admin_key=params.get("admin_key") or params.get("adminKey"),
-                transaction_memo=params.get("transaction_memo")
-                or params.get("transactionMemo"),
-            )
-        else:
-            # Fallback: attempt direct construction if a compatible pydantic model-like is provided
-            # Some tests might pass CreateTopicParameters (not normalised)
-            memo = getattr(params, "memo", None) or getattr(params, "topic_memo", None)
-            normalised = CreateTopicParametersNormalised(
-                memo=memo,
-                submit_key=getattr(params, "submit_key", None),
-                admin_key=getattr(params, "admin_key", True),
-                transaction_memo=getattr(params, "transaction_memo", None),
-            )
-
-        tx = HederaBuilder.create_topic(normalised)
+    async def create_topic(
+        self, params: CreateTopicParametersNormalised
+    ) -> RawTransactionResponse:
+        tx = HederaBuilder.create_topic(params)
         result: ExecutedTransactionToolResponse = await self.execute_strategy.handle(
             tx, self.client, Context()
         )
