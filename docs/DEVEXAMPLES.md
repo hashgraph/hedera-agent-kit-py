@@ -37,7 +37,15 @@ cd python/examples/langchain-classic
 cp .env.example .env
 ```
 
-Add your [Hedera API](https://portal.hedera.com/dashboard) and [OpenAI](https://platform.openai.com/api-keys) keys:
+**Google ADK**
+Copy `python/examples/adk/.env.example` to `python/examples/adk/.env`:
+
+```bash
+cd python/examples/adk
+cp .env.example .env
+```
+
+Add your credentials to the `.env` file based on the framework you're using (e.g., [Hedera Account](https://portal.hedera.com/dashboard), [OpenAI](https://platform.openai.com/api-keys) for Langchain, [Google AI Studio](https://aistudio.google.com/) for ADK):
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
@@ -61,8 +69,7 @@ Try out one or more of the example agents:
 * **Option C -** [Plugin Tool Calling Agent (LangChain Classic)](#option-c-run-the-plugin-tool-calling-agent-langchain-classic)
 * **Option D -** [Structured Chat Agent (LangChain Classic)](#option-d-run-the-structured-chat-agent-langchain-classic)
 * **Option E -** [Preconfigured MCPs Agent (LangChain v1)](#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
-
-> **Coming Soon:** Google ADK (Agents Development Kit) integration is planned for a future release.
+* **Option F -** [Plugin Tool Calling Agent (Google ADK)](#option-f-run-the-plugin-tool-calling-agent-google-adk)
 
 
 > **Coming Soon:** Return Bytes mode is planned for a future release. In this mode agents will create the transaction requested in natural language and return the bytes to the user to execute the transaction in another tool.
@@ -221,6 +228,27 @@ poetry install
 
 ```bash
 poetry run python hedera_mcp_agent.py
+```
+
+---
+
+### Option F: Run the Plugin Tool Calling Agent (Google ADK)
+
+This agent demonstrates how to use the Hedera Agent Kit with Google's Agent Development Kit (ADK) and the Gemini model.
+
+Found at `python/examples/adk/plugin_tool_calling_agent.py`.
+
+1. First, go into the directory where the example is and install dependencies:
+
+```bash
+cd python/examples/adk
+poetry install
+```
+
+2. Then, run the example:
+
+```bash
+poetry run python plugin_tool_calling_agent.py
 ```
 
 ---
