@@ -37,7 +37,7 @@ from test.utils.teardown import return_hbars_and_delete_account
 from test.utils.usd_to_hbar_service import UsdToHbarService
 
 # Constants
-DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"]))
+DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"]))
 
 # ============================================================================
 # MODULE-LEVEL FIXTURES
@@ -403,7 +403,7 @@ async def test_reject_unauthorized_update(
     outsider_resp = await operator_wrapper.create_account(
         CreateAccountParametersNormalised(
             initial_balance=Hbar(
-                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["STANDARD"])
+                UsdToHbarService.usd_to_hbar(BALANCE_TIERS["ELEVATED"])
             ),
             key=outsider_key.public_key(),
         )
