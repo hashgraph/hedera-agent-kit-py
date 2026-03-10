@@ -28,6 +28,7 @@ from .types import (
     ScheduledTransactionDetailsResponse,
     ExchangeRateResponse,
 )
+from .types.account import KeyType
 
 
 class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
@@ -60,27 +61,29 @@ class HederaMirrornodeServiceDefaultImpl(IHederaMirrornodeService):
             url, context=f"account {account_id}"
         )
 
-        if not raw_data.get("account") or "balance" not in raw_data:
-            raise ValueError(f"Account {account_id} not found")
+        if not raw_data.get("account"):
+            raise ValueError(f"Account {account_id} not found in response")
 
-        key_info = raw_data.get("key")
-        if not key_info or "key" not in key_info:
-            raise ValueError(f"Key not found for account {account_id}")
-
+        key_info = raw_data.get("key", {})
         account_public_key: str = key_info.get("key")
         if not account_public_key:
-            raise ValueError(f"Account public key not found for account {account_id}")
+            raise ValueError(f"Public key not found for account {account_id}")
 
-        # Get the EVM address from the raw data (returned by Mirror Node API)
-        evm_address = raw_data.get("evm_address")
-        if not evm_address:
-            raise ValueError(f"EVM address not found for account {account_id}")
+        # Determine Key Type
+        raw_key_type = key_info.get("_type") or key_info.get("type", "UNKNOWN")
+
+        try:
+            # Try to match string to Enum, default to UNKNOWN if not found
+            key_type_enum = KeyType(raw_key_type)
+        except ValueError:
+            key_type_enum = KeyType.UNKNOWN
 
         return {
             "account_id": raw_data["account"],
-            "account_public_key": key_info["key"],
+            "account_public_key": account_public_key,
+            "key_type": key_type_enum,
             "balance": raw_data["balance"],
-            "evm_address": evm_address,
+            "evm_address": raw_data.get("evm_address"),
         }
 
     async def get_account_hbar_balance(self, account_id: str) -> Decimal:
