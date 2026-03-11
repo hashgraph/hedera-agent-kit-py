@@ -72,37 +72,6 @@ Try out one or more of the example agents:
 * **Option F -** [Plugin Tool Calling Agent (Google ADK)](#option-f-run-the-plugin-tool-calling-agent-google-adk)
 * **Option G -** [Return Bytes Mode Agents (ADK & LangChain)](#option-g-run-the-return-bytes-mode-agents-human-in-the-loop)
 
----
-
-### Option G: Run the Return Bytes Mode Agents (Human-in-the-loop)
-
-These agents demonstrate "Return Bytes" mode, where the agent returns raw transaction bytes for the user to sign and execute manually, enabling human-in-the-loop transaction control.
-
-#### 1. LangChain v1 Return Bytes
-Found at `python/examples/langchain/return_bytes_tool_calling_agent.py`.
-
-```bash
-cd python/examples/langchain
-poetry run python return_bytes_tool_calling_agent.py
-```
-
-#### 2. LangChain Classic Return Bytes
-Found at `python/examples/langchain-classic/return_bytes_tool_calling_agent.py`.
-
-```bash
-cd python/examples/langchain-classic
-poetry run python return_bytes_tool_calling_agent.py
-```
-
-#### 3. Google ADK Return Bytes
-Found at `python/examples/adk/return_bytes_tool_calling_agent.py`.
-
-```bash
-cd python/examples/adk
-poetry run python return_bytes_tool_calling_agent.py
-```
----
-
 ### Option A: Run the Plugin Tool Calling Agent (LangChain v1)
 
 This agent uses LangChain v1 with LangGraph support, featuring plugin-based tool management and in-memory conversation state. Uses GPT-4o-mini as the default LLM.
@@ -300,6 +269,36 @@ You: Transfer 5 HBAR to account 0.0.800
 You: Create a new topic with memo "My first topic"
 You: Create a fungible token with 1000 initial supply
 You: exit
+```
+
+---
+
+### Option G: Run the Return Bytes Mode Agents (Human-in-the-loop)
+
+These agents demonstrate "Return Bytes" mode, where the agent returns raw transaction bytes for the user to sign and execute manually, enabling human-in-the-loop transaction control.
+
+#### 1. LangChain v1 Return Bytes
+Found at `python/examples/langchain/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/langchain
+poetry run python return_bytes_tool_calling_agent.py
+```
+
+#### 2. LangChain Classic Return Bytes
+Found at `python/examples/langchain-classic/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/langchain-classic
+poetry run python return_bytes_tool_calling_agent.py
+```
+
+#### 3. Google ADK Return Bytes
+Found at `python/examples/adk/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/adk
+poetry run python return_bytes_tool_calling_agent.py
 ```
 
 ---
