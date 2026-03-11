@@ -70,9 +70,37 @@ Try out one or more of the example agents:
 * **Option D -** [Structured Chat Agent (LangChain Classic)](#option-d-run-the-structured-chat-agent-langchain-classic)
 * **Option E -** [Preconfigured MCPs Agent (LangChain v1)](#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
 * **Option F -** [Plugin Tool Calling Agent (Google ADK)](#option-f-run-the-plugin-tool-calling-agent-google-adk)
+* **Option G -** [Return Bytes Mode Agents (ADK & LangChain)](#option-g-run-the-return-bytes-mode-agents-human-in-the-loop)
 
+---
 
-> **Coming Soon:** Return Bytes mode is planned for a future release. In this mode agents will create the transaction requested in natural language and return the bytes to the user to execute the transaction in another tool.
+### Option G: Run the Return Bytes Mode Agents (Human-in-the-loop)
+
+These agents demonstrate "Return Bytes" mode, where the agent returns raw transaction bytes for the user to sign and execute manually, enabling human-in-the-loop transaction control.
+
+#### 1. LangChain v1 Return Bytes
+Found at `python/examples/langchain/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/langchain
+poetry run python return_bytes_tool_calling_agent.py
+```
+
+#### 2. LangChain Classic Return Bytes
+Found at `python/examples/langchain-classic/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/langchain-classic
+poetry run python return_bytes_tool_calling_agent.py
+```
+
+#### 3. Google ADK Return Bytes
+Found at `python/examples/adk/return_bytes_tool_calling_agent.py`.
+
+```bash
+cd python/examples/adk
+poetry run python return_bytes_tool_calling_agent.py
+```
 ---
 
 ### Option A: Run the Plugin Tool Calling Agent (LangChain v1)

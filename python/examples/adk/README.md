@@ -33,8 +33,18 @@ GOOGLE_API_KEY=your-google-api-key
 
 ## Run the Example
 
+### Standard Plugin Agent
+
 ```bash
 poetry run python plugin_tool_calling_agent.py
+```
+
+### Return Bytes Mode Agent (Human-in-the-loop)
+
+This agent demonstrates "Return Bytes" mode, where the agent returns raw transaction bytes for the user to sign and execute manually, enabling human-in-the-loop transaction control.
+
+```bash
+poetry run python return_bytes_tool_calling_agent.py
 ```
 
 ## Example Interactions
