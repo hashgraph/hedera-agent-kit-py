@@ -10,6 +10,7 @@
 
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
+- [Third Party Plugins](#third-party-plugins)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [Agent Execution Modes](#agent-execution-modes)
@@ -46,6 +47,7 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 ---
 ### Third Party Plugins
+
 The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit) and README in [docs/PLUGINS.md](docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
 ---
 
