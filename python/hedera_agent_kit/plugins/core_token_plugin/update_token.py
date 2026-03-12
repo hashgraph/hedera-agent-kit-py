@@ -65,23 +65,26 @@ async def check_validity_of_updates(
     admin_key_info = token_details.get("admin_key")
     token_admin_key_str = admin_key_info.get("key") if admin_key_info else None
 
-    if token_admin_key_str != user_public_key.to_string_der():
-        if token_admin_key_str != user_public_key.to_string_raw():
-            try:
-                token_admin_key = PublicKey.from_string(token_admin_key_str)
-                if token_admin_key.to_string_der() != user_public_key.to_string_der():
-                    raise ValueError(
-                        f"You do not have permission to update this token. "
-                        f"The adminKey ({token_admin_key_str}) does not match your public key."
-                    )
-            except Exception:
-                if (
-                    token_admin_key_str
-                ):  # Only throw if there IS an admin key and it doesn't match
-                    raise ValueError(
-                        f"You do not have permission to update this token. "
-                        f"The adminKey ({token_admin_key_str}) does not match your public key."
-                    )
+    if token_admin_key_str:
+        try:
+            # Hedera SDK handle parsing whatever format the Mirror Node returned
+            token_admin_key = PublicKey.from_string(
+                token_admin_key_str
+            )  # token_admin_key is now a PublicKey object
+
+            if (
+                token_admin_key.to_string_der() != user_public_key.to_string_der()
+            ):  # compare the DER-encoded versions for a consistent comparison
+                raise ValueError(
+                    f"You do not have permission to update this token. "
+                    f"The adminKey ({token_admin_key_str}) does not match your public key."
+                )
+        except Exception:
+            # Catch parsing errors or the explicit ValueError we raised above
+            raise ValueError(
+                f"You do not have permission to update this token or the key is invalid. "
+                f"The adminKey ({token_admin_key_str}) does not match your public key."
+            )
 
     # Check if we are trying to update a key that doesn't exist on the token
     key_checks = [
