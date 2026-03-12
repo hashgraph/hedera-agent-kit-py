@@ -39,7 +39,7 @@ poetry install
 
 ## Available Agent Scripts
 
-This folder contains three agent examples:
+This folder contains four agent examples:
 
 ### 1. Tool Calling Agent (`tool_calling_agent.py`)
 
@@ -63,6 +63,14 @@ Agent with structured chat capabilities and conversation memory.
 
 ```bash
 poetry run python structured_chat_agent.py
+```
+
+### 4. Return Bytes Tool Calling Agent (`return_bytes_tool_calling_agent.py`)
+
+Agent that operates in `RETURN_BYTES` mode, returning unsigned transaction bytes for local signing and execution (Human-in-the-loop).
+
+```bash
+poetry run python return_bytes_tool_calling_agent.py
 ```
 
 ## Usage

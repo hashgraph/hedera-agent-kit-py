@@ -5,6 +5,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_servi
 from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
+from hedera_agent_kit.shared.hedera_utils.mirrornode.types.account import KeyType
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 
 
@@ -50,10 +51,21 @@ class AccountResolver:
 
         default_account_details = await mirrornode_service.get_account(default_account)
 
-        if not getattr(default_account_details, "accountPublicKey", None):
+        if not default_account_details.get("account_public_key"):
             raise ValueError("No public key available for the default account")
 
-        return PublicKey.from_string(default_account_details["account_public_key"])
+        if not default_account_details.get("key_type"):
+            raise ValueError("No key type available for the default account")
+
+        key_type = default_account_details["key_type"]
+        public_key_str = default_account_details["account_public_key"]
+
+        if key_type == KeyType.ED25519:
+            return PublicKey.from_string_ed25519(public_key_str)
+        elif key_type == KeyType.ECDSA_SECP256K1:
+            return PublicKey.from_string_ecdsa(public_key_str)
+
+        return PublicKey.from_string(public_key_str)
 
     @staticmethod
     def resolve_account(
