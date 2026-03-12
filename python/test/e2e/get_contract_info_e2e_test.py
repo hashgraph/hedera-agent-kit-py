@@ -244,7 +244,7 @@ async def test_get_contract_info_with_topic_id_should_error(
     human_message = parsed_data.get("humanMessage", "")
     error = parsed_data.get("raw").get("error")
     assert error is not None
-    assert "Failed to get contract info" in human_message
+    assert "Failed to fetch contract" in human_message
 
 
 @pytest.mark.asyncio
@@ -264,4 +264,4 @@ async def test_get_contract_info_with_invalid_id_should_error(
     human_message = parsed_data.get("humanMessage", "")
     error = parsed_data.get("raw").get("error")
     assert error is not None
-    assert "Failed to get contract info" in human_message
+    assert "Failed to fetch contract" in human_message

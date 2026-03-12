@@ -18,11 +18,12 @@ from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
 )
 from hedera_agent_kit.shared.hedera_utils.mirrornode import get_mirrornode_service
 from hedera_agent_kit.shared.models import ToolResponse
+from typing import Any
 from hedera_agent_kit.shared.parameter_schemas import (
     AccountBalanceQueryParameters,
     AccountBalanceQueryParametersNormalised,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -58,79 +59,26 @@ Parameters:
 """
 
 
-def post_process(balance: Decimal, account_id: str) -> str:
+def post_process(hbar_balance: str, account_id: str) -> str:
     """Produce a human-readable summary for an HBAR balance query result.
 
     Args:
-        balance: The HBAR balance in tinybars.
+        hbar_balance: The stringified HBAR balance.
         account_id: The account ID that was queried.
 
     Returns:
         A concise message describing the HBAR balance.
     """
-    # Convert tinybars to HBAR (1 HBAR = 100,000,000 tinybars)
-    hbar_balance = balance / Decimal("100000000")
-    return f"HBAR Balance for {account_id}: {hbar_balance} HBAR ({balance} tinybars)"
+    return f"""Account {account_id} has a balance of {hbar_balance} HBAR
 
-
-async def get_hbar_balance(
-    client: Client,
-    context: Context,
-    params: AccountBalanceQueryParameters,
-) -> ToolResponse:
-    """Execute an HBAR balance query using the mirror node service.
-
-    Args:
-        client: Hedera client used for network information.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the account to query.
-
-    Returns:
-        A ToolResponse wrapping the raw balance data and a human-friendly
-        message indicating success or failure.
-
-    Notes:
-        This function captures exceptions and returns a failure ToolResponse
-        rather than raising, to keep tool behavior consistent for callers.
-    """
-    try:
-        normalised_params: AccountBalanceQueryParametersNormalised = (
-            HederaParameterNormaliser.normalise_get_hbar_balance(
-                params, context, client
-            )
-        )
-
-        # Get mirrornode service
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # Query HBAR balance
-        balance: Decimal = await mirrornode_service.get_account_hbar_balance(
-            normalised_params.account_id
-        )
-
-        return ToolResponse(
-            human_message=post_process(balance, normalised_params.account_id),
-            extra={
-                "balance": str(balance),
-                "account_id": str(normalised_params.account_id),
-            },
-        )
-
-    except Exception as e:
-        message: str = f"Failed to get HBAR balance: {str(e)}"
-        print("[get_hbar_balance_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
+This balance is equivalent to {int(Decimal(hbar_balance) * Decimal("100000000"))} tinybars.
+"""
 
 
 GET_HBAR_BALANCE_QUERY_TOOL: str = "get_hbar_balance_query_tool"
 
 
-class GetHbarBalanceTool(Tool):
+class GetHbarBalanceTool(BaseToolV2):
     """Tool wrapper that exposes the HBAR balance query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -147,18 +95,43 @@ class GetHbarBalanceTool(Tool):
         )
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: AccountBalanceQueryParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> AccountBalanceQueryParametersNormalised:
+        return HederaParameterNormaliser.normalise_get_hbar_balance(
+            params, context, client
+        )
+
+    async def core_action(
+        self,
+        normalized_params: AccountBalanceQueryParametersNormalised,
+        context: Context,
+        client: Client,
     ) -> ToolResponse:
-        """Execute the HBAR balance query using the provided client, context, and params.
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        balance: Decimal = await mirrornode_service.get_account_hbar_balance(
+            normalized_params.account_id
+        )
+        hbar_balance = str(balance / Decimal("100000000"))
 
-        Args:
-            client: Hedera client used for network information.
-            context: Runtime context providing configuration and defaults.
-            params: HBAR balance query parameters accepted by this tool.
+        return ToolResponse(
+            human_message=post_process(hbar_balance, normalized_params.account_id),
+            extra={
+                "balance": str(balance),
+                "account_id": normalized_params.account_id,
+            },
+        )
 
-        Returns:
-            The result of the HBAR balance query as a ToolResponse, including a human-readable
-            message and error information if applicable.
-        """
-        return await get_hbar_balance(client, context, params)
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
+
+    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
+        desc = "Failed to get HBAR balance"
+        message = f"{desc}: {str(error)}"
+        print("[get_hbar_balance_query_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
