@@ -1,7 +1,7 @@
 import logging
 
 from hedera_agent_kit import Context
-from hedera_agent_kit.shared.abstract_hook import PreToolExecutionParams
+from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
 from hedera_agent_kit.shared.policy import Policy
 
 logger = logging.getLogger(__name__)

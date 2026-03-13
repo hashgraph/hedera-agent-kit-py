@@ -12,7 +12,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     TransferNonFungibleTokenParametersNormalised,
 )
 from hedera_agent_kit.shared.policy import Policy
-from hedera_agent_kit.shared.abstract_hook import PostParamsNormalizationParams
+from hedera_agent_kit.hooks.abstract_hook import PostParamsNormalizationParams
 from hedera_agent_kit.plugins.core_account_plugin import core_account_plugin_tool_names
 from hedera_agent_kit.plugins.core_token_plugin import core_token_plugin_tool_names
 
