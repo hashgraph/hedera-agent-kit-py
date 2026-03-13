@@ -2,12 +2,12 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 
-from hedera_agent_kit.shared.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
-from hedera_agent_kit.shared.configuration import AgentMode, Context
-from hedera_agent_kit.shared.abstract_hook import (
+from hedera_agent_kit.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
+from hedera_agent_kit.hooks.abstract_hook import (
     PreToolExecutionParams,
     PostSecondaryActionParams,
 )
+from hedera_agent_kit.shared.configuration import AgentMode, Context
 from hedera_agent_kit.shared.models import (
     RawTransactionResponse,
     ExecutedTransactionToolResponse,
@@ -89,7 +89,7 @@ async def test_post_hook_submits_message(hcs_hook, mock_client):
     )
 
     with patch(
-        "hedera_agent_kit.shared.hooks.hcs_audit_trail_hook.TopicMessageSubmitTransaction"
+        "hedera_agent_kit.hooks.hcs_audit_trail_hook.TopicMessageSubmitTransaction"
     ) as mock_tx_class:
         from hiero_sdk_python.hapi.services.response_code_pb2 import ResponseCodeEnum
 
@@ -127,7 +127,7 @@ async def test_post_hook_ignores_irrelevant_tools(hcs_hook, mock_client):
     )
 
     with patch(
-        "hedera_agent_kit.shared.hooks.hcs_audit_trail_hook.TopicMessageSubmitTransaction"
+        "hedera_agent_kit.hooks.hcs_audit_trail_hook.TopicMessageSubmitTransaction"
     ) as mock_tx_class:
         await hcs_hook.post_secondary_action_hook(context, params, "other_tool")
         mock_tx_class.assert_not_called()
