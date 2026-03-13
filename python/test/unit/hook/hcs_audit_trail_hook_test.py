@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 
 from hedera_agent_kit.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
-from hedera_agent_kit.shared.abstract_hook import (
+from hedera_agent_kit.hooks.abstract_hook import (
     PreToolExecutionParams,
     PostSecondaryActionParams,
 )
