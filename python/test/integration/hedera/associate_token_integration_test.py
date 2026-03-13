@@ -11,7 +11,6 @@ from hiero_sdk_python import (
 
 from test.utils.usd_to_hbar_service import UsdToHbarService
 from test.utils.setup.langchain_test_config import BALANCE_TIERS
-from hiero_sdk_python.account.account_balance import AccountBalance
 from hiero_sdk_python.tokens.token_create_transaction import TokenKeys, TokenParams
 
 from hedera_agent_kit.plugins.core_token_plugin import AssociateTokenTool
@@ -160,10 +159,13 @@ async def test_associate_token_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(
-        str(executor_account_id)
+    token_balances_response = (
+        await executor_wrapper.mirrornode.get_account_token_balances(
+            str(executor_account_id)
+        )
     )
-    associated = balances.token_balances.get(token_id_ft) is not None
+    tokens = token_balances_response.get("tokens", [])
+    associated = any(str(t.get("token_id")) == str(token_id_ft) for t in tokens)
 
     assert result is not None
     assert exec_result.raw.status == "SUCCESS"
@@ -220,11 +222,14 @@ async def test_associate_two_tokens_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(
-        str(executor_account_id)
+    token_balances_response = (
+        await executor_wrapper.mirrornode.get_account_token_balances(
+            str(executor_account_id)
+        )
     )
-    associated_first = balances.token_balances.get(token_id_ft1) is not None
-    associated_second = balances.token_balances.get(token_id_ft2) is not None
+    tokens = token_balances_response.get("tokens", [])
+    associated_first = any(str(t.get("token_id")) == str(token_id_ft1) for t in tokens)
+    associated_second = any(str(t.get("token_id")) == str(token_id_ft2) for t in tokens)
 
     assert result is not None
     assert exec_result.raw.status == "SUCCESS"
