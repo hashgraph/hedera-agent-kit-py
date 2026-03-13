@@ -310,7 +310,7 @@ async def test_should_approve_token_allowance_and_allow_spender_to_use_it(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 3. Verify Spender's balance increased
-    balances = spender_wrapper.get_account_balances(str(spender_id))
+    balances = await spender_wrapper.get_account_balances(str(spender_id))
 
     pprint(balances)
 

@@ -179,7 +179,6 @@ async def test_update_token_memo(setup_accounts):
     assert token_info.memo == "Updated Token Memo"
 
 
-# FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
 @pytest.mark.asyncio
 async def test_update_supply_key(setup_accounts):
     executor_client: Client = setup_accounts["executor_client"]

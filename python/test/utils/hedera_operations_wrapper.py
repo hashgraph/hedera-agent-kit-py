@@ -14,7 +14,6 @@ from hiero_sdk_python import (
     TokenNftInfoQuery,
     TopicId,
     TopicInfoQuery,
-    CryptoGetAccountBalanceQuery,
     AccountInfo,
     TokenInfo,
     TokenNftInfo,
@@ -272,11 +271,24 @@ class HederaOperationsWrapper:
     # ---------------------------
     # READ-ONLY QUERIES
     # ---------------------------
-    def get_account_balances(self, account_id: str) -> AccountBalance:
-        query = CryptoGetAccountBalanceQuery().set_account_id(
-            AccountId.from_string(account_id)
+    async def get_account_balances(self, account_id: str) -> AccountBalance:
+        from hiero_sdk_python import Hbar
+
+        account_info: AccountResponse = await self.mirrornode.get_account(account_id)
+        hbar_tinybars = int(account_info["balance"]["balance"])
+
+        token_balances_response: TokenBalancesResponse = (
+            await self.mirrornode.get_account_token_balances(account_id)
         )
-        return query.execute(self.client)
+        token_balances_dict = {}
+        for t in token_balances_response.get("tokens", []):
+            tid = TokenId.from_string(t["token_id"])
+            token_balances_dict[tid] = t["balance"]
+
+        return AccountBalance(
+            hbars=Hbar.from_tinybars(hbar_tinybars),
+            token_balances=token_balances_dict,
+        )
 
     def get_account_info(self, account_id: str) -> AccountInfo:
         query = AccountInfoQuery().set_account_id(AccountId.from_string(account_id))
@@ -298,31 +310,35 @@ class HederaOperationsWrapper:
         query = TokenNftInfoQuery(nft_id=NftId(TokenId.from_string(token_id), serial))
         return query.execute(self.client)
 
-    def get_account_token_balances(self, account_id: str) -> List[Dict[str, Any]]:
-        balances = self.get_account_balances(account_id)
-        tokens_map = getattr(balances, "tokens", {}) or {}
-        decimals_map = getattr(balances, "token_decimals", {}) or {}
-
+    async def get_account_token_balances(self, account_id: str) -> List[Dict[str, Any]]:
+        token_balances_response: TokenBalancesResponse = (
+            await self.mirrornode.get_account_token_balances(account_id)
+        )
         return [
             {
-                "tokenId": str(tid),
-                "balance": int(balance),
-                "decimals": int(decimals_map.get(tid, 0)),
+                "tokenId": t["token_id"],
+                "balance": int(t["balance"]),
+                "decimals": int(t.get("decimals", 0)),
             }
-            for tid, balance in tokens_map.items()
+            for t in token_balances_response.get("tokens", [])
         ]
 
-    def get_account_token_balance(
+    async def get_account_token_balance(
         self, account_id: str, token_id: str
     ) -> Dict[str, Any]:
-        balances = self.get_account_balances(account_id)
-        token_id_obj = TokenId.from_string(token_id)
-        balance = (getattr(balances, "tokens", {}) or {}).get(token_id_obj, 0)
-        decimals = (getattr(balances, "token_decimals", {}) or {}).get(token_id_obj, 0)
+        token_balances_response: TokenBalancesResponse = (
+            await self.mirrornode.get_account_token_balances(account_id, token_id=token_id)
+        )
+        found = next(
+            (t for t in token_balances_response.get("tokens", []) if t.get("token_id") == token_id),
+            None,
+        )
+        if not found:
+            return {"tokenId": token_id, "balance": 0, "decimals": 0}
         return {
-            "tokenId": str(token_id_obj),
-            "balance": int(balance),
-            "decimals": int(decimals),
+            "tokenId": found["token_id"],
+            "balance": int(found["balance"]),
+            "decimals": int(found.get("decimals", 0)),
         }
 
     async def get_account_token_balance_from_mirrornode(
