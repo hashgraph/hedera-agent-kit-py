@@ -310,12 +310,14 @@ async def test_should_approve_token_allowance_and_allow_spender_to_use_it(
     await wait(MIRROR_NODE_WAITING_TIME)
 
     # 3. Verify Spender's balance increased
-    token_balance_data = (
-        await spender_wrapper.get_account_token_balance_from_mirrornode(
-            str(spender_id), str(test_token)
-        )
-    )
+    balances = spender_wrapper.get_account_balances(str(spender_id))
 
-    token_balance = token_balance_data.get("balance", 0)
+    pprint(balances)
+
+    # Handle potential dictionary key variations
+    token_balance = 0
+    if balances.token_balances:
+        # Check TokenId object
+        token_balance = balances.token_balances.get(test_token, 0)
 
     assert token_balance == spend_amount_base

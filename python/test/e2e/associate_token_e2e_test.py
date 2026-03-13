@@ -139,13 +139,12 @@ async def check_token_is_associated(
     wrapper: HederaOperationsWrapper, account_id: str, token_id_str: str
 ) -> bool:
     """Checks if a specific token ID is present in the account's balances."""
-    token_balances_response = await wrapper.mirrornode.get_account_token_balances(
-        account_id
-    )
-    tokens = token_balances_response.get("tokens", [])
-    for t in tokens:
-        if str(t.get("token_id")) == token_id_str:
-            return True
+    balances = wrapper.get_account_balances(account_id)
+    if balances.token_balances:
+        # Check if the token ID string exists in the token_balances dictionary keys
+        for t_id in balances.token_balances.keys():
+            if str(t_id) == token_id_str:
+                return True
     return False
 
 

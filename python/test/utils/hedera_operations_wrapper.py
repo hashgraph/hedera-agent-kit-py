@@ -14,6 +14,7 @@ from hiero_sdk_python import (
     TokenNftInfoQuery,
     TopicId,
     TopicInfoQuery,
+    CryptoGetAccountBalanceQuery,
     AccountInfo,
     TokenInfo,
     TokenNftInfo,
@@ -23,6 +24,7 @@ from hiero_sdk_python import (
     BatchTransaction,
     PrivateKey,
 )
+from hiero_sdk_python.account.account_balance import AccountBalance
 from hiero_sdk_python.consensus.topic_info import TopicInfo
 from hiero_sdk_python.contract.contract_create_transaction import (
     ContractCreateTransaction,
@@ -270,6 +272,11 @@ class HederaOperationsWrapper:
     # ---------------------------
     # READ-ONLY QUERIES
     # ---------------------------
+    def get_account_balances(self, account_id: str) -> AccountBalance:
+        query = CryptoGetAccountBalanceQuery().set_account_id(
+            AccountId.from_string(account_id)
+        )
+        return query.execute(self.client)
 
     def get_account_info(self, account_id: str) -> AccountInfo:
         query = AccountInfoQuery().set_account_id(AccountId.from_string(account_id))
@@ -290,6 +297,33 @@ class HederaOperationsWrapper:
     def get_nft_info(self, token_id: str, serial: int) -> TokenNftInfo:
         query = TokenNftInfoQuery(nft_id=NftId(TokenId.from_string(token_id), serial))
         return query.execute(self.client)
+
+    def get_account_token_balances(self, account_id: str) -> List[Dict[str, Any]]:
+        balances = self.get_account_balances(account_id)
+        tokens_map = getattr(balances, "tokens", {}) or {}
+        decimals_map = getattr(balances, "token_decimals", {}) or {}
+
+        return [
+            {
+                "tokenId": str(tid),
+                "balance": int(balance),
+                "decimals": int(decimals_map.get(tid, 0)),
+            }
+            for tid, balance in tokens_map.items()
+        ]
+
+    def get_account_token_balance(
+        self, account_id: str, token_id: str
+    ) -> Dict[str, Any]:
+        balances = self.get_account_balances(account_id)
+        token_id_obj = TokenId.from_string(token_id)
+        balance = (getattr(balances, "tokens", {}) or {}).get(token_id_obj, 0)
+        decimals = (getattr(balances, "token_decimals", {}) or {}).get(token_id_obj, 0)
+        return {
+            "tokenId": str(token_id_obj),
+            "balance": int(balance),
+            "decimals": int(decimals),
+        }
 
     async def get_account_token_balance_from_mirrornode(
         self, account_id: str, token_id: str
