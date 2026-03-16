@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 
 from hedera_agent_kit.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
+from hedera_agent_kit.hooks.utils import stringify_recursive
 from hedera_agent_kit.hooks.abstract_hook import (
     PreToolExecutionParams,
     PostSecondaryActionParams,
@@ -133,23 +134,23 @@ async def test_post_hook_ignores_irrelevant_tools(hcs_hook, mock_client):
         mock_tx_class.assert_not_called()
 
 
-def test_stringify_recursive_bytes(hcs_hook):
+def test_stringify_recursive_bytes():
     data = {"secret": b"hello", "nested": {"key": bytearray(b"world")}}
-    result = hcs_hook._stringify_recursive(data)
+    result = stringify_recursive(data)
     assert result == {"secret": "0x68656c6c6f", "nested": {"key": "0x776f726c64"}}
 
 
-def test_stringify_recursive_sdk_objects(hcs_hook):
+def test_stringify_recursive_sdk_objects():
     data = {
         "account": AccountId.from_string("0.0.1"),
         "token": TokenId.from_string("0.0.2"),
         "topic": TopicId.from_string("0.0.3"),
     }
-    result = hcs_hook._stringify_recursive(data)
+    result = stringify_recursive(data)
     assert result == {"account": "0.0.1", "token": "0.0.2", "topic": "0.0.3"}
 
 
-def test_stringify_recursive_real_schemas(hcs_hook):
+def test_stringify_recursive_real_schemas():
     # Test CreateAccountParametersNormalised
     create_account = CreateAccountParametersNormalised(
         initial_balance=Hbar(10),
@@ -158,7 +159,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
         ),
         max_automatic_token_associations=5,
     )
-    result = hcs_hook._stringify_recursive(create_account)
+    result = stringify_recursive(create_account)
     # PublicKey stringification might vary depending on whether it's Ed25519 or ECDSA, but it should be a string.
     assert result["initial_balance"] == "10.00000000 ℏ"
     assert isinstance(result["key"], str)
@@ -169,7 +170,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
         topic_id=TopicId.from_string("0.0.123"),
         message="hello world",
     )
-    result = hcs_hook._stringify_recursive(submit_msg)
+    result = stringify_recursive(submit_msg)
     assert result == {
         "topic_id": "0.0.123",
         "message": "hello world",
@@ -183,7 +184,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
         topic_id=TopicId.from_string("0.0.123"),
         expiration_time=now,
     )
-    result = hcs_hook._stringify_recursive(update_topic)
+    result = stringify_recursive(update_topic)
     assert result["topic_id"] == "0.0.123"
     assert "2023-01-01" in result["expiration_time"]
 
@@ -194,7 +195,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
             AccountId.from_string("0.0.2"): -1000,
         }
     )
-    result = hcs_hook._stringify_recursive(transfer_hbar)
+    result = stringify_recursive(transfer_hbar)
     assert result["hbar_transfers"] == {"0.0.1": 1000, "0.0.2": -1000}
 
     # Test EVM schemas
@@ -203,7 +204,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
         function_parameters=b"\xde\xad\xbe\xef",
         gas=100000,
     )
-    result = hcs_hook._stringify_recursive(evm_execute)
+    result = stringify_recursive(evm_execute)
     assert result == {
         "contract_id": "0.0.456",
         "function_parameters": "0xdeadbeef",
@@ -216,7 +217,7 @@ def test_stringify_recursive_real_schemas(hcs_hook):
         function_parameters=b"\xca\xfe\xba\xbe",
         gas=50000,
     )
-    result = hcs_hook._stringify_recursive(evm_call)
+    result = stringify_recursive(evm_call)
     assert result == {
         "contract_id": "0.0.789",
         "function_parameters": "0xcafebabe",
@@ -225,14 +226,14 @@ def test_stringify_recursive_real_schemas(hcs_hook):
     }
 
 
-def test_stringify_recursive_mixed(hcs_hook):
+def test_stringify_recursive_mixed():
     data = [
         {"id": AccountId.from_string("0.0.10"), "data": b"\xff"},
         "simple string",
         123,
         None,
     ]
-    result = hcs_hook._stringify_recursive(data)
+    result = stringify_recursive(data)
     assert result == [
         {"id": "0.0.10", "data": "0xff"},
         "simple string",

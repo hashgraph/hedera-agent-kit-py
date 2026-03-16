@@ -14,6 +14,7 @@ from .abstract_hook import (
     PostSecondaryActionParams,
     PreToolExecutionParams,
 )
+from .utils import stringify_recursive
 from hedera_agent_kit.shared.configuration import AgentMode, Context
 from hedera_agent_kit.shared.models import RawTransactionResponse
 
@@ -139,7 +140,7 @@ class HcsAuditTrailHook(AbstractHook):
             account_id = str(raw_res.account_id) if raw_res.account_id else account_id
 
         # Create a clean copy for logging to avoid mutating the original
-        loggable_params = self._stringify_recursive(params.normalized_params)
+        loggable_params = stringify_recursive(params.normalized_params)
 
         log_message = (
             f"Agent executed tool {method} with params {json.dumps(loggable_params, indent=2)}.\n"
@@ -151,66 +152,6 @@ class HcsAuditTrailHook(AbstractHook):
             f"Account ID: {account_id}\n"
         )
         await self.post_message_to_hcs_topic(log_message, target_client)
-
-    def _stringify_recursive(self, obj: Any) -> Any:
-        """
-        Recursively converts objects to a log-friendly format.
-        Handles Pydantic models, SDK objects, and bytes.
-
-        Args:
-            obj (Any): The object to stringify.
-
-        Returns:
-            Any: The stringified object.
-        """
-        # Handle None and primitives
-        if obj is None or isinstance(obj, (int, float, bool, str)):
-            return obj
-
-        # Handle bytes/bytearray - convert to hex string
-        if isinstance(obj, (bytes, bytearray)):
-            return f"0x{obj.hex()}"
-
-        # Handle SDK objects (AccountId, TokenId, TopicId, PublicKey, Hbar, etc.)
-        # These are usually Pydantic models themselves, but we want them stringified.
-        # We check for common SDK types or types that should be stringified.
-        sdk_types = (
-            "AccountId",
-            "TokenId",
-            "TopicId",
-            "PublicKey",
-            "Hbar",
-            "ScheduleId",
-            "ContractId",
-            "Timestamp",
-        )
-        if obj.__class__.__name__ in sdk_types:
-            return str(obj)
-
-        # Handle Pydantic models (our parameter schemas)
-        # We use dict(obj) for shallow conversion to preserve nested objects for our own recursion.
-        if hasattr(obj, "__pydantic_model_complete__") or hasattr(obj, "model_fields"):
-            return self._stringify_recursive(dict(obj))
-        if hasattr(obj, "dict") and callable(obj.dict):
-            # Fallback for Pydantic v1 if needed, though we prefer shallow
-            return self._stringify_recursive(obj.dict())
-
-        # Handle lists, tuples, sets
-        if isinstance(obj, (list, tuple, set)):
-            return [self._stringify_recursive(item) for item in obj]
-
-        # Handle dictionaries
-        if isinstance(obj, dict):
-            return {
-                str(key): self._stringify_recursive(value) for key, value in obj.items()
-            }
-
-        # Handle other objects with custom __str__
-        if hasattr(obj, "__str__") and obj.__class__.__str__ is not object.__str__:
-            return str(obj)
-
-        # Fallback to str() for anything else
-        return str(obj)
 
     async def post_message_to_hcs_topic(self, message: str, client: Client):
         """
