@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Generic, List, TypeVar
 from hiero_sdk_python import Client
 
 if TYPE_CHECKING:
-    from .configuration import Context
+    from hedera_agent_kit.shared.configuration import Context
 
 TParams = TypeVar("TParams")
 TNormalizedParams = TypeVar("TNormalizedParams")

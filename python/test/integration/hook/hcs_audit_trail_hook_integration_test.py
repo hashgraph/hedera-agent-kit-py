@@ -13,7 +13,7 @@ from test.utils.setup.langchain_test_setup import create_langchain_test_setup
 from test.utils.setup.client_setup import get_operator_client_for_tests
 
 from hedera_agent_kit.shared import AgentMode
-from hedera_agent_kit.shared.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
+from hedera_agent_kit.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
 from hedera_agent_kit.shared.parameter_schemas import (
     CreateAccountParametersNormalised,
     CreateTopicParametersNormalised,
