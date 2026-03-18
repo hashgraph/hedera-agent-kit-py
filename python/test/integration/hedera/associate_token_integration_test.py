@@ -160,7 +160,7 @@ async def test_associate_token_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(
+    balances: AccountBalance = await executor_wrapper.get_account_balances(
         str(executor_account_id)
     )
     associated = balances.token_balances.get(token_id_ft) is not None
@@ -220,7 +220,7 @@ async def test_associate_two_tokens_to_executor_account(setup_accounts):
 
     await wait(MIRROR_NODE_WAITING_TIME)
 
-    balances: AccountBalance = executor_wrapper.get_account_balances(
+    balances: AccountBalance = await executor_wrapper.get_account_balances(
         str(executor_account_id)
     )
     associated_first = balances.token_balances.get(token_id_ft1) is not None

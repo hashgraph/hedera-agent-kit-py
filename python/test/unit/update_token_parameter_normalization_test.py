@@ -26,9 +26,7 @@ def mock_client():
     # Mock operator private key for key resolution
     mock_private_key = MagicMock()
     mock_public_key = MagicMock(spec=PublicKey)
-    mock_public_key.to_string_der.return_value = (
-        "302a300506032b6570032100abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234"
-    )
+    mock_public_key.to_string_der.return_value = "302a300506032b6570032100abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234"
     mock_private_key.public_key.return_value = mock_public_key
     client.operator_private_key = mock_private_key
     return client
@@ -47,7 +45,7 @@ async def test_resolves_token_id_and_includes_token_name(mock_context, mock_clie
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -72,7 +70,7 @@ async def test_resolves_token_symbol(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -95,7 +93,7 @@ async def test_resolves_token_memo(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -117,7 +115,7 @@ async def test_resolves_admin_key_with_boolean_true(mock_context, mock_client):
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
     ) as mock_resolver:
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -140,7 +138,7 @@ async def test_resolves_supply_key_with_string(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -162,7 +160,7 @@ async def test_resolves_treasury_account_id(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -184,13 +182,15 @@ async def test_resolves_auto_renew_account_id(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
 
     assert result.token_params is not None
-    assert result.token_params.auto_renew_account_id == AccountId.from_string("0.0.8888")
+    assert result.token_params.auto_renew_account_id == AccountId.from_string(
+        "0.0.8888"
+    )
 
 
 @pytest.mark.asyncio
@@ -206,7 +206,7 @@ async def test_resolves_metadata_string_to_bytes(mock_context, mock_client):
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -225,7 +225,7 @@ async def test_omits_token_params_when_no_optional_fields(mock_context, mock_cli
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -250,7 +250,7 @@ async def test_resolves_multiple_keys(mock_context, mock_client):
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
     ) as mock_resolver:
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )
@@ -275,7 +275,7 @@ async def test_supports_scheduling_params_when_provided(mock_context, mock_clien
     ) as mock_resolver:
         mock_public_key = MagicMock(spec=PublicKey)
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         with patch.object(
             HederaParameterNormaliser,
             "normalise_scheduled_transaction_params",
@@ -308,7 +308,7 @@ async def test_resolves_multiple_params_and_keys_together(mock_context, mock_cli
         "hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer.AccountResolver"
     ) as mock_resolver:
         mock_resolver.get_default_public_key = AsyncMock(return_value=mock_public_key)
-        
+
         result = await HederaParameterNormaliser.normalise_update_token(
             params, mock_context, mock_client
         )

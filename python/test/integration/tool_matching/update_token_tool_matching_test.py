@@ -105,7 +105,9 @@ async def test_update_token_memo(agent_executor, toolkit, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_update_token_admin_key_with_operator(agent_executor, toolkit, monkeypatch):
+async def test_update_token_admin_key_with_operator(
+    agent_executor, toolkit, monkeypatch
+):
     input_text = "Update token 0.0.4444 admin key to my key"
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
@@ -240,7 +242,9 @@ async def test_update_token_treasury_account(agent_executor, toolkit, monkeypatc
 
 @pytest.mark.asyncio
 async def test_update_token_with_metadata(agent_executor, toolkit, monkeypatch):
-    input_text = 'Update token 0.0.8888 metadata to "https://example.com/new-metadata.json"'
+    input_text = (
+        'Update token 0.0.8888 metadata to "https://example.com/new-metadata.json"'
+    )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()
