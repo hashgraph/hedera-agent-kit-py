@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING, Any, List
 
-from .abstract_hook import (
+from hedera_agent_kit.hooks.abstract_hook import (
     AbstractHook,
     PostCoreActionParams,
     PostParamsNormalizationParams,

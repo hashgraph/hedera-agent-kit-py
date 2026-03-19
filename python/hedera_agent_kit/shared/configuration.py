@@ -8,7 +8,7 @@ from .hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
 )
 
 if False:  # TYPE_CHECKING
-    from .abstract_hook import AbstractHook
+    from hedera_agent_kit.hooks.abstract_hook import AbstractHook
 
 
 class AgentMode(str, Enum):
