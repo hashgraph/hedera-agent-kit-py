@@ -47,6 +47,23 @@ This agent demonstrates "Return Bytes" mode, where the agent returns raw transac
 poetry run python return_bytes_tool_calling_agent.py
 ```
 
+### Audit Hook Agent
+
+This agent demonstrates "Hooks" by logging actions using HcsAuditTrailHook.
+> **Note**: You must create an HCS topic before running this agent. You can create one easily using the [Hedera Portal Playground](https://portal.hedera.com/playground) and then set it as the `hcs_topic_id` in the code.
+
+```bash
+poetry run python audit_hook_agent.py
+```
+
+### Policy Tool Calling Agent
+
+This agent demonstrates "Policies" by applying `MaxRecipientsPolicy` on the base set of token and account tools it operates on.
+
+```bash
+poetry run python policy_tool_calling_agent.py
+```
+
 ## Example Interactions
 
 Once running, you can interact with the agent:
