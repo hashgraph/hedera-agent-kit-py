@@ -39,9 +39,9 @@ poetry install
 
 ## Available Agent Scripts
 
-This folder contains two agent examples:
+This folder contains three agent examples:
 
-### Plugin Tool Calling Agent (`plugin_tool_calling_agent.py`)
+### 1. Plugin Tool Calling Agent (`plugin_tool_calling_agent.py`)
 
 LangChain v1 agent with LangGraph support, featuring plugin-based tool management and in-memory conversation state.
 
@@ -67,6 +67,14 @@ You: What is my HBAR balance?
 You: Transfer 5 HBAR to account 0.0.800
 You: Create a new topic with memo "My first topic"
 You: exit
+```
+
+### 2. Return Bytes Tool Calling Agent (`return_bytes_tool_calling_agent.py`)
+
+Agent that operates in `RETURN_BYTES` mode, demonstrating Human-in-the-loop transaction flows by returning unsigned transaction bytes.
+
+```bash
+poetry run python return_bytes_tool_calling_agent.py
 ```
 
 ## Hedera Agent with preconfigured MCPs (`hedera_mcp_agent.py`)

@@ -14,6 +14,8 @@ from hiero_sdk_python import (
     Client,
     TransactionReceipt,
     ResponseCode,
+    TransactionId,
+    AccountId,
 )
 from hiero_sdk_python.hapi.services.response_code_pb2 import ResponseCodeEnum
 from hiero_sdk_python.transaction.transaction import Transaction
@@ -139,7 +141,7 @@ class ReturnBytesStrategy(TxModeStrategy):
     async def handle(
         self,
         tx: Transaction,
-        _client: Client,
+        client: Client,
         context: Context,
         post_process: Optional[Callable[[RawTransactionResponse], Any]] = None,
     ) -> ReturnBytesToolResponse:
@@ -147,7 +149,7 @@ class ReturnBytesStrategy(TxModeStrategy):
 
         Args:
             tx: The transaction to prepare.
-            _client: Unused for this mode.
+            client: Unused for this mode.
             context: Runtime context containing the required `account_id`.
             post_process: Unused for this mode.
 
@@ -159,13 +161,13 @@ class ReturnBytesStrategy(TxModeStrategy):
         """
         if not context.account_id:
             raise ValueError("Context account_id is required for RETURN_BYTES mode")
-        # tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
-        # tx.set_transaction_id(tx_id).freeze() # FIXME: Transaction.freeze() is not yet implemented in the SDK
-        # return {"bytes": tx.to_bytes()} FIXME: Transaction.to_bytes() is not yet implemented in the SDK
+        tx_id = TransactionId.generate(AccountId.from_string(context.account_id))
+        tx.set_transaction_id(tx_id).freeze_with(client=client)
+
         return ReturnBytesToolResponse(
-            bytes_data=b"bytes",
-            human_message="Transaction bytes: <HERE PASS SOME BYTES>",
-        )  # temporary placeholder
+            bytes_data=tx.to_bytes(),
+            human_message=f"Transaction bytes: {str(tx.to_bytes())}",
+        )
 
 
 def get_strategy_from_context(context: Context) -> TxModeStrategy:

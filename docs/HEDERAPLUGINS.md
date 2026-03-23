@@ -105,6 +105,7 @@ A plugin for the Hedera **Token Service (HTS)**, enabling creation and managemen
 | [`DELETE_TOKEN_ALLOWANCE_TOOL`](./HEDERATOOLS.md#delete_token_allowance_tool)                                 | Delete token allowances                | [View Parameters & Examples](./HEDERATOOLS.md#delete_token_allowance_tool)                 |
 | [`TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`](./HEDERATOOLS.md#transfer_non_fungible_token_tool)                     | Transfer NFTs                          | [View Parameters & Examples](./HEDERATOOLS.md#transfer_non_fungible_token_tool)            |
 | [`DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL`](./HEDERATOOLS.md#delete_non_fungible_token_allowance_tool)       | Delete NFT allowances                  | [View Parameters & Examples](./HEDERATOOLS.md#delete_non_fungible_token_allowance_tool)    |
+| [`UPDATE_TOKEN_TOOL`](./HEDERATOOLS.md#update_token_tool)                                                     | Update token properties                | [View Parameters & Examples](./HEDERATOOLS.md#update_token_tool)                           |
 
 ---
 

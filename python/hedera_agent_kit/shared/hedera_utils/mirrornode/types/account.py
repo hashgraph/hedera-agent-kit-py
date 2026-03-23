@@ -1,4 +1,5 @@
 from decimal import Decimal
+from enum import Enum
 from typing import TypedDict, Optional, List, Dict
 
 from .common import MirrornodeKeyInfo
@@ -11,18 +12,25 @@ class AccountBalanceResponse(TypedDict):
     tokens: List[TokenBalance]
 
 
+class KeyType(str, Enum):
+    ED25519 = "ED25519"
+    ECDSA_SECP256K1 = "ECDSA_SECP256K1"
+    UNKNOWN = "UNKNOWN"
+
+
 class AccountResponse(TypedDict):
     account_id: str
     account_public_key: str
+    key_type: KeyType
     balance: AccountBalanceResponse
-    evm_address: str
+    evm_address: Optional[str]
 
 
 class AccountAPIResponse(TypedDict):
     account: str
     key: MirrornodeKeyInfo
     balance: AccountBalanceResponse
-    evm_address: str
+    evm_address: Optional[str]
 
 
 class AccountTokenBalancesQueryParams(TypedDict, total=False):

@@ -1597,26 +1597,25 @@ description = "Use the Hedera Agent Kit to build agents that can interact with t
 optional = false
 python-versions = ">=3.10,<3.14"
 groups = ["main"]
-files = [
-    {file = "hedera_agent_kit-3.2.0-py3-none-any.whl", hash = "sha256:020258da2a2cad0c03b7a4ae57423b5624753d311be2196af34e9dd41965e6bf"},
-]
+files = []
+develop = true
 
 [package.dependencies]
 aiohttp = ">=3.13.1,<4.0.0"
 hiero-sdk-python = "0.2.0"
-langchain = "1.2.10"
-langchain-anthropic = "1.3.4"
-langchain-groq = "1.1.2"
-langchain-mcp-adapters = ">=0.2.1,<0.3.0"
-langchain-openai = "1.1.10"
+langchain = "==1.2.10"
+langchain-anthropic = "==1.3.4"
+langchain-groq = "==1.1.2"
+langchain-mcp-adapters = "^0.2.1"
+langchain-openai = "==1.1.10"
 mcp = "1.26.0"
-pydantic = ">=2.12.5,<3.0.0"
+pydantic = "^2.12.5"
 python-dotenv = ">=1,<2"
-web3 = "7.14.1"
+web3 = "==7.14.1"
 
 [package.source]
-type = "file"
-url = "../../dist/hedera_agent_kit-3.2.0-py3-none-any.whl"
+type = "directory"
+url = "../.."
 
 [[package]]
 name = "hexbytes"
@@ -3052,7 +3051,7 @@ description = "Python for Window Extensions"
 optional = false
 python-versions = "*"
 groups = ["main"]
-markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
+markers = "platform_system == \"Windows\" or sys_platform == \"win32\""
 files = [
     {file = "pywin32-311-cp310-cp310-win32.whl", hash = "sha256:d03ff496d2a0cd4a5893504789d4a15399133fe82517455e78bad62efbb7f0a3"},
     {file = "pywin32-311-cp310-cp310-win_amd64.whl", hash = "sha256:797c2772017851984b97180b0bebe4b620bb86328e8a884bb626156295a63b3b"},
@@ -4389,4 +4388,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "6ce908b3bcd8b82c9f18e68531cd49f20433cecc08e614c6985a37e3350d351f"
+content-hash = "de9d5a61253de4a1d2dd25248f9304c4ada5ab33586fface362c5f8c8b575585"

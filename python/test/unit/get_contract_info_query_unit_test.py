@@ -1,4 +1,5 @@
-from unittest.mock import AsyncMock, patch
+from importlib import import_module
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from hiero_sdk_python import Network
@@ -10,6 +11,10 @@ from hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query impo
     GetContractInfoQueryTool,
 )
 from hedera_agent_kit.shared.configuration import Context
+
+_gciq_mod = import_module(
+    "hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query"
+)
 
 
 def test_post_process_with_full_data():
@@ -74,12 +79,10 @@ def test_post_process_with_missing_data_uses_defaults():
 
 
 @pytest.mark.asyncio
-@patch(
-    "hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query.get_mirrornode_service"
-)
-async def test_get_contract_info_query_returns_expected_output(mock_get_service):
+async def test_get_contract_info_query_returns_expected_output():
     # Arrange mock mirrornode service
-    mock_service = AsyncMock()
+    mock_get_service = MagicMock()
+    mock_service = MagicMock()
     info = {
         "contract_id": "0.0.42",
         "evm_address": "0x42",
@@ -108,7 +111,8 @@ async def test_get_contract_info_query_returns_expected_output(mock_get_service)
 
     # Act
     tool = GetContractInfoQueryTool(context)
-    response = await tool.execute(client, context, params)
+    with patch.object(_gciq_mod, "get_mirrornode_service", mock_get_service):
+        response = await tool.core_action(params, context, client)
 
     # Assert
     assert response.error is None
