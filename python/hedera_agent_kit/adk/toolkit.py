@@ -13,7 +13,7 @@ from google.adk.tools import BaseTool
 from hiero_sdk_python import Client
 
 from hedera_agent_kit import Configuration, Tool
-from hedera_agent_kit.adk.adk_tool_factory import create_adk_tool
+from hedera_agent_kit.adk.tool import HederaAdkTool
 from hedera_agent_kit.shared import ToolDiscovery, HederaAgentAPI
 from hedera_agent_kit.shared.configuration import Context
 
@@ -59,7 +59,7 @@ class HederaADKToolkit:
 
         # Generate ADK-compatible tools for each Hedera tool
         self._tools: List[BaseTool] = [
-            create_adk_tool(self._hedera_agentkit, t) for t in all_tools
+            HederaAdkTool(hedera_api=self._hedera_agentkit, tool=t) for t in all_tools
         ]
 
     def get_tools(self) -> List[BaseTool]:

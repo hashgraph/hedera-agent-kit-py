@@ -1,4 +1,4 @@
-"""ADK tool factory using BaseTool for Hedera Agent Kit tools.
+"""ADK tool wrapper for exposing Hedera Agent Kit tools.
 
 This module provides a HederaAdkTool class that subclasses Google ADK's BaseTool,
 building a FunctionDeclaration directly from the Pydantic schema. This gives full
@@ -30,29 +30,6 @@ from hedera_agent_kit.shared import Tool
 from hedera_agent_kit.shared.models import ToolResponse
 
 
-# ---------------------------------------------------------------------------
-# Public factory
-# ---------------------------------------------------------------------------
-
-
-def create_adk_tool(hedera_api: HederaAgentAPI, tool: Tool) -> "HederaAdkTool":
-    """Create a Google ADK BaseTool from a Hedera Agent Kit tool.
-
-    Args:
-        hedera_api: A configured HederaAgentAPI instance.
-        tool: The Hedera tool to wrap.
-
-    Returns:
-        A HederaAdkTool instance ready to be passed to an ADK Agent.
-    """
-    return HederaAdkTool(hedera_api=hedera_api, tool=tool)
-
-
-# ---------------------------------------------------------------------------
-# BaseTool subclass
-# ---------------------------------------------------------------------------
-
-
 class HederaAdkTool(BaseTool):
     """Google ADK BaseTool wrapper for a Hedera Agent Kit tool.
 
@@ -75,7 +52,11 @@ class HederaAdkTool(BaseTool):
 
     # ADK calls this to get the FunctionDeclaration sent to Gemini
     def _get_declaration(self) -> genai_types.FunctionDeclaration:
-        return self._declaration
+        return genai_types.FunctionDeclaration(
+            name=self._tool.method,
+            description=self._tool.description,
+            parameters_json_schema=self._schema.model_json_schema(),
+        )
 
     async def run_async(
         self,
