@@ -45,7 +45,8 @@ async def bootstrap():
             core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"],
             core_token_plugin_tool_names["CREATE_FUNGIBLE_TOKEN_TOOL"],
         ],
-        hcs_topic_id="0.0.???",  # Replace it with your actual topic ID. Create one using the Hedera Portal Playground or Hedera Agent Kit
+        hcs_topic_id="0.0.????",
+        # TODO: Replace it with your actual topic ID. Create one using the Hedera Portal Playground or Hedera Agent Kit
     )
 
     configuration: Configuration = Configuration(
