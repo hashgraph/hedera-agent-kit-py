@@ -32,7 +32,7 @@ audit_hook = HcsAuditTrailHook(
         core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"],
         core_token_plugin_tool_names["CREATE_FUNGIBLE_TOKEN_TOOL"],
     ],
-    hcs_topic_id="0.0.8346696",  # FIXME: REMOVE THE PLACEHOLDER! Replace it with your actual topic ID. Create one using the Hedera Portal Playground or Hedera Agent Kit
+    hcs_topic_id="0.0.8357090",  # FIXME: REMOVE THE PLACEHOLDER! Replace it with your actual topic ID. Create one using the Hedera Portal Playground or Hedera Agent Kit
 )
 
 configuration: Configuration = Configuration(
@@ -50,7 +50,8 @@ hedera_toolkit: HederaADKToolkit = HederaADKToolkit(
 tools = hedera_toolkit.get_tools()
 
 root_agent = Agent(
-    model="gemini-3.1-flash-lite-preview",
+    # model="gemini-3.1-flash-lite-preview",
+    model="gemini-3-flash-preview",
     name="hedera_audit_agent",
     instruction=(
         "You are a helpful assistant with access to Hedera blockchain tools. "

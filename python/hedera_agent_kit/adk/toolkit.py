@@ -7,28 +7,23 @@ with Google ADK agents.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import List
 
+from google.adk.tools import BaseTool
 from hiero_sdk_python import Client
 
 from hedera_agent_kit import Configuration, Tool
-from hedera_agent_kit.adk.tool import create_adk_tool_function
+from hedera_agent_kit.adk.adk_tool_factory import create_adk_tool
 from hedera_agent_kit.shared import ToolDiscovery, HederaAgentAPI
 from hedera_agent_kit.shared.configuration import Context
-
-
-# Type alias for ADK tool functions
-# We use a Callable because Google ADK natively inspects Python functions
-# and automatically constructs a `FunctionTool` object internally.
-ADKToolFunction = Callable[..., Coroutine[Any, Any, Dict[str, Any]]]
 
 
 class HederaADKToolkit:
     """Wrapper to expose Hedera tools as Google ADK-compatible function tools.
 
     This class discovers all tools based on a configuration, creates a
-    `HederaAgentAPI` instance for execution, and generates async Python
-    functions for each tool that ADK can automatically wrap as FunctionTools.
+    `HederaAgentAPI` instance for execution, and generates ADK `BaseTool`
+    classes for each tool that ADK can use as FunctionTools.
 
     Example:
         ```python
@@ -39,7 +34,7 @@ class HederaADKToolkit:
         agent = Agent(
             model='gemini-2.0-flash',
             name='hedera_agent',
-            tools=toolkit.get_tools(),  # Pass functions directly
+            tools=toolkit.get_tools(),  # Pass ADK tools directly
         )
         ```
     """
@@ -62,20 +57,16 @@ class HederaADKToolkit:
         # Create API wrapper
         self._hedera_agentkit = HederaAgentAPI(client, context, all_tools)
 
-        # Generate ADK-compatible functions for each tool
-        self._tools: List[ADKToolFunction] = [
-            create_adk_tool_function(
-                hedera_api=self._hedera_agentkit,
-                tool=tool,
-            )
-            for tool in all_tools
+        # Generate ADK-compatible tools for each Hedera tool
+        self._tools: List[BaseTool] = [
+            create_adk_tool(self._hedera_agentkit, t) for t in all_tools
         ]
 
-    def get_tools(self) -> List[ADKToolFunction]:
-        """Return all registered ADK-compatible tool functions.
+    def get_tools(self) -> List[BaseTool]:
+        """Return all registered ADK-compatible tools.
 
         Returns:
-            List of async functions that can be passed to an ADK Agent's tools list.
+            List of BaseTool instances that can be passed to an ADK Agent's tools list.
         """
         return self._tools
 
