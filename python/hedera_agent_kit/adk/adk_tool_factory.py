@@ -102,7 +102,7 @@ def _build_function_declaration(
     description: str,
     schema: Type[BaseModel],
 ) -> genai_types.FunctionDeclaration:
-    """Build a Gemini FunctionDeclaration from a Pydantic BaseModel schema."""
+    """Build an ADK FunctionDeclaration from a Pydantic BaseModel schema."""
     parameters_schema = _pydantic_model_to_genai_schema(schema)
     return genai_types.FunctionDeclaration(
         name=name,
