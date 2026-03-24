@@ -235,7 +235,7 @@ poetry run python hedera_mcp_agent.py
 
 This agent demonstrates how to use the Hedera Agent Kit with Google's Agent Development Kit (ADK) and the Gemini model.
 
-Found at `python/examples/adk/plugin_tool_calling_agent.py`.
+Found at `python/examples/adk/plugin_tool_calling_agent`.
 
 1. First, go into the directory where the example is and install dependencies:
 
@@ -244,11 +244,18 @@ cd python/examples/adk
 poetry install
 ```
 
-2. Then, run the example:
+2. Then, run the example using the ADK dev tools CLI:
 
 ```bash
-poetry run python plugin_tool_calling_agent.py
+poetry run adk run plugin_tool_calling_agent
 ```
+
+Or run with the ADK web interface:
+
+```bash
+poetry run adk web
+```
+*(This will start a local web server at `http://localhost:8000` where you can select and interact with the agent)*
 
 ---
 
@@ -310,7 +317,7 @@ poetry run python return_bytes_tool_calling_agent.py
 This example demonstrates how to use the `HcsAuditTrailHook` to create an immutable audit trail of agent actions on the Hedera Consensus Service (HCS). Every tool execution is logged to an HCS topic, providing a transparent and tamper-proof record.
 
 **Found at:**
-- `python/examples/adk/audit_hook_agent.py`
+- `python/examples/adk/audit_hook_agent` (using ADK dev tools)
 - `python/examples/langchain/audit_hook_agent.py`
 
 For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.md](./HOOKS_AND_POLICIES.md).
@@ -319,11 +326,25 @@ For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.m
 
 1. **Create an HCS Topic**: You must create an HCS topic before running this example.
 2. **Configure Environment**: Update `audit_hook_agent.py` and replace `0.0.???` with your actual topic ID.
-3. Run the agent using poetry:
+Run the LangChain agent using poetry:
 
 ```bash
 cd python/examples/langchain
 poetry run python audit_hook_agent.py
+```
+
+Or run the ADK agent using ADK dev tools CLI:
+
+```bash
+cd python/examples/adk
+poetry run adk run audit_hook_agent
+```
+
+Or using the ADK web interface:
+
+```bash
+cd python/examples/adk
+poetry run adk web
 ```
 
 ---
@@ -333,18 +354,32 @@ poetry run python audit_hook_agent.py
 This example demonstrates how to use the `MaxRecipientsPolicy` to restrict the number of recipients in transfer and airdrop operations. It enforces the policy by intercepting the operations prior to execution.
 
 **Found at:**
-- `python/examples/adk/policy_tool_calling_agent.py`
+- `python/examples/adk/policy_tool_calling_agent` (using ADK dev tools)
 - `python/examples/langchain/policy_tool_calling_agent.py`
 
 For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.md](./HOOKS_AND_POLICIES.md).
 
 #### Running the Example
 
-Run the agent using poetry:
+Run the LangChain agent using poetry:
 
 ```bash
 cd python/examples/langchain
 poetry run python policy_tool_calling_agent.py
+```
+
+Or run the ADK agent using ADK dev tools CLI:
+
+```bash
+cd python/examples/adk
+poetry run adk run policy_tool_calling_agent
+```
+
+Or using the ADK web interface:
+
+```bash
+cd python/examples/adk
+poetry run adk web
 ```
 
 ---
