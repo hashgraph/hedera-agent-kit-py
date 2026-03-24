@@ -12,20 +12,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 from hedera_agent_kit.langchain import HederaAgentKitTool
 from hedera_agent_kit.langchain.response_parser_service import ResponseParserService
 from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
-from hedera_agent_kit.plugins import (
-    core_account_plugin,
-    core_consensus_query_plugin,
-    core_account_query_plugin,
-    core_consensus_plugin,
-    core_evm_plugin,
-    core_misc_query_plugin,
-    core_transaction_query_plugin,
-    core_token_query_plugin,
-    core_token_plugin,
-    core_evm_query_plugin,
-    core_account_plugin_tool_names,
-)
-from hedera_agent_kit.policies import RequiredAccountMemoPolicy
+from hedera_agent_kit.plugins import core_account_plugin, core_token_plugin
+from hedera_agent_kit.policies import MaxRecipientsPolicy
 from hedera_agent_kit.shared.configuration import AgentMode, Context, Configuration
 
 load_dotenv(".env")
@@ -39,35 +27,28 @@ async def bootstrap():
     operator_id: AccountId = AccountId.from_string(os.getenv("ACCOUNT_ID"))
     operator_key: PrivateKey = PrivateKey.from_string(os.getenv("PRIVATE_KEY"))
 
-    network: Network = Network(
-        network="testnet"
-    )  # ensure this matches SDK expectations
+    network: Network = Network(network="testnet")
     client: Client = Client(network)
     client.set_operator(operator_id, operator_key)
 
-    # Configuration placeholder
+    # Instantiate the MaxRecipientsPolicy, restricting transfers to a maximum of 2 recipients
+    policy = MaxRecipientsPolicy(max_recipients=2)
+
+    # We load only the core_account_plugin and core_token_plugin, which provide the base set
+    # of tools that the MaxRecipientsPolicy operates on:
+    # - TRANSFER_HBAR_TOOL
+    # - TRANSFER_HBAR_WITH_ALLOWANCE_TOOL
+    # - AIRDROP_FUNGIBLE_TOKEN_TOOL
+    # - TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL
+    # - TRANSFER_NFT_WITH_ALLOWANCE_TOOL
+    # - TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
     configuration: Configuration = Configuration(
         tools=[],
-        plugins=[
-            core_consensus_plugin,
-            core_account_query_plugin,
-            core_consensus_query_plugin,
-            core_misc_query_plugin,
-            core_evm_plugin,
-            core_account_plugin,
-            core_token_plugin,
-            core_transaction_query_plugin,
-            core_token_query_plugin,
-            core_evm_query_plugin,
-        ],
+        plugins=[core_account_plugin, core_token_plugin],
         context=Context(
             mode=AgentMode.AUTONOMOUS,
             account_id=str(operator_id),
-            hooks=[
-                RequiredAccountMemoPolicy(
-                    core_account_plugin_tool_names["CREATE_ACCOUNT_TOOL"]
-                )
-            ],
+            hooks=[policy],
         ),
     )
 
@@ -83,18 +64,20 @@ async def bootstrap():
     agent = create_agent(
         model,
         tools=tools,
-        system_prompt="You are a helpful assistant with access to Hedera blockchain tools and plugin tools",
+        system_prompt=(
+            "You are a helpful assistant with access to Hedera blockchain tools. "
+            "You can help users perform transactions. "
+            "IMPORTANT: A MaxRecipientsPolicy is active. You are STRICTLY forbidden from "
+            "submitting any transfer (HBAR or Token, with or without allowance) to more than 2 recipients at once."
+        ),
         checkpointer=InMemorySaver(),
     )
 
     response_parsing_service: ResponseParserService = ResponseParserService(tools=tools)
 
-    print("Hedera Agent CLI Chatbot with Plugin Support — type 'exit' to quit")
-    print("Available plugin tools:")
-    print("- example_greeting_tool: Generate personalized greetings")
-    print(
-        "- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)"
-    )
+    print("Hedera Agent CLI Chatbot with Policy Enforcement — type 'exit' to quit")
+    print("This agent explicitly loads tools related to Transfers and Airdrops.")
+    print("MaxRecipientsPolicy is ACTIVE: All transfers to >2 recipients are blocked.")
     print("")
 
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}

@@ -1,14 +1,21 @@
-"""ADK tool factory for generating Python functions from Hedera Agent Kit tools.
+"""ADK tool wrapper for exposing Hedera Agent Kit tools.
 
-This module provides utilities to transform Hedera tools into async Python functions
-that Google ADK can automatically wrap as FunctionTools.
+This module provides a HederaAdkTool class that subclasses Google ADK's BaseTool,
+building a FunctionDeclaration directly from the Pydantic schema. This gives full
+control over nested types, field descriptions, and required/optional fields — without
+relying on ADK's function introspection heuristics.
 """
 
 from __future__ import annotations
 
+from typing import (
+    Any,
+    Dict,
+)
 
-from typing import Any, Callable, Coroutine, Dict, get_type_hints
-
+from google.adk.tools import BaseTool
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types as genai_types
 from pydantic import BaseModel
 
 from hedera_agent_kit import HederaAgentAPI
@@ -16,114 +23,42 @@ from hedera_agent_kit.shared import Tool
 from hedera_agent_kit.shared.models import ToolResponse
 
 
-def create_adk_tool_function(
-    hedera_api: HederaAgentAPI,
-    tool: Tool,
-) -> Callable[..., Coroutine[Any, Any, Dict[str, Any]]]:
-    """Create an async function from a Hedera tool for use with Google ADK.
+class HederaAdkTool(BaseTool):
+    """Google ADK BaseTool wrapper for a Hedera Agent Kit tool.
 
-    The generated function:
-    - Uses the tool's method name as the function name
-    - Uses the tool's description as the docstring
-    - Extracts parameter types from the Pydantic schema
-    - Returns results as a dictionary
-
-    Note: We return a dynamically constructed `Callable` rather than a class instance
-    because Google ADK natively inspects Python functions (using `inspect.isfunction`,
-    `__annotations__`, and `__doc__`) and automatically wraps them into a `FunctionTool`
-    object internally. This approach perfectly perfectly matches ADK's intended design
-    pattern without the need for an extra wrapper class.
-
-    Args:
-        hedera_api: A configured HederaAgentAPI instance.
-        tool: The Hedera tool to wrap.
-
-    Returns:
-        An async function compatible with Google ADK's FunctionTool.
+    Builds the FunctionDeclaration directly from the tool's Pydantic parameter
+    schema, preserving:
+    - Nested model structures (e.g. List[TransferHbarEntry])
+    - Field descriptions from Field(description=...)
+    - Required vs optional distinction
+    - Recursive nesting (models inside models)
     """
 
-    # Build parameter docstring from Pydantic schema
-    schema: type[BaseModel] = tool.parameters
-    param_docs = _build_param_docstring(schema)
+    def __init__(self, hedera_api: HederaAgentAPI, tool: Tool) -> None:
+        super().__init__(name=tool.method, description=tool.description)
+        self._hedera_api = hedera_api
+        self._tool = tool
+        self._schema = tool.parameters
+        self._declaration = self._get_declaration()
 
-    # Create the docstring
-    docstring = f"{tool.description}\n\nArgs:\n{param_docs}"
+    # ADK calls this to get the FunctionDeclaration sent to Gemini
+    def _get_declaration(self) -> genai_types.FunctionDeclaration:
+        return genai_types.FunctionDeclaration(
+            name=self._tool.method,
+            description=self._tool.description,
+            parameters_json_schema=self._schema.model_json_schema(),
+        )
 
-    async def tool_function(**kwargs: Any) -> Dict[str, Any]:
-        """Dynamically generated ADK tool function."""
-        result: ToolResponse = await hedera_api.run(tool.method, kwargs)
+    async def run_async(
+        self,
+        *,
+        args: Dict[str, Any],
+        tool_context: ToolContext,
+    ) -> Dict[str, Any]:
+        """Execute the Hedera tool, coercing raw ADK args through Pydantic first."""
+        # Coerce plain dicts / primitives from Gemini into validated Pydantic model
+        validated: BaseModel = self._schema.model_validate(args)
+        result: ToolResponse = await self._hedera_api.run(
+            self._tool.method, validated.model_dump()
+        )
         return result.to_dict()
-
-    # Set function metadata for ADK introspection
-    tool_function.__name__ = tool.method
-    tool_function.__qualname__ = tool.method
-    tool_function.__doc__ = docstring
-
-    # Create proper annotations from Pydantic schema
-    tool_function.__annotations__ = _extract_annotations(schema)
-    tool_function.__annotations__["return"] = Dict[str, Any]
-
-    return tool_function
-
-
-def _build_param_docstring(schema: type[BaseModel]) -> str:
-    """Build parameter documentation from a Pydantic schema.
-
-    Args:
-        schema: Pydantic model class defining the parameters.
-
-    Returns:
-        A formatted string with parameter descriptions.
-    """
-    lines = []
-    for field_name, field_info in schema.model_fields.items():
-        field_type = _get_field_type_name(schema, field_name)
-        description = field_info.description or "No description provided."
-        lines.append(f"    {field_name} ({field_type}): {description}")
-    return "\n".join(lines) if lines else "    None"
-
-
-def _get_field_type_name(schema: type[BaseModel], field_name: str) -> str:
-    """Get a human-readable type name for a field.
-
-    Args:
-        schema: Pydantic model class.
-        field_name: Name of the field.
-
-    Returns:
-        String representation of the field type.
-    """
-    try:
-        hints = get_type_hints(schema)
-        if field_name in hints:
-            type_hint = hints[field_name]
-            if hasattr(type_hint, "__name__"):
-                return type_hint.__name__
-            return str(type_hint)
-    except Exception:
-        pass
-    return "Any"
-
-
-def _extract_annotations(schema: type[BaseModel]) -> Dict[str, Any]:
-    """Extract type annotations from a Pydantic schema.
-
-    Args:
-        schema: Pydantic model class defining the parameters.
-
-    Returns:
-        Dictionary mapping parameter names to their types.
-    """
-    annotations = {}
-    try:
-        hints = get_type_hints(schema)
-        for field_name in schema.model_fields.keys():
-            if field_name in hints:
-                annotations[field_name] = hints[field_name]
-            else:
-                annotations[field_name] = Any
-    except Exception:
-        # Fallback to Any if type extraction fails
-        for field_name in schema.model_fields.keys():
-            annotations[field_name] = Any
-    return annotations
