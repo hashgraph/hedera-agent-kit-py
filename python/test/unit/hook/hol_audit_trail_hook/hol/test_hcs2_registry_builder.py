@@ -1,31 +1,6 @@
 import json
 
-from hedera_agent_kit.hooks.hol_audit_trail_hook.hol.constants import HCS2_REGISTRY_TYPE
 from hedera_agent_kit.hooks.hol_audit_trail_hook.hol.hcs2_registry_builder import Hcs2RegistryBuilder
-
-
-class TestHcs2RegistryBuilderCreateRegistry:
-    def test_creates_topic_with_hcs2_protocol_memo(self):
-        result = Hcs2RegistryBuilder.create_registry()
-        assert "hcs-2" in result.memo
-
-    def test_defaults_registry_type_to_indexed(self):
-        result = Hcs2RegistryBuilder.create_registry()
-        assert result.memo == "hcs-2:0:0"
-
-    def test_defaults_ttl_to_zero(self):
-        result = Hcs2RegistryBuilder.create_registry()
-        assert result.memo.endswith(":0")
-
-    def test_non_indexed_registry_type(self):
-        result = Hcs2RegistryBuilder.create_registry(
-            registry_type=HCS2_REGISTRY_TYPE["NON_INDEXED"],
-        )
-        assert result.memo == "hcs-2:1:0"
-
-    def test_custom_ttl(self):
-        result = Hcs2RegistryBuilder.create_registry(ttl=3600)
-        assert result.memo == "hcs-2:0:3600"
 
 
 class TestHcs2RegistryBuilderRegisterEntry:

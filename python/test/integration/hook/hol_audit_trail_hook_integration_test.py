@@ -6,7 +6,7 @@ import re
 
 import brotli
 import pytest
-from hiero_sdk_python import Hbar, PrivateKey
+from hiero_sdk_python import Hbar, PrivateKey, TopicCreateTransaction
 
 from hedera_agent_kit.hooks.hol_audit_trail_hook.audit.audit_entry import (
     AuditEntry,
@@ -48,6 +48,15 @@ from test.utils.usd_to_hbar_service import UsdToHbarService
 
 POLL_INTERVAL_MS = 500
 POLL_TIMEOUT_MS = 30_000
+
+
+def create_session_topic(client) -> str:
+    """Create an HCS-2 session topic with memo 'hcs-2:0:0' and return its topic ID string."""
+    tx = TopicCreateTransaction(memo="hcs-2:0:0")
+    receipt = tx.execute(client)
+    if not receipt.topic_id:
+        raise RuntimeError("Failed to create session topic")
+    return str(receipt.topic_id)
 
 
 async def poll_topic_messages(
@@ -146,14 +155,15 @@ async def setup_environment():
 @pytest.mark.asyncio
 @pytest.mark.timeout(60)
 async def test_single_write_creates_hcs2_session_and_hcs1_entry(setup_environment):
-    """Create HCS-2 session registry and HCS-1 audit entry for a single write."""
+    """Write HCS-1 audit entry to provided HCS-2 session registry for a single write."""
     env = setup_environment
     executor_client = env["executor_client"]
     executor_wrapper: HederaOperationsWrapper = env["executor_wrapper"]
     recipient_account_id = env["recipient_account_id"]
 
+    session_topic_id = create_session_topic(executor_client)
     writer = HolAuditWriter(executor_client)
-    session = AuditSession(writer)
+    session = AuditSession(writer, session_topic_id)
 
     entry = build_audit_entry(
         tool=TRANSFER_HBAR_TOOL,
@@ -167,12 +177,7 @@ async def test_single_write_creates_hcs2_session_and_hcs1_entry(setup_environmen
 
     await session.write_entry(entry)
 
-    session_topic_id = session.get_session_id()
-    assert session_topic_id, "Session topic ID should be truthy"
-
-    # Verify session topic memo is HCS-2 registry format
-    topic_info = executor_wrapper.get_topic_info(session_topic_id)
-    assert topic_info.memo == "hcs-2:0:0"
+    assert session.get_session_id() == session_topic_id
 
     # Poll mirror node until the register message appears
     session_messages = await poll_topic_messages(executor_wrapper, session_topic_id, 1)
@@ -209,14 +214,15 @@ async def test_single_write_creates_hcs2_session_and_hcs1_entry(setup_environmen
 @pytest.mark.asyncio
 @pytest.mark.timeout(60)
 async def test_multiple_entries_under_same_session(setup_environment):
-    """Multiple entries should be registered under the same HCS-2 session."""
+    """Multiple entries should be registered under the same provided HCS-2 session."""
     env = setup_environment
     executor_client = env["executor_client"]
     executor_wrapper: HederaOperationsWrapper = env["executor_wrapper"]
     recipient_account_id = env["recipient_account_id"]
 
+    session_topic_id = create_session_topic(executor_client)
     writer = HolAuditWriter(executor_client)
-    session = AuditSession(writer)
+    session = AuditSession(writer, session_topic_id)
 
     entry1 = build_audit_entry(
         tool=TRANSFER_HBAR_TOOL,
@@ -241,8 +247,7 @@ async def test_multiple_entries_under_same_session(setup_environment):
     await session.write_entry(entry1)
     await session.write_entry(entry2)
 
-    session_topic_id = session.get_session_id()
-    assert session_topic_id, "Session topic ID should be truthy"
+    assert session.get_session_id() == session_topic_id
 
     # Poll until both register messages appear
     session_messages = await poll_topic_messages(executor_wrapper, session_topic_id, 2)
@@ -263,8 +268,9 @@ async def test_large_entry_splits_into_multiple_hcs1_chunks(setup_environment):
     executor_client = env["executor_client"]
     executor_wrapper: HederaOperationsWrapper = env["executor_wrapper"]
 
+    session_topic_id = create_session_topic(executor_client)
     writer = HolAuditWriter(executor_client)
-    session = AuditSession(writer)
+    session = AuditSession(writer, session_topic_id)
 
     # Build an entry with high-entropy padding so brotli cannot compress it
     # below the HCS-1 chunk threshold (~1008 chars per chunk in the data URI).
@@ -278,8 +284,7 @@ async def test_large_entry_splits_into_multiple_hcs1_chunks(setup_environment):
 
     await session.write_entry(large_entry)
 
-    session_topic_id = session.get_session_id()
-    assert session_topic_id, "Session topic ID should be truthy"
+    assert session.get_session_id() == session_topic_id
 
     # Poll for the register message in the session topic
     session_messages = await poll_topic_messages(executor_wrapper, session_topic_id, 1)
@@ -326,7 +331,7 @@ async def test_rejects_return_bytes_mode(setup_environment):
     env = setup_environment
     executor_client = env["executor_client"]
 
-    hook = HolAuditTrailHook(relevant_tools=[TRANSFER_HBAR_TOOL])
+    hook = HolAuditTrailHook(relevant_tools=[TRANSFER_HBAR_TOOL], session_id="0.0.12345")
 
     from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
 
@@ -349,7 +354,7 @@ async def test_does_not_trigger_for_irrelevant_tool(setup_environment):
     env = setup_environment
     executor_client = env["executor_client"]
 
-    hook = HolAuditTrailHook(relevant_tools=["some_other_tool"])
+    hook = HolAuditTrailHook(relevant_tools=["some_other_tool"], session_id="0.0.12345")
 
     from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
 
@@ -364,4 +369,4 @@ async def test_does_not_trigger_for_irrelevant_tool(setup_environment):
     # Should return None (no-op) without raising
     result = await hook.pre_tool_execution_hook(context, params, TRANSFER_HBAR_TOOL)
     assert result is None
-    assert hook.get_session_topic_id() is None
+    assert hook.get_session_id() == "0.0.12345"

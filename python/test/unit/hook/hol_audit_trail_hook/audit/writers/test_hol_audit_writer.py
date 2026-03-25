@@ -28,14 +28,6 @@ def mock_registry_builder():
     with patch(
         "hedera_agent_kit.hooks.hol_audit_trail_hook.audit.writers.hol_audit_writer.Hcs2RegistryBuilder"
     ) as mock:
-        # create_registry returns a transaction mock
-        registry_tx = MagicMock()
-        registry_receipt = MagicMock()
-        registry_receipt.topic_id = MagicMock()
-        registry_receipt.topic_id.__str__ = lambda self: "0.0.999"
-        registry_tx.execute.return_value = registry_receipt
-        mock.create_registry.return_value = registry_tx
-
         # register_entry returns a transaction mock
         register_tx = MagicMock()
         register_tx.execute.return_value = MagicMock()
@@ -80,50 +72,6 @@ class TestHolAuditWriterSetSessionId:
         mock_registry_builder.register_entry.assert_called_once()
         call_kwargs = mock_registry_builder.register_entry.call_args
         assert call_kwargs[1]["registry_topic_id"] == "0.0.666"
-
-
-@pytest.mark.timeout(10)
-@pytest.mark.asyncio
-class TestHolAuditWriterInitialize:
-    async def test_creates_hcs2_indexed_registry_and_returns_topic_id(
-        self, mock_client, mock_registry_builder
-    ):
-        writer = HolAuditWriter(mock_client)
-        session_id = await writer.initialize()
-
-        assert session_id == "0.0.999"
-        mock_registry_builder.create_registry.assert_called_once()
-
-    async def test_passes_operator_public_key_to_create_registry(
-        self, mock_client, mock_registry_builder
-    ):
-        writer = HolAuditWriter(mock_client)
-        await writer.initialize()
-
-        call_kwargs = mock_registry_builder.create_registry.call_args[1]
-        assert call_kwargs["submit_key"] == "mock-public-key"
-
-    async def test_requests_indexed_registry_with_ttl_0(
-        self, mock_client, mock_registry_builder
-    ):
-        writer = HolAuditWriter(mock_client)
-        await writer.initialize()
-
-        call_kwargs = mock_registry_builder.create_registry.call_args[1]
-        assert call_kwargs["registry_type"] == 0
-        assert call_kwargs["ttl"] == 0
-
-    async def test_raises_when_receipt_has_no_topic_id(
-        self, mock_client, mock_registry_builder
-    ):
-        registry_tx = mock_registry_builder.create_registry.return_value
-        receipt = MagicMock()
-        receipt.topic_id = None
-        registry_tx.execute.return_value = receipt
-
-        writer = HolAuditWriter(mock_client)
-        with pytest.raises(RuntimeError, match="Failed to create session topic"):
-            await writer.initialize()
 
 
 @pytest.mark.timeout(10)

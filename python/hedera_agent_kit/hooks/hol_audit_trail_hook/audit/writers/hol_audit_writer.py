@@ -5,7 +5,6 @@ from hiero_sdk_python import Client
 from ..audit_entry import AuditEntry
 from ...hol.hcs1_file_builder import Hcs1FileBuilder
 from ...hol.hcs2_registry_builder import Hcs2RegistryBuilder
-from ...hol.constants import HCS2_REGISTRY_TYPE
 
 
 class HolAuditWriter:
@@ -17,19 +16,6 @@ class HolAuditWriter:
 
     def set_session_id(self, session_id: str) -> None:
         self._session_id = session_id
-
-    async def initialize(self) -> str:
-        tx = Hcs2RegistryBuilder.create_registry(
-            submit_key=self._client.operator_private_key.public_key(),
-            registry_type=HCS2_REGISTRY_TYPE["INDEXED"],
-            ttl=0,
-        )
-
-        receipt = tx.execute(self._client)
-        if not receipt.topic_id:
-            raise RuntimeError("Failed to create session topic")
-
-        return str(receipt.topic_id)
 
     async def write(self, entry: AuditEntry) -> None:
         file_result = Hcs1FileBuilder.create_file(

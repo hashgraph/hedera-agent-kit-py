@@ -23,13 +23,6 @@ def mock_registry_builder():
     with patch(
         "hedera_agent_kit.hooks.hol_audit_trail_hook.audit.writers.hol_audit_writer.Hcs2RegistryBuilder"
     ) as mock:
-        registry_tx = MagicMock()
-        registry_receipt = MagicMock()
-        registry_receipt.topic_id = MagicMock()
-        registry_receipt.topic_id.__str__ = lambda self: "0.0.999"
-        registry_tx.execute.return_value = registry_receipt
-        mock.create_registry.return_value = registry_tx
-
         register_tx = MagicMock()
         register_tx.execute.return_value = MagicMock()
         mock.register_entry.return_value = register_tx
@@ -83,43 +76,47 @@ def make_post_params(client, **overrides):
 
 class TestHolAuditTrailHookProperties:
     def test_name_description_and_relevant_tools(self):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         assert hook.name == "HOL Audit Trail Hook"
         assert "HOL-standards-compliant" in hook.description
         assert hook.relevant_tools == ["test_tool"]
 
 
-class TestGetSessionTopicId:
-    def test_returns_none_when_no_session_and_no_config(self):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
-        assert hook.get_session_topic_id() is None
-
-    def test_returns_configured_session_topic_id(self):
+class TestGetSessionId:
+    def test_returns_configured_session_id(self):
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
-        assert hook.get_session_topic_id() == "0.0.666"
+        assert hook.get_session_id() == "0.0.666"
 
     @pytest.mark.timeout(10)
     @pytest.mark.asyncio
     async def test_returns_session_id_after_first_execution(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
         await hook.post_secondary_action_hook(context, params, "test_tool")
 
-        assert hook.get_session_topic_id() == "0.0.999"
+        assert hook.get_session_id() == "0.0.666"
+
+    def test_raises_on_invalid_session_id(self):
+        with pytest.raises(ValueError, match="session_id must be a valid Hedera topic ID"):
+            HolAuditTrailHook(relevant_tools=["test_tool"], session_id="not-a-topic")
+
+    def test_raises_on_empty_session_id(self):
+        with pytest.raises(ValueError, match="session_id must be a valid Hedera topic ID"):
+            HolAuditTrailHook(relevant_tools=["test_tool"], session_id="")
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.asyncio
 class TestPreToolExecutionHook:
     async def test_returns_none_for_irrelevant_tools(self):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = PreToolExecutionParams(
             context=context, raw_params={}, client=MagicMock(), method="other_tool"
@@ -129,7 +126,7 @@ class TestPreToolExecutionHook:
         assert result is None
 
     async def test_does_not_throw_in_autonomous_mode(self):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = PreToolExecutionParams(
             context=context, raw_params={}, client=MagicMock(), method="test_tool"
@@ -139,7 +136,7 @@ class TestPreToolExecutionHook:
         await hook.pre_tool_execution_hook(context, params, "test_tool")
 
     async def test_throws_in_return_bytes_mode(self):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.RETURN_BYTES)
         params = PreToolExecutionParams(
             context=context, raw_params={}, client=MagicMock(), method="test_tool"
@@ -158,64 +155,59 @@ class TestPostSecondaryActionHook:
     async def test_returns_none_for_irrelevant_tools(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
         result = await hook.post_secondary_action_hook(context, params, "other_tool")
 
         assert result is None
-        mock_registry_builder.create_registry.assert_not_called()
         mock_file_builder.create_file.assert_not_called()
 
-    async def test_lazily_creates_session_on_first_relevant_call(
+    async def test_creates_session_on_first_relevant_call(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
         await hook.post_secondary_action_hook(context, params, "test_tool")
 
-        mock_registry_builder.create_registry.assert_called_once()
-        assert hook.get_session_topic_id() == "0.0.999"
+        assert hook.get_session_id() == "0.0.666"
 
     async def test_reuses_session_on_subsequent_calls(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
+        hook = HolAuditTrailHook(relevant_tools=["test_tool"], session_id="0.0.666")
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
         await hook.post_secondary_action_hook(context, params, "test_tool")
         await hook.post_secondary_action_hook(context, params, "test_tool")
 
-        # Registry created only once
-        mock_registry_builder.create_registry.assert_called_once()
         # File created twice
         assert mock_file_builder.create_file.call_count == 2
 
-    async def test_skips_registry_creation_when_session_topic_id_provided(
+    async def test_does_not_create_registry(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
         await hook.post_secondary_action_hook(context, params, "test_tool")
 
-        mock_registry_builder.create_registry.assert_not_called()
-        assert hook.get_session_topic_id() == "0.0.666"
+        assert hook.get_session_id() == "0.0.666"
 
     async def test_builds_audit_entry_with_tool_params_and_result(
         self, mock_client, mock_registry_builder, mock_file_builder
     ):
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
@@ -239,7 +231,7 @@ class TestPostSecondaryActionHook:
     ):
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
@@ -255,7 +247,7 @@ class TestPostSecondaryActionHook:
     ):
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
@@ -276,25 +268,8 @@ class TestPostSecondaryActionHook:
 
         hook = HolAuditTrailHook(
             relevant_tools=["test_tool"],
-            session_topic_id="0.0.666",
+            session_id="0.0.666",
         )
-        context = Context(mode=AgentMode.AUTONOMOUS)
-        params = make_post_params(mock_client)
-
-        # Should not raise
-        await hook.post_secondary_action_hook(context, params, "test_tool")
-
-        captured = capsys.readouterr()
-        assert "HolAuditTrailHook: Failed to log audit entry" in captured.out
-
-    async def test_catches_and_logs_init_errors(
-        self, mock_client, mock_registry_builder, mock_file_builder, capsys
-    ):
-        mock_registry_builder.create_registry.return_value.execute.side_effect = RuntimeError(
-            "Init error"
-        )
-
-        hook = HolAuditTrailHook(relevant_tools=["test_tool"])
         context = Context(mode=AgentMode.AUTONOMOUS)
         params = make_post_params(mock_client)
 
