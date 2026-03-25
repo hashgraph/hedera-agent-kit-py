@@ -9,11 +9,6 @@ class AuditWriter(ABC):
     """Base interface for audit writers."""
 
     @abstractmethod
-    async def initialize(self) -> str:
-        """One-time setup: create resources (e.g. registry topic). Returns session identifier."""
-        ...
-
-    @abstractmethod
     async def write(self, entry: AuditEntry) -> None:
         """Write a single audit entry."""
         ...

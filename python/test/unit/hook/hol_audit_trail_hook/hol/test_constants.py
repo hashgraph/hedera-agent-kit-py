@@ -4,7 +4,6 @@ from hedera_agent_kit.hooks.hol_audit_trail_hook.hol.constants import (
     HCS1_CHUNK_THRESHOLD,
     HCS2_OPERATION,
     HCS2_PROTOCOL,
-    HCS2_REGISTRY_TYPE,
 )
 
 
@@ -30,10 +29,4 @@ class TestHcs2Constants:
             "UPDATE": "update",
             "DELETE": "delete",
             "MIGRATE": "migrate",
-        }
-
-    def test_hcs2_registry_type_values(self):
-        assert HCS2_REGISTRY_TYPE == {
-            "INDEXED": 0,
-            "NON_INDEXED": 1,
         }

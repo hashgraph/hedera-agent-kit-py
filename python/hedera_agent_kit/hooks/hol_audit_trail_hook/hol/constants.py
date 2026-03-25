@@ -10,8 +10,3 @@ HCS2_OPERATION = {
     "DELETE": "delete",
     "MIGRATE": "migrate",
 }
-
-HCS2_REGISTRY_TYPE = {
-    "INDEXED": 0,
-    "NON_INDEXED": 1,
-}
