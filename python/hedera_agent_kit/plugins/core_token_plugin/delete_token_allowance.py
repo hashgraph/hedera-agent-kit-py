@@ -8,8 +8,10 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import Any
 
 from hiero_sdk_python import Client
+from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -30,7 +32,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -80,54 +82,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Token allowance(s) deleted successfully. Transaction ID: {response.transaction_id}"
 
 
-async def delete_token_allowance(
-    client: Client,
-    context: Context,
-    params: DeleteTokenAllowanceParameters,
-) -> ToolResponse:
-    """Execute a delete token allowance transaction using normalized parameters.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the allowance deletion.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-    """
-    try:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # Normalize parameters
-        normalised_params: ApproveTokenAllowanceParametersNormalised = (
-            await HederaParameterNormaliser.normalise_delete_token_allowance(
-                params, context, client, mirrornode_service
-            )
-        )
-
-        # Build transaction
-        tx = HederaBuilder.approve_token_allowance(normalised_params)
-
-        # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        desc = "Failed to delete token allowance(s)."
-        message: str = desc + (f": {str(e)}" if str(e) else "")
-        print("[delete_token_allowance_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 DELETE_TOKEN_ALLOWANCE_TOOL: str = "delete_token_allowance_tool"
 
 
-class DeleteTokenAllowanceTool(Tool):
+class DeleteTokenAllowanceTool(BaseToolV2):
     """Tool wrapper that exposes the delete token allowance capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -144,17 +102,28 @@ class DeleteTokenAllowanceTool(Tool):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: DeleteTokenAllowanceParameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> ApproveTokenAllowanceParametersNormalised:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        return await HederaParameterNormaliser.normalise_delete_token_allowance(
+            params, context, client, mirrornode_service
+        )
+
+    async def core_action(
+        self,
+        normalized_params: ApproveTokenAllowanceParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> Transaction:
+        return HederaBuilder.approve_token_allowance(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: Transaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the delete token allowance using the provided client, context, and params.
-
-        Args:
-            client: Hedera client used to execute transactions.
-            context: Runtime context providing configuration and defaults.
-            params: Delete token allowance parameters accepted by this tool.
-
-        Returns:
-            The result of the deletion as a ToolResponse.
-        """
-        return await delete_token_allowance(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)

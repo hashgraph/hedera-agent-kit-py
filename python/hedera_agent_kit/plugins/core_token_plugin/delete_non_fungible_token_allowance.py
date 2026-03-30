@@ -9,7 +9,10 @@ This module exposes:
 from __future__ import annotations
 
 
+from typing import Any
+
 from hiero_sdk_python import Client
+from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -27,7 +30,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -75,51 +78,12 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"NFT allowance(s) deleted successfully. Transaction ID: {response.transaction_id}"
 
 
-async def delete_non_fungible_token_allowance(
-    client: Client,
-    context: Context,
-    params: DeleteNonFungibleTokenAllowanceParameters,
-) -> ToolResponse:
-    """Execute a delete NFT allowance transaction using normalized parameters.
-
-    Args:
-        client: Hedera client used to execute transactions.
-        context: Runtime context providing configuration and defaults.
-        params: User-supplied parameters describing the allowance deletion.
-
-    Returns:
-        A ToolResponse wrapping the raw transaction response and a human-friendly
-        message indicating success or failure.
-    """
-    try:
-        # Normalize parameters
-        normalised_params: DeleteNftAllowanceParametersNormalised = (
-            HederaParameterNormaliser.normalise_delete_non_fungible_token_allowance(
-                params, context, client
-            )
-        )
-
-        tx = HederaBuilder.delete_nft_allowance(normalised_params)
-
-        # Execute transaction and post-process result
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        desc = "Failed to delete NFT allowance(s)."
-        message: str = desc + (f": {str(e)}" if str(e) else "")
-        print("[delete_non_fungible_token_allowance_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 DELETE_NON_FUNGIBLE_TOKEN_ALLOWANCE_TOOL: str = (
     "delete_non_fungible_token_allowance_tool"
 )
 
 
-class DeleteNonFungibleTokenAllowanceTool(Tool):
+class DeleteNonFungibleTokenAllowanceTool(BaseToolV2):
     """Tool wrapper that exposes the delete NFT allowance capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -136,20 +100,25 @@ class DeleteNonFungibleTokenAllowanceTool(Tool):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> DeleteNftAllowanceParametersNormalised:
+        return HederaParameterNormaliser.normalise_delete_non_fungible_token_allowance(
+            params, context, client
+        )
+
+    async def core_action(
         self,
+        normalized_params: DeleteNftAllowanceParametersNormalised,
         client: Client,
         context: Context,
-        params: DeleteNonFungibleTokenAllowanceParameters,
+    ) -> Transaction:
+        return HederaBuilder.delete_nft_allowance(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: Transaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        """Execute the delete NFT allowance using the provided client, context, and params.
-
-        Args:
-            client: Hedera client used to execute transactions.
-            context: Runtime context providing configuration and defaults.
-            params: Delete NFT allowance parameters accepted by this tool.
-
-        Returns:
-            The result of the deletion as a ToolResponse.
-        """
-        return await delete_non_fungible_token_allowance(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)

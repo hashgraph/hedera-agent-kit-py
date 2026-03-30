@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from typing import TypedDict, List, cast
+from typing import Any, TypedDict, List, cast
 
 from hiero_sdk_python import Client
 
@@ -32,7 +32,7 @@ from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     PendingAirdropQueryParameters,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.account_resolver import AccountResolver
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
@@ -126,70 +126,10 @@ def post_process(account_id: str, enriched_airdrops: List[EnrichedTokenAirdrop])
     return f"Here are the pending airdrops for account **{account_id}** (total: {count}):\n\n{details_str}"
 
 
-async def get_pending_airdrop_query(
-    client: Client,
-    context: Context,
-    params: PendingAirdropQueryParameters,
-) -> ToolResponse:
-    """Execute a pending airdrop query using the mirrornode service."""
-    try:
-        parsed_params: PendingAirdropQueryParameters = cast(
-            PendingAirdropQueryParameters,
-            HederaParameterNormaliser.parse_params_with_schema(
-                params, PendingAirdropQueryParameters
-            ),
-        )
-
-        account_id = parsed_params.account_id or AccountResolver.get_default_account(
-            context, client
-        )
-
-        if not account_id:
-            raise ValueError("Account ID is required and was not provided")
-
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # 1. Fetch the list of pending airdrops
-        response: TokenAirdropsResponse = await mirrornode_service.get_pending_airdrops(
-            account_id
-        )
-
-        # 2. Parallel Fetch & Enrich
-        raw_airdrops = response.get("airdrops", [])
-
-        tasks = [
-            enrich_single_airdrop(airdrop, mirrornode_service)
-            for airdrop in raw_airdrops
-        ]
-
-        gathered_airdrops = await asyncio.gather(*tasks)
-
-        # 3. Return ToolResponse
-        enriched_response: EnrichedTokenAirdropsResponse = {
-            "airdrops": list(gathered_airdrops),
-        }
-
-        return ToolResponse(
-            human_message=post_process(account_id, list(gathered_airdrops)),
-            extra={"accountId": account_id, "pending_airdrops": enriched_response},
-        )
-
-    except Exception as e:
-        desc = "Failed to get pending airdrops"
-        message = f"{desc}: {str(e)}"
-        print("[get_pending_airdrop_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_PENDING_AIRDROP_QUERY_TOOL: str = "get_pending_airdrop_query_tool"
 
 
-class GetPendingAirdropQueryTool(Tool):
+class GetPendingAirdropQueryTool(BaseToolV2):
     """Tool wrapper that exposes the pending airdrop query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -201,7 +141,50 @@ class GetPendingAirdropQueryTool(Tool):
         )
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: PendingAirdropQueryParameters
-    ) -> ToolResponse:
-        return await get_pending_airdrop_query(client, context, params)
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> dict:
+        parsed_params: PendingAirdropQueryParameters = cast(
+            PendingAirdropQueryParameters,
+            HederaParameterNormaliser.parse_params_with_schema(
+                params, PendingAirdropQueryParameters
+            ),
+        )
+        account_id = parsed_params.account_id or AccountResolver.get_default_account(
+            context, client
+        )
+        if not account_id:
+            raise ValueError("Account ID is required and was not provided")
+        return {"account_id": account_id}
+
+    async def core_action(
+        self,
+        normalized_params: dict,
+        client: Client,
+        context: Context,
+    ):
+        account_id = normalized_params["account_id"]
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        response: TokenAirdropsResponse = await mirrornode_service.get_pending_airdrops(
+            account_id
+        )
+        raw_airdrops = response.get("airdrops", [])
+        tasks = [
+            enrich_single_airdrop(airdrop, mirrornode_service)
+            for airdrop in raw_airdrops
+        ]
+
+        gathered_airdrops = await asyncio.gather(*tasks)
+        enriched_response: EnrichedTokenAirdropsResponse = {
+            "airdrops": gathered_airdrops,
+        }
+
+        return ToolResponse(
+            human_message=post_process(account_id, gathered_airdrops),
+            extra={"accountId": account_id, "pending_airdrops": enriched_response},
+        )
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
