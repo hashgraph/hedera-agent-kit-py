@@ -77,6 +77,23 @@ Agent that operates in `RETURN_BYTES` mode, demonstrating Human-in-the-loop tran
 poetry run python return_bytes_tool_calling_agent.py
 ```
 
+### 3. Policy Tool Calling Agent (`policy_tool_calling_agent.py`)
+
+Demonstrates how to apply policies (e.g. `MaxRecipientsPolicy`) to enforce agent limits on specific tool suites.
+
+```bash
+poetry run python policy_tool_calling_agent.py
+```
+
+### 4. Audit Hook Agent (`audit_hook_agent.py`)
+
+Demonstrates how to log transactions automatically to HCS using `HcsAuditTrailHook`.
+> **Note**: You must create an HCS topic before running this agent. You can create one easily using the [Hedera Portal Playground](https://portal.hedera.com/playground) and then set it as the `hcs_topic_id` in the code.
+
+```bash
+poetry run python audit_hook_agent.py
+```
+
 ## Hedera Agent with preconfigured MCPs (`hedera_mcp_agent.py`)
 
 This agent demonstrates how to integrate **Hederion MCP** and **Hgraph MCP** using a LangChain v1 agent and the `hedera-agent-kit` SDK.
