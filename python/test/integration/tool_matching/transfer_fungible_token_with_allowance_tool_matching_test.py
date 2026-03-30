@@ -122,7 +122,7 @@ async def test_match_spend_allowance_phrasing(agent_executor, toolkit, monkeypat
 @pytest.mark.asyncio
 async def test_match_scheduling(agent_executor, toolkit, monkeypatch):
     """Test extraction of scheduling parameters."""
-    input_text = "Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allowance. Schedule this transaction and make it expire tomorrow and wait for its expiration time with executing it."
+    input_text = "Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allowance. Schedule this transaction and make it expire tomorrow and wait for its expiration time without executing it."
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 
     hedera_api = toolkit.get_hedera_agentkit_api()

@@ -157,7 +157,7 @@ async def test_match_and_extract_params_for_scheduled_create_account(
     """Test matching and parameter extraction for scheduled create account transaction."""
     input_text = (
         "Schedule creation of an account with max automatic token associations 10. "
-        "Make it expire tomorrow and wait for its expiration time with executing it."
+        "Make it expire tomorrow and wait for its expiration time without executing it."
     )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 

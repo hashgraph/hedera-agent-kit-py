@@ -29,6 +29,12 @@ class HcsAuditTrailHook(AbstractHook):
 
     @warning If a paid topic (HIP-991: https://hips.hedera.com/hip/hip-991) is provided,
     it could potentially drain the provided logging client's funds due to message submission fees.
+
+    > [!NOTE]
+    > **Error Handling**: If the hook fails to post a message to HCS (e.g., due to network issues or incorrect topic ID), it
+    > will catch the error and log it to the CLI as `console.error`. Note that this might affect the auditing and it means
+    > that agent might have executed some transaction that was not logged in the auditing topic if misconfigured or external
+    > problems appeared. We are looking into further improvements of the auditing trail to make it more secure.
     """
 
     def __init__(
@@ -107,51 +113,58 @@ class HcsAuditTrailHook(AbstractHook):
         if method not in self.relevant_tools:
             return
 
-        target_client = self.logging_client
+        try:
+            target_client = self.logging_client
 
-        # HcsAuditTrailHook will use the agent's operator account client if no logging specific client is provided on hook initialization.
-        if not target_client:
-            print(
-                "HcsAuditTrailHook: No logging specific client provided. Using the agent's operator account client."
+            # HcsAuditTrailHook will use the agent's operator account client if no logging specific client is provided on hook initialization.
+            if not target_client:
+                print(
+                    "HcsAuditTrailHook: No logging specific client provided. Using the agent's operator account client."
+                )
+                target_client = params.client
+
+            raw_res = (
+                params.tool_result.raw if hasattr(params.tool_result, "raw") else None
             )
-            target_client = params.client
 
-        raw_res = params.tool_result.raw if hasattr(params.tool_result, "raw") else None
+            transaction_id = "N/A (query action)"
+            status = "N/A (query action)"
+            token_id = "N/A"
+            topic_id = "N/A"
+            schedule_id = "N/A"
+            account_id = "N/A"
 
-        transaction_id = "N/A (query action)"
-        status = "N/A (query action)"
-        token_id = "N/A"
-        topic_id = "N/A"
-        schedule_id = "N/A"
-        account_id = "N/A"
+            if isinstance(raw_res, RawTransactionResponse):
+                transaction_id = (
+                    str(raw_res.transaction_id)
+                    if raw_res.transaction_id
+                    else transaction_id
+                )
+                status = raw_res.status or status
+                token_id = str(raw_res.token_id) if raw_res.token_id else token_id
+                topic_id = str(raw_res.topic_id) if raw_res.topic_id else topic_id
+                schedule_id = (
+                    str(raw_res.schedule_id) if raw_res.schedule_id else schedule_id
+                )
+                account_id = (
+                    str(raw_res.account_id) if raw_res.account_id else account_id
+                )
 
-        if isinstance(raw_res, RawTransactionResponse):
-            transaction_id = (
-                str(raw_res.transaction_id)
-                if raw_res.transaction_id
-                else transaction_id
+            # Create a clean copy for logging to avoid mutating the original
+            loggable_params = stringify_recursive(params.normalized_params)
+
+            log_message = (
+                f"Agent executed tool {method} with params {json.dumps(loggable_params, indent=2)}.\n"
+                f"Transaction ID: {transaction_id}\n"
+                f"Transaction Status: {status}\n"
+                f"Token ID: {token_id}\n"
+                f"Topic ID: {topic_id}\n"
+                f"Schedule ID: {schedule_id}\n"
+                f"Account ID: {account_id}\n"
             )
-            status = raw_res.status or status
-            token_id = str(raw_res.token_id) if raw_res.token_id else token_id
-            topic_id = str(raw_res.topic_id) if raw_res.topic_id else topic_id
-            schedule_id = (
-                str(raw_res.schedule_id) if raw_res.schedule_id else schedule_id
-            )
-            account_id = str(raw_res.account_id) if raw_res.account_id else account_id
-
-        # Create a clean copy for logging to avoid mutating the original
-        loggable_params = stringify_recursive(params.normalized_params)
-
-        log_message = (
-            f"Agent executed tool {method} with params {json.dumps(loggable_params, indent=2)}.\n"
-            f"Transaction ID: {transaction_id}\n"
-            f"Transaction Status: {status}\n"
-            f"Token ID: {token_id}\n"
-            f"Topic ID: {topic_id}\n"
-            f"Schedule ID: {schedule_id}\n"
-            f"Account ID: {account_id}\n"
-        )
-        await self.post_message_to_hcs_topic(log_message, target_client)
+            await self.post_message_to_hcs_topic(log_message, target_client)
+        except Exception as e:
+            print(f"HcsAuditTrailHook: Hook failed: {str(e)}")
 
     async def post_message_to_hcs_topic(self, message: str, client: Client):
         """

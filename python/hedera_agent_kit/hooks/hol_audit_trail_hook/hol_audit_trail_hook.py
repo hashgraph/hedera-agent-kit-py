@@ -20,6 +20,12 @@ class HolAuditTrailHook(AbstractHook):
 
     Uses an HCS-2 INDEXED registry as the session topic to list audit entries.
     Delegates to AuditSession + HolAuditWriter for all write operations.
+
+    > [!NOTE]
+    > **Error Handling**: If the hook fails to post a message to HCS (e.g., due to network issues or incorrect topic ID), it
+    > will catch the error and log it to the CLI as `console.error`. Note that this might affect the auditing and it means
+    > that agent might have executed some transaction that was not logged in the auditing topic if misconfigured or external
+    > problems appeared. We are looking into further improvements of the auditing trail to make it more secure.
     """
 
     def __init__(

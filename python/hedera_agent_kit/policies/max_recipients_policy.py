@@ -139,6 +139,11 @@ class MaxRecipientsPolicy(Policy):
         additional_tools: List[str] | None = None,
         custom_strategies: Dict[str, Callable[[Any], int]] | None = None,
     ) -> None:
+        if max_recipients <= 0:
+            raise ValueError(
+                "MaxRecipientsPolicy: max_recipients must be a positive integer"
+            )
+
         self._max_recipients: int = max_recipients
         self._description: str = (
             f"Limits the maximum number of recipients to {max_recipients}"

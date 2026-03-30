@@ -324,7 +324,7 @@ async def test_match_scheduled_transaction(agent_executor, toolkit, monkeypatch)
     """Test matching a scheduled transaction."""
     input_text = (
         "Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to "
-        "0x1234567890123456789012345678901234567890. Make it expire tomorrow and wait for its expiration time with executing it."
+        "0x1234567890123456789012345678901234567890. Make it expire tomorrow and wait for its expiration time without executing it."
     )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 

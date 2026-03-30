@@ -93,7 +93,7 @@ async def test_extract_scheduling_parameters(agent, toolkit, monkeypatch):
     """Test matching and extracting scheduling parameters for minting."""
     input_text = (
         "Schedule Mint 0.0.5005 with metadata: ipfs://meta.json. "
-        "Make it expire tomorrow and wait for its expiration time with executing it."
+        "Make it expire tomorrow and wait for its expiration time without executing it."
     )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 

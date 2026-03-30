@@ -67,7 +67,7 @@ async def test_extract_scheduling_parameters(agent, toolkit, monkeypatch):
     """Test matching and extracting scheduling parameters for minting."""
     input_text = (
         "Schedule mint 10 of token 0.0.12345. Make it expire tomorrow "
-        "and wait for its expiration time with executing it."
+        "and wait for its expiration time without executing it."
     )
     config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 

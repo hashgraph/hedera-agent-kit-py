@@ -137,7 +137,7 @@ async def test_match_scheduled_transaction(agent_executor, toolkit, monkeypatch)
     """Test that the tool matches when the user schedules the ERC721 creation."""
     input_text = (
         "Schedule deploy ERC721 token called MyNFT with symbol MNFT and base URI ipfs://collection/. "
-        "Make it expire tomorrow and wait for its expiration time with executing it."
+        "Make it expire tomorrow and wait for its expiration time without executing it."
     )
     config: "RunnableConfig" = {"configurable": {"thread_id": "1"}}
 

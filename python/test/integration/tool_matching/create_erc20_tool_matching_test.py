@@ -168,7 +168,7 @@ async def test_match_scheduled_transaction(agent_executor, toolkit, monkeypatch)
     """Test that the tool matches when the user schedules the ERC20 creation."""
     input_text = (
         "Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, and 8 decimals. "
-        "Make it expire tomorrow and wait for its expiration time with executing it."
+        "Make it expire tomorrow and wait for its expiration time without executing it."
     )
     config: "RunnableConfig" = {"configurable": {"thread_id": "1"}}
 
