@@ -60,4 +60,3 @@ The `server.py` script accepts the following command-line arguments:
 ### Key Formats
 
 Both **ECDSA** and **ED25519** keys are supported. For **HEX** format of keys changes to the `server.py` code are required. Follow https://github.com/hiero-ledger/hiero-sdk-python for more information on `Client.set_operator` method.
-

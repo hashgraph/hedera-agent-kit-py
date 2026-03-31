@@ -178,7 +178,7 @@ async def test_update_token_memo(setup_accounts):
     token_info = executor_wrapper.get_token_info(token_id)
     assert token_info.memo == "Updated Token Memo"
 
-# FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
+
 @pytest.mark.asyncio
 async def test_update_supply_key(setup_accounts):
     executor_client: Client = setup_accounts["executor_client"]
@@ -253,7 +253,8 @@ async def test_fail_update_immutable_token(setup_accounts):
     assert result.error is not None
     # The tool's pre-check should detect no admin key
     assert (
-        "transaction failed with status: token_is_immutable" in result.human_message.lower()
+        "transaction failed with status: token_is_immutable"
+        in result.human_message.lower()
     )
 
 

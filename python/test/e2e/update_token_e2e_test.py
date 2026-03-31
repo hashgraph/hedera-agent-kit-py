@@ -269,7 +269,6 @@ async def test_update_token_memo_e2e(
     assert token_info.memo == "E2E updated memo"
 
 
-# FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
 @pytest.mark.asyncio
 async def test_update_token_supply_key_with_my_key(
     agent_executor,
@@ -299,7 +298,6 @@ async def test_update_token_supply_key_with_my_key(
     )
 
 
-# FIXME: This test fails because the token's keys in update transaction are only accepted only as Private keys
 @pytest.mark.asyncio
 async def test_update_token_supply_key_with_explicit_key(
     agent_executor,

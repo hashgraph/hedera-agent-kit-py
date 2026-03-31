@@ -253,6 +253,7 @@ async def test_empty_topic_returns_no_messages(setup_accounts):
     assert "No messages found for topic" in result.human_message
 
 
+# FIXME: This test fails
 @pytest.mark.asyncio
 async def test_fetch_50_messages(setup_accounts):
     """Should fetch all topic messages from a topic with 5000 messages."""

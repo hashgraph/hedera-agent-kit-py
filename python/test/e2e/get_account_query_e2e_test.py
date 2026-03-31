@@ -24,7 +24,6 @@ from test.utils.setup import (
     MIRROR_NODE_WAITING_TIME,
 )
 
-
 DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))
 
 

@@ -33,15 +33,30 @@ GOOGLE_API_KEY=your-google-api-key
 
 ## Run the Example
 
-### Standard Plugin Agent
+You can run the ADK agents either via the CLI or using the ADK web interface.
+
+### Web Interface
+
+The easiest way to explore all the autonomous ADK agents is through the built-in web interface:
 
 ```bash
-poetry run python plugin_tool_calling_agent.py
+poetry run adk web
+```
+
+This will start a local web server at `http://localhost:8000`. Open this URL in your browser, select the agent you want to interact with from the top-left dropdown, and start chatting!
+
+### Standard Plugin Agent
+
+This agent demonstrates loading all plugins and making them available to an autonomous agent.
+
+```bash
+poetry run adk run plugin_tool_calling_agent
 ```
 
 ### Return Bytes Mode Agent (Human-in-the-loop)
 
 This agent demonstrates "Return Bytes" mode, where the agent returns raw transaction bytes for the user to sign and execute manually, enabling human-in-the-loop transaction control.
+This example demonstrates how to orchestrate ADK agents using a custom Python script and CLI loop rather than the `adk run` dev tools.
 
 ```bash
 poetry run python return_bytes_tool_calling_agent.py

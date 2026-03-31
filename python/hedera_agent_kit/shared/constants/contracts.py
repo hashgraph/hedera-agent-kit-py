@@ -5,7 +5,6 @@ and their ABIs across supported networks.
 
 from hedera_agent_kit.shared.utils.ledger_id import LedgerId
 
-
 # =====================================================
 #  Contract Addresses (per network)
 # =====================================================

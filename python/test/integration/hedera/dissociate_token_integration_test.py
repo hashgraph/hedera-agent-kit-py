@@ -180,12 +180,13 @@ async def test_dissociate_single_token_successfully(setup_environment):
     assert "successfully dissociated" in result.human_message
 
     # Verify balance is gone (or association removed)
-    balances = executor_wrapper.get_account_balances(executor_account_id)
+    balances = await executor_wrapper.get_account_balances(executor_account_id)
     # SDK usually returns None or omits the key if not associated/zero balance depending on query
     is_associated = balances.token_balances.get(token_id_ft) is not None
     assert is_associated is False
 
 
+# FIXME: This test fails
 @pytest.mark.asyncio
 async def test_dissociate_multiple_tokens_at_once(setup_environment):
     executor_client: Client = setup_environment["executor_client"]
@@ -211,7 +212,7 @@ async def test_dissociate_multiple_tokens_at_once(setup_environment):
     assert "successfully dissociated" in result.human_message
 
     # Verify both removed
-    balances = executor_wrapper.get_account_balances(executor_account_id)
+    balances = await executor_wrapper.get_account_balances(executor_account_id)
     assert balances.token_balances.get(token_id_ft) is None
     assert balances.token_balances.get(token_id_nft) is None
 

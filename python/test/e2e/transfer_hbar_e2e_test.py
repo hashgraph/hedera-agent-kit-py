@@ -27,7 +27,6 @@ from test.utils import create_langchain_test_setup
 from test.utils.setup import get_custom_client
 from test.utils.teardown import return_hbars_and_delete_account
 
-
 # Constants
 TRANSFER_HBAR_TOOL = core_account_plugin_tool_names["TRANSFER_HBAR_TOOL"]
 DEFAULT_EXECUTOR_BALANCE = Hbar(UsdToHbarService.usd_to_hbar(BALANCE_TIERS["MINIMAL"]))

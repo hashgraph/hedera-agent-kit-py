@@ -33,7 +33,6 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-
 # Constants
 SIGN_SCHEDULE_TRANSACTION_TOOL = core_account_plugin_tool_names[
     "SIGN_SCHEDULE_TRANSACTION_TOOL"
