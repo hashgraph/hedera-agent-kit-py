@@ -327,10 +327,16 @@ class HederaOperationsWrapper:
         self, account_id: str, token_id: str
     ) -> Dict[str, Any]:
         token_balances_response: TokenBalancesResponse = (
-            await self.mirrornode.get_account_token_balances(account_id, token_id=token_id)
+            await self.mirrornode.get_account_token_balances(
+                account_id, token_id=token_id
+            )
         )
         found = next(
-            (t for t in token_balances_response.get("tokens", []) if t.get("token_id") == token_id),
+            (
+                t
+                for t in token_balances_response.get("tokens", [])
+                if t.get("token_id") == token_id
+            ),
             None,
         )
         if not found:
