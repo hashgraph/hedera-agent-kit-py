@@ -229,11 +229,11 @@ poetry run python hedera_mcp_agent.py
 
 ---
 
-### Option F: Run the Plugin Tool Calling Agent (Google ADK)
+### Option F: Run the Google ADK Agents
 
-This agent demonstrates how to use the Hedera Agent Kit with Google's Agent Development Kit (ADK) and the Gemini model.
+Google's Agent Development Kit (ADK) allows you to build and run agents with Gemini models. You can run these agents either via a web interface or the CLI.
 
-Found at `python/examples/adk/plugin_tool_calling_agent.py`.
+Found at `python/examples/adk/`.
 
 1. First, go into the directory where the example is and install dependencies:
 
@@ -242,10 +242,29 @@ cd python/examples/adk
 poetry install
 ```
 
-2. Then, run the example:
+#### Run via Web Interface (Recommended)
+
+The easiest way to explore all the autonomous ADK agents is through the built-in web interface:
 
 ```bash
-poetry run python plugin_tool_calling_agent.py
+poetry run adk web
+```
+
+This will start a local web server at `http://localhost:8000`. Open this URL in your browser, select the agent you want to interact with from the top-left dropdown, and start chatting!
+
+#### Run via CLI
+
+You can run individual agents directly using the ADK CLI:
+
+```bash
+# Run the plugin tool calling agent
+poetry run adk run plugin_tool_calling_agent
+```
+
+Alternatively, you can run the agent script directly:
+
+```bash
+poetry run python plugin_tool_calling_agent/agent.py
 ```
 
 ---
@@ -295,6 +314,8 @@ poetry run python return_bytes_tool_calling_agent.py
 
 #### 3. Google ADK Return Bytes
 Found at `python/examples/adk/return_bytes_tool_calling_agent.py`.
+
+This example demonstrates how to orchestrate ADK agents using a custom Python script and CLI loop rather than the `adk run` dev tools, showing that the dev tools are optional and the SDK can be used in any custom environment.
 
 ```bash
 cd python/examples/adk
