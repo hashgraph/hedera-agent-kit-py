@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any
-
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
@@ -30,7 +28,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -97,10 +95,57 @@ def post_process(response: RawTransactionResponse) -> str:
     )
 
 
+async def create_account(
+    client: Client,
+    context: Context,
+    params: CreateAccountParameters,
+) -> ToolResponse:
+    """Execute an account creation using normalized parameters and a built transaction.
+
+    Args:
+        client: Hedera client used to execute transactions.
+        context: Runtime context providing configuration and defaults.
+        params: User-supplied parameters describing the account to create.
+
+    Returns:
+        A ToolResponse wrapping the raw transaction response and a human-friendly
+        message indicating success or failure.
+
+    Notes:
+        This function captures exceptions and returns a failure ToolResponse
+        rather than raising, to keep tool behavior consistent for callers.
+        It accepts raw params, validates, and normalizes them before performing the transaction.
+    """
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        # Normalize parameters
+        normalised_params: CreateAccountParametersNormalised = (
+            await HederaParameterNormaliser.normalise_create_account(
+                params, context, client, mirrornode_service
+            )
+        )
+
+        # Build transaction
+        tx: Transaction = HederaBuilder.create_account(normalised_params)
+
+        # Execute transaction and post-process result
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        message: str = f"Failed to create account: {str(e)}"
+        print("[create_account_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 CREATE_ACCOUNT_TOOL: str = "create_account_tool"
 
 
-class CreateAccountTool(BaseToolV2):
+class CreateAccountTool(Tool):
     """Tool wrapper that exposes the account creation capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -115,34 +160,18 @@ class CreateAccountTool(BaseToolV2):
         self.parameters: type[CreateAccountParameters] = CreateAccountParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> CreateAccountParametersNormalised:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        return await HederaParameterNormaliser.normalise_create_account(
-            params, context, client, mirrornode_service
-        )
-
-    async def core_action(
-        self,
-        normalized_params: CreateAccountParametersNormalised,
-        context: Context,
-        client: Client,
-    ) -> Transaction:
-        return HederaBuilder.create_account(normalized_params)
-
-    async def secondary_action(
-        self, transaction: Transaction, client: Client, context: Context
+    async def execute(
+        self, client: Client, context: Context, params: CreateAccountParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        """Execute the account creation using the provided client, context, and params.
 
-    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
-        desc = "Failed to create account"
-        message = f"{desc}: {str(error)}"
-        print(f"[create_account_tool] {message}")
-        return ToolResponse(
-            error=message,
-            human_message=message,
-        )
+        Args:
+            client: Hedera client used to execute transactions.
+            context: Runtime context providing configuration and defaults.
+            params: Account creation parameters accepted by this tool.
+
+        Returns:
+            The result of the account creation as a ToolResponse, including a human-readable
+            message and error information if applicable.
+        """
+        return await create_account(client, context, params)

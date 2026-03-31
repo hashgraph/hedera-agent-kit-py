@@ -22,7 +22,7 @@ from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     GetTokenInfoParameters,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -167,10 +167,56 @@ def post_process(token_info: TokenInfo) -> str:
 """
 
 
+async def get_token_info_query(
+    client: Client,
+    context: Context,
+    params: GetTokenInfoParameters,
+) -> ToolResponse:
+    """Execute a token info query using the mirrornode service.
+
+    Args:
+        client: Hedera client.
+        context: Runtime context.
+        params: Query parameters.
+
+    Returns:
+        A ToolResponse with token details.
+    """
+    try:
+        parsed_params = HederaParameterNormaliser.normalise_get_token_info(params)
+
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        # Fetch token info
+        token_info: TokenInfo = await mirrornode_service.get_token_info(
+            parsed_params.token_id
+        )
+
+        # Ensure token_id is present in the dict
+        if token_info["token_id"] is None:
+            token_info["token_id"] = parsed_params.token_id
+
+        return ToolResponse(
+            human_message=post_process(token_info),
+            extra={"tokenInfo": token_info, "tokenId": parsed_params.token_id},
+        )
+
+    except Exception as e:
+        desc = "Failed to get token info"
+        message = f"{desc}: {str(e)}"
+        print("[get_token_info_query_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 GET_TOKEN_INFO_QUERY_TOOL: str = "get_token_info_query_tool"
 
 
-class GetTokenInfoQueryTool(BaseToolV2):
+class GetTokenInfoQueryTool(Tool):
     """Tool wrapper that exposes the token info query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -185,30 +231,17 @@ class GetTokenInfoQueryTool(BaseToolV2):
         self.parameters: type[GetTokenInfoParameters] = GetTokenInfoParameters
         self.outputParser = untyped_query_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> Any:
-        return HederaParameterNormaliser.normalise_get_token_info(params)
+    async def execute(
+        self, client: Client, context: Context, params: GetTokenInfoParameters
+    ) -> ToolResponse:
+        """Execute the token info query.
 
-    async def core_action(
-        self,
-        normalized_params: Any,
-        client: Client,
-        context: Context,
-    ):
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        token_info: TokenInfo = await mirrornode_service.get_token_info(
-            normalized_params.token_id
-        )
-        if token_info["token_id"] is None:
-            token_info["token_id"] = normalized_params.token_id
+        Args:
+            client: Hedera client.
+            context: Runtime context.
+            params: Query parameters.
 
-        return ToolResponse(
-            human_message=post_process(token_info),
-            extra={"tokenInfo": token_info, "tokenId": token_info.get("token_id")},
-        )
-
-    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
-        return False
+        Returns:
+            The query result.
+        """
+        return await get_token_info_query(client, context, params)

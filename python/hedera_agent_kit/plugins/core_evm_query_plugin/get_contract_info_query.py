@@ -9,7 +9,7 @@ This module exposes:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from hiero_sdk_python import Client
 
@@ -23,7 +23,7 @@ from hedera_agent_kit.shared.models import ToolResponse
 from hedera_agent_kit.shared.parameter_schemas.evm_schema import (
     ContractInfoQueryParameters,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -114,10 +114,33 @@ def post_process(contract: ContractInfo) -> str:
     )
 
 
+async def get_contract_info_query(
+    client: Client, context: Context, params: ContractInfoQueryParameters
+) -> ToolResponse:
+    """Execute a contract info query via the Mirror Node service."""
+    try:
+        # validate/parse params using schema — pydantic will validate on creation
+        parsed = params
+
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        info = await mirrornode_service.get_contract_info(parsed.get("contract_id"))
+
+        human_message = post_process(info)
+        return ToolResponse(human_message=human_message)
+
+    except Exception as e:
+        message = f"== Failed to get contract info: {str(e)}"
+        print("[get_contract_info_query]", message)
+        return ToolResponse(human_message=message, error=message)
+
+
 GET_CONTRACT_INFO_QUERY_TOOL = "get_contract_info_query_tool"
 
 
-class GetContractInfoQueryTool(BaseToolV2):
+class GetContractInfoQueryTool(Tool):
     """Tool wrapper exposing contract info query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -127,27 +150,7 @@ class GetContractInfoQueryTool(BaseToolV2):
         self.parameters: type[ContractInfoQueryParameters] = ContractInfoQueryParameters
         self.outputParser = untyped_query_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ContractInfoQueryParameters:
-        return params
-
-    async def core_action(
-        self,
-        normalized_params: ContractInfoQueryParameters,
-        context: Context,
-        client: Client,
+    async def execute(
+        self, client: Client, context: Context, params: ContractInfoQueryParameters
     ) -> ToolResponse:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        info = await mirrornode_service.get_contract_info(
-            normalized_params.get("contract_id")
-        )
-
-        human_message = post_process(info)
-        return ToolResponse(human_message=human_message, extra={"contract_info": info})
-
-    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
-        return False
+        return await get_contract_info_query(client, context, params)

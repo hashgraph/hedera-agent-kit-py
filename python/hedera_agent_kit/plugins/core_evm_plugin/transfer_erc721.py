@@ -9,8 +9,6 @@ This module exposes:
 from __future__ import annotations
 
 
-from typing import Any
-
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
@@ -31,7 +29,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -93,10 +91,44 @@ def post_process(response: RawTransactionResponse) -> str:
     return "ERC721 token transferred successfully."
 
 
+async def transfer_erc721(
+    client: Client,
+    context: Context,
+    params: TransferERC721Parameters,
+) -> ToolResponse:
+    """Execute ERC721 transfer transaction."""
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        normalised_params: ContractExecuteTransactionParametersNormalised = (
+            await HederaParameterNormaliser.normalise_transfer_erc721_params(
+                params,
+                ERC721_TRANSFER_FUNCTION_ABI,
+                ERC721_TRANSFER_FUNCTION_NAME,
+                context,
+                mirrornode_service,
+                client,
+            )
+        )
+
+        tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        message = f"Failed to transfer ERC721: {str(e)}"
+        print("[transfer_erc721_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 TRANSFER_ERC721_TOOL = "transfer_erc721_tool"
 
 
-class TransferERC721Tool(BaseToolV2):
+class TransferERC721Tool(Tool):
     """Tool wrapper exposing ERC721 transfer capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -106,33 +138,7 @@ class TransferERC721Tool(BaseToolV2):
         self.parameters: type[TransferERC721Parameters] = TransferERC721Parameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ContractExecuteTransactionParametersNormalised:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        return await HederaParameterNormaliser.normalise_transfer_erc721_params(
-            params,
-            ERC721_TRANSFER_FUNCTION_ABI,
-            ERC721_TRANSFER_FUNCTION_NAME,
-            context,
-            mirrornode_service,
-            client,
-        )
-
-    async def core_action(
-        self,
-        normalized_params: ContractExecuteTransactionParametersNormalised,
-        client: Client,
-        context: Context,
-    ) -> Transaction:
-        return HederaBuilder.execute_transaction(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: Transaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: TransferERC721Parameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        return await transfer_erc721(client, context, params)

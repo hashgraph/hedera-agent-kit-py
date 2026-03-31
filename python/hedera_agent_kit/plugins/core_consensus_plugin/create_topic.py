@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any
-
 from hiero_sdk_python import Client
 from hiero_sdk_python.consensus.topic_create_transaction import TopicCreateTransaction
 
@@ -29,7 +27,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -77,10 +75,54 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Topic created successfully with topic id {topic_id_str} and transaction id {response.transaction_id}"
 
 
+async def create_topic(
+    client: Client,
+    context: Context,
+    params: CreateTopicParameters,
+) -> ToolResponse:
+    """Execute a topic creation using normalized parameters and a built transaction.
+
+    Args:
+        client: Hedera client used to execute transactions.
+        context: Runtime context providing configuration and defaults.
+        params: User-supplied parameters describing the topic creation to perform.
+
+    Returns:
+        A ToolResponse wrapping the raw transaction response and a human-friendly
+        message indicating success or failure.
+
+    Notes:
+        This function captures exceptions and returns a failure ToolResponse
+        rather than raising, to keep tool behavior consistent for callers.
+        It accepts raw params, validates, and normalizes them before performing the transaction.
+    """
+    try:
+        # Normalize parameters
+        normalised_params: CreateTopicParametersNormalised = (
+            await HederaParameterNormaliser.normalise_create_topic_params(
+                params, context, client
+            )
+        )
+
+        # Build transaction
+        tx: TopicCreateTransaction = HederaBuilder.create_topic(normalised_params)
+
+        # Execute transaction and post-process result
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        message: str = f"Failed to create topic: {str(e)}"
+        print("[create_topic_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 CREATE_TOPIC_TOOL: str = "create_topic_tool"
 
 
-class CreateTopicTool(BaseToolV2):
+class CreateTopicTool(Tool):
     """Tool wrapper that exposes the topic creation capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -95,25 +137,18 @@ class CreateTopicTool(BaseToolV2):
         self.parameters: type[CreateTopicParameters] = CreateTopicParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> CreateTopicParametersNormalised:
-        return await HederaParameterNormaliser.normalise_create_topic_params(
-            params, context, client
-        )
-
-    async def core_action(
-        self,
-        normalized_params: CreateTopicParametersNormalised,
-        client: Client,
-        context: Context,
-    ) -> TopicCreateTransaction:
-        return HederaBuilder.create_topic(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: TopicCreateTransaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: CreateTopicParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        """Execute the topic creation using the provided client, context, and params.
+
+        Args:
+            client: Hedera client used to execute transactions.
+            context: Runtime context providing configuration and defaults.
+            params: Topic creation parameters accepted by this tool.
+
+        Returns:
+            The result of the creation as a ToolResponse, including a human-readable
+            message and error information if applicable.
+        """
+        return await create_topic(client, context, params)

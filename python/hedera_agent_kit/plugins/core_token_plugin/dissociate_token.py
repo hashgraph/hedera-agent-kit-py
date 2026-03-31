@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any
-
 from hiero_sdk_python import Client, TokenDissociateTransaction
 
 from hedera_agent_kit.shared.configuration import Context
@@ -20,6 +18,7 @@ from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
 from hedera_agent_kit.shared.models import (
     RawTransactionResponse,
     ToolResponse,
+    ExecutedTransactionToolResponse,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     DissociateTokenParameters,
@@ -27,7 +26,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -79,10 +78,49 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Token(s) successfully dissociated with transaction id {response.transaction_id}"
 
 
+async def dissociate_token(
+    client: Client,
+    context: Context,
+    params: DissociateTokenParameters,
+) -> ToolResponse:
+    """Execute a token dissociation using normalized parameters and a built transaction.
+
+    Args:
+        client: Hedera client.
+        context: Runtime context.
+        params: Dissociation parameters.
+
+    Returns:
+        A ToolResponse wrapping the transaction result.
+    """
+    try:
+        normalised_params = (
+            await HederaParameterNormaliser.normalise_dissociate_token_params(
+                params, context, client
+            )
+        )
+
+        tx: TokenDissociateTransaction = HederaBuilder.dissociate_token(
+            normalised_params
+        )
+
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        desc = "Failed to dissociate token"
+        message = f"{desc}: {str(e)}"
+        print("[dissociate_token_tool]", message)
+        return ExecutedTransactionToolResponse(
+            human_message=message,
+            error=message,
+            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
+        )
+
+
 DISSOCIATE_TOKEN_TOOL: str = "dissociate_token_tool"
 
 
-class DissociateTokenTool(BaseToolV2):
+class DissociateTokenTool(Tool):
     """Tool wrapper that exposes the token dissociation capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -97,25 +135,17 @@ class DissociateTokenTool(BaseToolV2):
         self.parameters: type[DissociateTokenParameters] = DissociateTokenParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> Any:
-        return await HederaParameterNormaliser.normalise_dissociate_token_params(
-            params, context, client
-        )
-
-    async def core_action(
-        self,
-        normalized_params: Any,
-        client: Client,
-        context: Context,
-    ) -> TokenDissociateTransaction:
-        return HederaBuilder.dissociate_token(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: TokenDissociateTransaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: DissociateTokenParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        """Execute the dissociation using the provided client, context, and params.
+
+        Args:
+            client: Hedera client.
+            context: Runtime context.
+            params: Dissociation parameters.
+
+        Returns:
+            The result of the transaction.
+        """
+        return await dissociate_token(client, context, params)

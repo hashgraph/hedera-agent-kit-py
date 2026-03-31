@@ -7,7 +7,6 @@ function on Hedera.
 
 from __future__ import annotations
 
-from typing import Any
 
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
@@ -27,7 +26,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
     ContractExecuteTransactionParametersNormalised,
 )
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import handle_transaction
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -77,10 +76,38 @@ def post_process(response: RawTransactionResponse) -> str:
     )
 
 
+async def mint_erc721(
+    client: Client,
+    context: Context,
+    params: MintERC721Parameters,
+) -> ToolResponse:
+    """Execute ERC721 mint transaction by calling safeMint(to) on the contract."""
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        normalised_params: ContractExecuteTransactionParametersNormalised = (
+            await HederaParameterNormaliser.normalise_mint_erc721_params(
+                params, context, mirrornode_service, client
+            )
+        )
+
+        tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        message = f"Failed to mint ERC721 token: {str(e)}"
+        print("[mint_erc721_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 MINT_ERC721_TOOL = "mint_erc721_tool"
 
 
-class MintERC721Tool(BaseToolV2):
+class MintERC721Tool(Tool):
     """Tool wrapper exposing ERC721 mint capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -90,28 +117,7 @@ class MintERC721Tool(BaseToolV2):
         self.parameters: type[MintERC721Parameters] = MintERC721Parameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ContractExecuteTransactionParametersNormalised:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        return await HederaParameterNormaliser.normalise_mint_erc721_params(
-            params, context, mirrornode_service, client
-        )
-
-    async def core_action(
-        self,
-        normalized_params: ContractExecuteTransactionParametersNormalised,
-        client: Client,
-        context: Context,
-    ) -> Transaction:
-        return HederaBuilder.execute_transaction(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: Transaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: MintERC721Parameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        return await mint_erc721(client, context, params)

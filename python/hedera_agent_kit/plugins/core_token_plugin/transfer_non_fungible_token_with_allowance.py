@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 
-from typing import Any
-
 from hiero_sdk_python import Client
-from hiero_sdk_python.transaction.transaction import Transaction
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
 from hedera_agent_kit.shared.hedera_utils.hedera_parameter_normalizer import (
@@ -21,7 +18,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -53,10 +50,33 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Non-fungible tokens successfully transferred with allowance. Transaction ID: {response.transaction_id}"
 
 
+async def transfer_nft_with_allowance(
+    client: Client,
+    context: Context,
+    params: TransferNonFungibleTokenWithAllowanceParameters,
+) -> ToolResponse:
+    try:
+        normalised_params: TransferNonFungibleTokenWithAllowanceParametersNormalised = (
+            HederaParameterNormaliser.normalise_transfer_non_fungible_token_with_allowance(
+                params, context
+            )
+        )
+        tx = HederaBuilder.transfer_non_fungible_token_with_allowance(normalised_params)
+        return await handle_transaction(tx, client, context, post_process)
+    except Exception as e:
+        desc = "Failed to transfer non-fungible token with allowance"
+        message = f"{desc}: {str(e)}"
+        print(f"[transfer_non_fungible_token_with_allowance_tool] {message}")
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 TRANSFER_NFT_WITH_ALLOWANCE_TOOL = "transfer_non_fungible_token_with_allowance_tool"
 
 
-class TransferNftWithAllowanceTool(BaseToolV2):
+class TransferNftWithAllowanceTool(Tool):
     def __init__(self, context: Context):
         self.method = TRANSFER_NFT_WITH_ALLOWANCE_TOOL
         self.name = "Transfer Non Fungible Token with Allowance"
@@ -64,27 +84,10 @@ class TransferNftWithAllowanceTool(BaseToolV2):
         self.parameters = TransferNonFungibleTokenWithAllowanceParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> TransferNonFungibleTokenWithAllowanceParametersNormalised:
-        return HederaParameterNormaliser.normalise_transfer_non_fungible_token_with_allowance(
-            params, context
-        )
-
-    async def core_action(
+    async def execute(
         self,
-        normalized_params: TransferNonFungibleTokenWithAllowanceParametersNormalised,
         client: Client,
         context: Context,
-    ) -> Transaction:
-        return HederaBuilder.transfer_non_fungible_token_with_allowance(
-            normalized_params
-        )
-
-    async def secondary_action(
-        self,
-        transaction: Transaction,
-        client: Client,
-        context: Context,
+        params: TransferNonFungibleTokenWithAllowanceParameters,
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        return await transfer_nft_with_allowance(client, context, params)

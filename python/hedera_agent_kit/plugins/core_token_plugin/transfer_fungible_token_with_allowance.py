@@ -8,10 +8,7 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any
-
 from hiero_sdk_python import Client
-from hiero_sdk_python.transaction.transaction import Transaction
 
 from hedera_agent_kit.shared.configuration import Context
 from hedera_agent_kit.shared.hedera_utils.hedera_builder import HederaBuilder
@@ -24,6 +21,7 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.hedera_mirrornode_utils imp
 from hedera_agent_kit.shared.models import (
     RawTransactionResponse,
     ToolResponse,
+    ExecutedTransactionToolResponse,
 )
 from hedera_agent_kit.shared.parameter_schemas.token_schema import (
     TransferFungibleTokenWithAllowanceParameters,
@@ -32,7 +30,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -91,12 +89,52 @@ Schedule ID: {response.schedule_id}"""
     return f"Fungible tokens successfully transferred with allowance. Transaction ID: {response.transaction_id}"
 
 
+async def transfer_fungible_token_with_allowance(
+    client: Client,
+    context: Context,
+    params: TransferFungibleTokenWithAllowanceParameters,
+) -> ToolResponse:
+    """Execute a fungible token transfer using allowance.
+
+    Args:
+        client: Hedera client.
+        context: Runtime context.
+        params: Transfer parameters.
+
+    Returns:
+        A ToolResponse wrapping the transaction result.
+    """
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        normalised_params: TransferFungibleTokenWithAllowanceParametersNormalised = (
+            await HederaParameterNormaliser.normalise_transfer_fungible_token_with_allowance(
+                params, context, client, mirrornode_service
+            )
+        )
+
+        tx = HederaBuilder.transfer_fungible_token_with_allowance(normalised_params)
+
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        desc = "Failed to transfer fungible token with allowance"
+        message = f"{desc}: {str(e)}"
+        print("[transfer_fungible_token_with_allowance_tool]", message)
+        return ExecutedTransactionToolResponse(
+            human_message=message,
+            error=message,
+            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
+        )
+
+
 TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL: str = (
     "transfer_fungible_token_with_allowance_tool"
 )
 
 
-class TransferFungibleTokenWithAllowanceTool(BaseToolV2):
+class TransferFungibleTokenWithAllowanceTool(Tool):
     """Tool wrapper that exposes the fungible token allowance transfer capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -113,28 +151,20 @@ class TransferFungibleTokenWithAllowanceTool(BaseToolV2):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> TransferFungibleTokenWithAllowanceParametersNormalised:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        return await HederaParameterNormaliser.normalise_transfer_fungible_token_with_allowance(
-            params, context, client, mirrornode_service
-        )
-
-    async def core_action(
+    async def execute(
         self,
-        normalized_params: TransferFungibleTokenWithAllowanceParametersNormalised,
         client: Client,
         context: Context,
-    ) -> Transaction:
-        return HederaBuilder.transfer_fungible_token_with_allowance(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: Transaction,
-        client: Client,
-        context: Context,
+        params: TransferFungibleTokenWithAllowanceParameters,
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        """Execute the transfer using the provided client, context, and params.
+
+        Args:
+            client: Hedera client.
+            context: Runtime context.
+            params: Transfer parameters.
+
+        Returns:
+            The result of the transaction.
+        """
+        return await transfer_fungible_token_with_allowance(client, context, params)

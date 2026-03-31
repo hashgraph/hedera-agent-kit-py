@@ -28,7 +28,7 @@ from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
 )
 from hedera_agent_kit.shared.utils.prompt_generator import PromptGenerator
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 
 
 def get_topic_messages_query_prompt(context: Context = {}) -> str:
@@ -82,10 +82,59 @@ def post_process(messages: List[Dict[str, Any]], topic_id: str) -> str:
   """
 
 
+async def get_topic_messages_query(
+    client: Client,
+    context: Context,
+    params: TopicMessagesQueryParameters,
+) -> ToolResponse:
+    """Execute a topic messages query using the mirrornode service.
+
+    Args:
+        client: Hedera client used to determine network/ledger ID.
+        context: Runtime context providing configuration and defaults.
+        params: Query parameters containing the topic ID and optional filters.
+    Returns:
+        A ToolResponse wrapping the raw messages and a human-friendly
+        message indicating success or failure.
+    """
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+
+        # Prepare params for the service call (handling timestamp conversion)
+        parsed_params: TopicMessagesQueryParams = (
+            HederaParameterNormaliser.normalise_get_topic_messages(params)
+        )
+
+        result: TopicMessagesResponse = await mirrornode_service.get_topic_messages(
+            parsed_params
+        )
+
+        topic_id = result.get("topic_id")
+        messages_list = result.get("messages")
+
+        return ToolResponse(
+            human_message=post_process(messages_list, topic_id),
+            extra={
+                "topicId": topic_id,
+                "messages": messages_list,
+            },
+        )
+
+    except Exception as e:
+        message: str = f"Failed to get topic messages: {str(e)}"
+        print("[get_topic_messages_query_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 GET_TOPIC_MESSAGES_QUERY_TOOL: str = "get_topic_messages_query_tool"
 
 
-class GetTopicMessagesQueryTool(BaseToolV2):
+class GetTopicMessagesQueryTool(Tool):
     """Tool wrapper that exposes the topic messages query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -102,35 +151,15 @@ class GetTopicMessagesQueryTool(BaseToolV2):
         )
         self.outputParser = untyped_query_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> TopicMessagesQueryParams:
-        return HederaParameterNormaliser.normalise_get_topic_messages(params)
-
-    async def core_action(
-        self,
-        normalized_params: TopicMessagesQueryParams,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: TopicMessagesQueryParameters
     ) -> ToolResponse:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
+        """Execute the topic messages query using the provided client, context, and params.
 
-        result: TopicMessagesResponse = await mirrornode_service.get_topic_messages(
-            normalized_params
-        )
-
-        topic_id = result.get("topic_id")
-        messages_list = result.get("messages")
-
-        return ToolResponse(
-            human_message=post_process(messages_list, topic_id),
-            extra={
-                "topicId": topic_id,
-                "messages": messages_list,
-            },
-        )
-
-    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
-        return False
+        Args:
+             client: Hedera client used to determine network/ledger ID.
+             context: Runtime context providing configuration and defaults.
+             params: Topic messages query parameters accepted by this tool.
+        Returns:
+            The result of the query as a ToolResponse."""
+        return await get_topic_messages_query(client, context, params)

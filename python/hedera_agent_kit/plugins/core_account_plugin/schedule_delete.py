@@ -18,8 +18,7 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
-from typing import Any
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -45,10 +44,32 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Scheduled transaction successfully deleted. Transaction ID: {response.transaction_id}"
 
 
+async def schedule_delete(
+    client: Client,
+    context: Context,
+    params: ScheduleDeleteTransactionParameters,
+) -> ToolResponse:
+    try:
+        normalised_params: ScheduleDeleteTransactionParametersNormalised = (
+            HederaParameterNormaliser.normalise_schedule_delete_transaction(params)
+        )
+        tx: ScheduleDeleteTransaction = HederaBuilder.delete_schedule_transaction(
+            normalised_params
+        )
+        return await handle_transaction(tx, client, context, post_process)
+    except Exception as e:
+        message: str = f"Failed to delete a schedule: {str(e)}"
+        print("[schedule_delete_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 SCHEDULE_DELETE_TOOL = "schedule_delete_tool"
 
 
-class ScheduleDeleteTool(BaseToolV2):
+class ScheduleDeleteTool(Tool):
     def __init__(self, context: Context):
         self.method = SCHEDULE_DELETE_TOOL
         self.name = "Delete Scheduled Transaction"
@@ -56,28 +77,10 @@ class ScheduleDeleteTool(BaseToolV2):
         self.parameters = ScheduleDeleteTransactionParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ScheduleDeleteTransactionParametersNormalised:
-        return HederaParameterNormaliser.normalise_schedule_delete_transaction(params)
-
-    async def core_action(
+    async def execute(
         self,
-        normalized_params: ScheduleDeleteTransactionParametersNormalised,
-        context: Context,
         client: Client,
-    ) -> ScheduleDeleteTransaction:
-        return HederaBuilder.delete_schedule_transaction(normalized_params)
-
-    async def secondary_action(
-        self, transaction: ScheduleDeleteTransaction, client: Client, context: Context
+        context: Context,
+        params: ScheduleDeleteTransactionParameters,
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
-
-    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
-        message: str = f"Failed to delete a schedule: {str(error)}"
-        print("[schedule_delete_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
+        return await schedule_delete(client, context, params)
