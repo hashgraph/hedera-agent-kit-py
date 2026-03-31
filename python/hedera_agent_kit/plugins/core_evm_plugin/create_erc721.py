@@ -8,7 +8,7 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
@@ -33,7 +33,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import (
     ledger_id_from_network,
     get_deployed_contract_address,
@@ -82,49 +82,30 @@ def post_process(evm_contract_id: str, response: RawTransactionResponse) -> str:
     )
 
 
-CREATE_ERC721_TOOL = "create_erc721_tool"
-
-
-class CreateERC721Tool(BaseToolV2):
-    """Tool wrapper exposing ERC721 creation capability to the Agent runtime."""
-
-    def __init__(self, context: Context):
-        self.method: str = CREATE_ERC721_TOOL
-        self.name: str = "Create ERC721 Token"
-        self.description: str = create_erc721_prompt(context)
-        self.parameters: type[CreateERC721Parameters] = CreateERC721Parameters
-        self.outputParser = transaction_tool_output_parser
-
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ContractExecuteTransactionParametersNormalised:
+async def create_erc721(
+    client: Client,
+    context: Context,
+    params: CreateERC721Parameters,
+) -> ToolResponse:
+    """Execute ERC721 creation transaction via the BaseERC721Factory contract."""
+    try:
         factory_address = get_erc721_factory_address(
             ledger_id_from_network(client.network)
         )
-        return await HederaParameterNormaliser.normalise_create_erc721_params(
-            params,
-            factory_address,
-            ERC721_FACTORY_ABI,
-            "deployToken",
-            context,
-            client,
+
+        normalised_params: ContractExecuteTransactionParametersNormalised = (
+            await HederaParameterNormaliser.normalise_create_erc721_params(
+                params,
+                factory_address,
+                ERC721_FACTORY_ABI,
+                "deployToken",
+                context,
+                client,
+            )
         )
 
-    async def core_action(
-        self,
-        normalized_params: ContractExecuteTransactionParametersNormalised,
-        client: Client,
-        context: Context,
-    ) -> Transaction:
-        return HederaBuilder.execute_transaction(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: Transaction,
-        client: Client,
-        context: Context,
-    ) -> ToolResponse:
-        result = await handle_transaction(transaction, client, context)
+        tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
+        result = await handle_transaction(tx, client, context)
 
         if context.mode == AgentMode.RETURN_BYTES:
             return result
@@ -138,7 +119,7 @@ class CreateERC721Tool(BaseToolV2):
         evm_contract_id: str | None = None
 
         # If transaction is scheduled we can't know the created address yet.
-        is_scheduled = getattr(raw_tx_data, "schedule_id", None) is not None
+        is_scheduled = getattr(params, "is_scheduled", False)
         if not is_scheduled:
             evm_contract_id = await get_deployed_contract_address(client, raw_tx_data)
             # inject the correct contract ID into raw response
@@ -151,3 +132,30 @@ class CreateERC721Tool(BaseToolV2):
             raw=raw_tx_data,
             extra={"erc721_address": evm_contract_id, "raw": raw_tx_data},
         )
+
+    except Exception as e:
+        message = f"Failed to create ERC721 token: {str(e)}"
+        print("[create_erc721_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
+CREATE_ERC721_TOOL = "create_erc721_tool"
+
+
+class CreateERC721Tool(Tool):
+    """Tool wrapper exposing ERC721 creation capability to the Agent runtime."""
+
+    def __init__(self, context: Context):
+        self.method: str = CREATE_ERC721_TOOL
+        self.name: str = "Create ERC721 Token"
+        self.description: str = create_erc721_prompt(context)
+        self.parameters: type[CreateERC721Parameters] = CreateERC721Parameters
+        self.outputParser = transaction_tool_output_parser
+
+    async def execute(
+        self, client: Client, context: Context, params: CreateERC721Parameters
+    ) -> ToolResponse:
+        return await create_erc721(client, context, params)

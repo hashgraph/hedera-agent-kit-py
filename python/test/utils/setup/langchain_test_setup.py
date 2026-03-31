@@ -90,7 +90,6 @@ async def create_langchain_test_setup(
             context=Context(
                 mode=toolkit_options.agent_mode,
                 account_id=str(operator_account_id),
-                hooks=toolkit_options.hooks,
             ),
         ),
     )

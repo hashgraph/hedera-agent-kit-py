@@ -232,11 +232,8 @@ async def test_handle_non_existent_transaction(
     error_message = parsed_data.get("error")
 
     # Check for error in either the error field or the human message content
-    assert (
-        error_message
-        and "Failed to execute Get Transaction Record Query" in error_message
-    ) or (
-        "Failed to execute Get Transaction Record Query" in human_message
+    assert (error_message and "Failed to get transaction record" in error_message) or (
+        "Failed to get transaction record" in human_message
         and "Not found" in human_message
     )
 
@@ -259,7 +256,7 @@ async def test_handle_invalid_format_transaction(
     error_message = parsed_data.get("error")
 
     # Check for error in either the error field or the human message content
-    assert (error_message and "Failed to fetch transaction" in error_message) or (
-        "Failed to execute Get Transaction Record Query" in human_message
+    assert (error_message and "Failed to get transaction record" in error_message) or (
+        "Failed to get transaction record" in human_message
         and "Invalid transactionId format" in human_message
     )

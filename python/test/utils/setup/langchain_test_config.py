@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from hedera_agent_kit.plugins import (
     core_account_plugin,
@@ -16,7 +16,6 @@ from hedera_agent_kit.plugins import (
 )
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.plugin import Plugin
-from hedera_agent_kit.hooks.abstract_hook import AbstractHook
 from .llm_factory import LLMProvider, LLMOptions
 
 # Maps provider to base environment variable name
@@ -32,7 +31,6 @@ class LangchainTestOptions:
     tools: List[str]
     plugins: List[Plugin]
     agent_mode: AgentMode
-    hooks: Optional[List[AbstractHook]] = None
 
 
 def get_all_provider_api_keys(provider: LLMProvider) -> List[str]:

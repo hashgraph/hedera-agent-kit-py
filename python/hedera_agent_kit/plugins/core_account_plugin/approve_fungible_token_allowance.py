@@ -17,8 +17,7 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
-from typing import Any
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -74,10 +73,38 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"Fungible token allowance(s) approved successfully. Transaction ID: {response.transaction_id}"
 
 
+async def approve_fungible_token_allowance(
+    client: Client,
+    context: Context,
+    params: ApproveTokenAllowanceParameters,
+) -> ToolResponse:
+    try:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        normalised_params: ApproveTokenAllowanceParametersNormalised = (
+            await HederaParameterNormaliser.normalise_approve_token_allowance(
+                params, context, client, mirrornode_service
+            )
+        )
+        tx: AccountAllowanceApproveTransaction = HederaBuilder.approve_token_allowance(
+            normalised_params
+        )
+        return await handle_transaction(tx, client, context, post_process)
+    except Exception as e:
+        desc = "Failed to approve token allowance"
+        message = f"{desc}: {str(e)}"
+        print(f"[approve_fungible_token_allowance_tool] {message}")
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL = "approve_fungible_token_allowance_tool"
 
 
-class ApproveFungibleTokenAllowanceTool(BaseToolV2):
+class ApproveFungibleTokenAllowanceTool(Tool):
     def __init__(self, context: Context):
         self.method = APPROVE_FUNGIBLE_TOKEN_ALLOWANCE_TOOL
         self.name = "Approve Fungible Token Allowance"
@@ -85,37 +112,7 @@ class ApproveFungibleTokenAllowanceTool(BaseToolV2):
         self.parameters = ApproveTokenAllowanceParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ApproveTokenAllowanceParametersNormalised:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-        return await HederaParameterNormaliser.normalise_approve_token_allowance(
-            params, context, client, mirrornode_service
-        )
-
-    async def core_action(
-        self,
-        normalized_params: ApproveTokenAllowanceParametersNormalised,
-        context: Context,
-        client: Client,
-    ) -> AccountAllowanceApproveTransaction:
-        return HederaBuilder.approve_token_allowance(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: AccountAllowanceApproveTransaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: ApproveTokenAllowanceParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
-
-    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
-        desc = "Failed to approve token allowance"
-        message = f"{desc}: {str(error)}"
-        print(f"[approve_fungible_token_allowance_tool] {message}")
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
+        return await approve_fungible_token_allowance(client, context, params)

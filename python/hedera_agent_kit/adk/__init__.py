@@ -6,8 +6,8 @@ Agent Development Kit (ADK).
 
 __all__ = [
     "HederaADKToolkit",
-    "HederaAdkTool",
+    "create_adk_tool_function",
 ]
 
-from .tool import HederaAdkTool
+from .tool import create_adk_tool_function
 from .toolkit import HederaADKToolkit

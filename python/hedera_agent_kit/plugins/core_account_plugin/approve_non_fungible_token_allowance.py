@@ -19,8 +19,7 @@ from hedera_agent_kit.shared.parameter_schemas.token_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
-from typing import Any
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -54,10 +53,36 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"NFT allowance approved successfully. Transaction ID: {response.transaction_id}"
 
 
+async def approve_nft_allowance(
+    client: Client,
+    context: Context,
+    params: ApproveNftAllowanceParameters,
+) -> ToolResponse:
+    try:
+        pprint(params)
+        normalised_params: ApproveNftAllowanceParametersNormalised = (
+            HederaParameterNormaliser.normalise_approve_nft_allowance(
+                params, context, client
+            )
+        )
+        tx: AccountAllowanceApproveTransaction = HederaBuilder.approve_nft_allowance(
+            normalised_params
+        )
+        return await handle_transaction(tx, client, context, post_process)
+    except Exception as e:
+        desc = "Failed to approve NFT allowance"
+        message = f"{desc}: {str(e)}"
+        print(f"[approve_nft_allowance_tool] {message}")
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 APPROVE_NFT_ALLOWANCE_TOOL = "approve_nft_allowance_tool"
 
 
-class ApproveNftAllowanceTool(BaseToolV2):
+class ApproveNftAllowanceTool(Tool):
     def __init__(self, context: Context):
         self.method = APPROVE_NFT_ALLOWANCE_TOOL
         self.name = "Approve NFT Allowance"
@@ -65,35 +90,7 @@ class ApproveNftAllowanceTool(BaseToolV2):
         self.parameters = ApproveNftAllowanceParameters
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> ApproveNftAllowanceParametersNormalised:
-        pprint(params)
-        return HederaParameterNormaliser.normalise_approve_nft_allowance(
-            params, context, client
-        )
-
-    async def core_action(
-        self,
-        normalized_params: ApproveNftAllowanceParametersNormalised,
-        context: Context,
-        client: Client,
-    ) -> AccountAllowanceApproveTransaction:
-        return HederaBuilder.approve_nft_allowance(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction: AccountAllowanceApproveTransaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: ApproveNftAllowanceParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
-
-    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
-        desc = "Failed to approve NFT allowance"
-        message = f"{desc}: {str(error)}"
-        print(f"[approve_nft_allowance_tool] {message}")
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
+        return await approve_nft_allowance(client, context, params)

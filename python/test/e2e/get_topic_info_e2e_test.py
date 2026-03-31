@@ -172,7 +172,6 @@ async def test_get_topic_info_via_agent(
     parsed_data = await execute_get_topic_info_query(
         agent_executor, input_text, langchain_config, response_parser
     )
-    print(parsed_data)
 
     human_message = parsed_data["humanMessage"]
     raw_data = parsed_data["raw"]

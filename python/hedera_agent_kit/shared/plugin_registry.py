@@ -12,16 +12,7 @@ from typing import List, Dict
 from hedera_agent_kit.shared.tool import Tool
 from .configuration import Context
 from .plugin import Plugin
-from ..plugins import (
-    core_consensus_plugin,
-    core_token_plugin,
-    core_token_query_plugin,
-    core_consensus_query_plugin,
-    core_evm_plugin,
-    core_evm_query_plugin,
-    core_misc_query_plugin,
-    core_transaction_query_plugin,
-)
+from ..plugins import core_consensus_plugin
 from ..plugins.core_account_plugin import core_account_plugin
 from ..plugins.core_account_query_plugin import core_account_query_plugin
 
@@ -29,13 +20,6 @@ CORE_PLUGINS: List[Plugin] = [
     core_account_plugin,
     core_account_query_plugin,
     core_consensus_plugin,
-    core_consensus_query_plugin,
-    core_evm_plugin,
-    core_evm_query_plugin,
-    core_token_plugin,
-    core_token_query_plugin,
-    core_misc_query_plugin,
-    core_transaction_query_plugin,
 ]
 
 

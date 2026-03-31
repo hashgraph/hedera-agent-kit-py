@@ -8,8 +8,6 @@ This module exposes:
 
 from __future__ import annotations
 
-from typing import Any
-
 from hiero_sdk_python import Client
 
 from hedera_agent_kit.shared.configuration import Context
@@ -28,7 +26,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from hedera_agent_kit.shared.tool import Tool
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -79,10 +77,54 @@ def post_process(response: RawTransactionResponse) -> str:
         return f"Message submitted successfully with transaction id {response.transaction_id}"
 
 
+async def submit_topic_message(
+    client: Client,
+    context: Context,
+    params: SubmitTopicMessageParameters,
+) -> ToolResponse:
+    """Execute a topic message submission using normalized parameters and a built transaction.
+
+    Args:
+        client: Hedera client used to execute transactions.
+        context: Runtime context providing configuration and defaults.
+        params: User-supplied parameters describing the message submission to perform.
+
+    Returns:
+        A ToolResponse wrapping the raw transaction response and a human-friendly
+        message indicating success or failure.
+
+    Notes:
+        This function captures exceptions and returns a failure ToolResponse
+        rather than raising, to keep tool behavior consistent for callers.
+        It accepts raw params, validates, and normalizes them before performing the transaction.
+    """
+    try:
+        # Normalize parameters
+        normalised_params: SubmitTopicMessageParametersNormalised = (
+            await HederaParameterNormaliser.normalise_submit_topic_message(
+                params, context, client
+            )
+        )
+
+        # Build transaction
+        tx = HederaBuilder.submit_topic_message(normalised_params)
+
+        # Execute transaction and post-process result
+        return await handle_transaction(tx, client, context, post_process)
+
+    except Exception as e:
+        message: str = f"Failed to submit message to topic: {str(e)}"
+        print("[submit_topic_message_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )
+
+
 SUBMIT_TOPIC_MESSAGE_TOOL: str = "submit_topic_message_tool"
 
 
-class SubmitTopicMessageTool(BaseToolV2):
+class SubmitTopicMessageTool(Tool):
     """Tool wrapper that exposes the topic message submission capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -99,25 +141,18 @@ class SubmitTopicMessageTool(BaseToolV2):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def normalize_params(
-        self, params: Any, context: Context, client: Client
-    ) -> SubmitTopicMessageParametersNormalised:
-        return await HederaParameterNormaliser.normalise_submit_topic_message(
-            params, context, client
-        )
-
-    async def core_action(
-        self,
-        normalized_params: SubmitTopicMessageParametersNormalised,
-        client: Client,
-        context: Context,
-    ):
-        return HederaBuilder.submit_topic_message(normalized_params)
-
-    async def secondary_action(
-        self,
-        transaction,
-        client: Client,
-        context: Context,
+    async def execute(
+        self, client: Client, context: Context, params: SubmitTopicMessageParameters
     ) -> ToolResponse:
-        return await handle_transaction(transaction, client, context, post_process)
+        """Execute the topic message submission using the provided client, context, and params.
+
+        Args:
+            client: Hedera client used to execute transactions.
+            context: Runtime context providing configuration and defaults.
+            params: Topic message submission parameters accepted by this tool.
+
+        Returns:
+            The result of the submission as a ToolResponse, including a human-readable
+            message and error information if applicable.
+        """
+        return await submit_topic_message(client, context, params)
