@@ -133,9 +133,8 @@ class ExecuteStrategy(TxModeStrategy):
 class ReturnBytesStrategy(TxModeStrategy):
     """Strategy that returns a byte representation instead of executing.
 
-    Note:
-        The current SDK lacks `freeze()` and `to_bytes()`; a placeholder is
-        returned until those APIs are available.
+    The transaction is frozen with the given client and serialized to bytes,
+    allowing external (human-in-the-loop) signing.
     """
 
     async def handle(
