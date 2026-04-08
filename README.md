@@ -52,6 +52,15 @@ The Hedera Agent Kit is extensible with third party plugins by other projects. S
 
 ---
 
+## Third Party Plugins
+
+- CoinCap Plugin - provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
+  - PyPI: [https://pypi.org/project/coincap-hedera-agent-kit-plugin](https://pypi.org/project/coincap-hedera-agent-kit-plugin)
+  - Source: [https://github.com/henrytongv/coincap-hedera-plugin-py](https://github.com/henrytongv/coincap-hedera-plugin-py)
+  - ✅ Tested/endorsed version of plugin: coincap-hedera-agent-kit-plugin==0.9
+
+---
+
 ## Developer Examples
 
 You can try out examples of the different types of agents you can build by following the instructions in the [Developer Examples](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md) doc in this repo.
