@@ -48,7 +48,7 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ---
 ### Third Party Plugins
 
-The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit) and README in [docs/PLUGINS.md](docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
+The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit) and README in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
 
 ---
 
@@ -62,7 +62,9 @@ First follow instructions in the [Developer Examples to clone and configure the 
 - **Option B -** [Tool Calling Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-tool-calling-agent-langchain-classic)
 - **Option C -** [Plugin Tool Calling Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-c-run-the-plugin-tool-calling-agent-langchain-classic)
 - **Option D -** [Structured Chat Agent (LangChain Classic)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-d-run-the-structured-chat-agent-langchain-classic)
-
+- **Option E -** [Preconfigured MCPs Agent (LangChain v1)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
+- **Option F -** [Plugin Tool Calling Agent (Google ADK)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-f-run-the-google-adk-agents)
+- **Option G -** [Return Bytes Mode Agents (ADK & LangChain)](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-g-run-the-return-bytes-mode-agents-human-in-the-loop)
 ---
 
 ## 🚀 60-Second Quick-Start
@@ -268,7 +270,7 @@ This tool has two execution modes with AI agents; autonomous execution and retur
 | Mode | Description |
 |------|-------------|
 | `AgentMode.AUTONOMOUS` | The transaction will be executed autonomously using the operator account. |
-| `AgentMode.RETURN_BYTES` | *(Coming Soon)* The transaction bytes will be returned for the user to sign and execute. |
+| `AgentMode.RETURN_BYTES` | The transaction bytes will be returned for the user to sign and execute. |
 
 ### Hedera Plugins & Tools
 
