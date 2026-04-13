@@ -7,7 +7,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
 hedera_agent_kit = { path = "../../", develop = true }
-google-adk = "1.27.3"
+google-adk = "1.28.0"
 google-genai = "1.65.0"
 python-dotenv = "1.2.1"
 

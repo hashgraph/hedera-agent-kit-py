@@ -177,6 +177,7 @@ async def test_update_decline_staking_rewards(
     executor_wrapper.get_account_info(target_account_id)
     # assert account_info.staking_info.decline_staking_reward is True  # FIXME: not supported by the SDK - implemented for future use
 
+
 # FIXME: This test fails
 @pytest.mark.asyncio
 async def test_fail_update_non_existent_account(

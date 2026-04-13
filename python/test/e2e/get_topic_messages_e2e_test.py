@@ -262,6 +262,7 @@ async def test_get_messages_after_timestamp_via_agent(
     messages_text = [m["message"] for m in reversed(messages)]
     assert messages_text == ["E2E Message 2", "E2E Message 3"]
 
+
 # FIXME: This test fails
 @pytest.mark.asyncio
 async def test_fetch_50_messages(

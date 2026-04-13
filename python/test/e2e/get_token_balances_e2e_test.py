@@ -29,7 +29,6 @@ from test.utils.setup import (
 )
 from test.utils.teardown import return_hbars_and_delete_account
 
-
 # ============================================================================
 # FIXTURES
 # ============================================================================
