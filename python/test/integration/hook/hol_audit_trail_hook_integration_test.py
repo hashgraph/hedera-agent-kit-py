@@ -168,11 +168,12 @@ async def test_single_write_creates_hcs2_session_and_hcs1_entry(setup_environmen
     entry = build_audit_entry(
         tool=TRANSFER_HBAR_TOOL,
         params={
-            "transfers": [
-                {"accountId": str(recipient_account_id), "amount": 0.0001}
-            ]
+            "transfers": [{"accountId": str(recipient_account_id), "amount": 0.0001}]
         },
-        result={"raw": {"status": "SUCCESS"}, "message": "HBAR successfully transferred."},
+        result={
+            "raw": {"status": "SUCCESS"},
+            "message": "HBAR successfully transferred.",
+        },
     )
 
     await session.write_entry(entry)
@@ -227,9 +228,7 @@ async def test_multiple_entries_under_same_session(setup_environment):
     entry1 = build_audit_entry(
         tool=TRANSFER_HBAR_TOOL,
         params={
-            "transfers": [
-                {"accountId": str(recipient_account_id), "amount": 0.0001}
-            ]
+            "transfers": [{"accountId": str(recipient_account_id), "amount": 0.0001}]
         },
         result={"raw": {"status": "SUCCESS"}, "message": "first transfer"},
     )
@@ -237,9 +236,7 @@ async def test_multiple_entries_under_same_session(setup_environment):
     entry2 = build_audit_entry(
         tool=TRANSFER_HBAR_TOOL,
         params={
-            "transfers": [
-                {"accountId": str(recipient_account_id), "amount": 0.0002}
-            ]
+            "transfers": [{"accountId": str(recipient_account_id), "amount": 0.0002}]
         },
         result={"raw": {"status": "SUCCESS"}, "message": "second transfer"},
     )
@@ -331,9 +328,11 @@ async def test_rejects_return_bytes_mode(setup_environment):
     env = setup_environment
     executor_client = env["executor_client"]
 
-    hook = HolAuditTrailHook(relevant_tools=[TRANSFER_HBAR_TOOL], session_id="0.0.12345")
+    hook = HolAuditTrailHook(
+        relevant_tools=[TRANSFER_HBAR_TOOL], session_id="0.0.12345"
+    )
 
-    from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
+    from hedera_agent_kit.shared.hook import PreToolExecutionParams
 
     context = Context(mode=AgentMode.RETURN_BYTES, hooks=[hook])
     params = PreToolExecutionParams(
@@ -356,7 +355,7 @@ async def test_does_not_trigger_for_irrelevant_tool(setup_environment):
 
     hook = HolAuditTrailHook(relevant_tools=["some_other_tool"], session_id="0.0.12345")
 
-    from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
+    from hedera_agent_kit.shared.hook import PreToolExecutionParams
 
     context = Context(mode=AgentMode.AUTONOMOUS, hooks=[hook])
     params = PreToolExecutionParams(

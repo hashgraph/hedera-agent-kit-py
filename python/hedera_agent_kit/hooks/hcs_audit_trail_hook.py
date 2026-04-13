@@ -9,7 +9,7 @@ from hiero_sdk_python import (
 )
 from hiero_sdk_python.hapi.services.response_code_pb2 import ResponseCodeEnum
 
-from .abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook,
     PostSecondaryActionParams,
     PreToolExecutionParams,

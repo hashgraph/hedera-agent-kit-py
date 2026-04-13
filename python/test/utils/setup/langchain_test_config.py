@@ -16,7 +16,7 @@ from hedera_agent_kit.plugins import (
 )
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.plugin import Plugin
-from hedera_agent_kit.hooks.abstract_hook import AbstractHook
+from hedera_agent_kit.shared.hook import AbstractHook
 from .llm_factory import LLMProvider, LLMOptions
 
 # Maps provider to base environment variable name

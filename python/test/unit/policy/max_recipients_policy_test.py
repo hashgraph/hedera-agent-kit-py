@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 from hedera_agent_kit.policies.max_recipients_policy import MaxRecipientsPolicy
 from hedera_agent_kit.shared.configuration import AgentMode, Context
-from hedera_agent_kit.hooks.abstract_hook import PostParamsNormalizationParams
+from hedera_agent_kit.shared.hook import PostParamsNormalizationParams
 from hedera_agent_kit.plugins.core_account_plugin import core_account_plugin_tool_names
 from hedera_agent_kit.plugins.core_token_plugin import core_token_plugin_tool_names
 

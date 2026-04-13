@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from hedera_agent_kit.policies.reject_tool_policy import RejectToolPolicy
 from hedera_agent_kit.shared import AgentMode
 from hedera_agent_kit.shared.configuration import Context
-from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
+from hedera_agent_kit.shared.hook import PreToolExecutionParams
 
 import pytest
 

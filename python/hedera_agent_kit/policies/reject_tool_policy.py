@@ -1,13 +1,13 @@
 import logging
 
 from hedera_agent_kit import Context
-from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
-from hedera_agent_kit.shared.policy import Policy
+from hedera_agent_kit.shared.hook import PreToolExecutionParams
+from hedera_agent_kit.shared.policy import AbstractPolicy
 
 logger = logging.getLogger(__name__)
 
 
-class RejectToolPolicy(Policy):
+class RejectToolPolicy(AbstractPolicy):
     """
     Rejects calls of predefined tools based on their method names. This policy can be used to prevent the execution of certain tools in specific contexts, enhancing security and control over tool usage.
     """

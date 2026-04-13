@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, List, Optional
 
-from ..abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook,
     PostSecondaryActionParams,
     PreToolExecutionParams,

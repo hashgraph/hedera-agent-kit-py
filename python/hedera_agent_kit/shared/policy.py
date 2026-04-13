@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING, Any, List
 
-from hedera_agent_kit.hooks.abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook,
     PostCoreActionParams,
     PostParamsNormalizationParams,
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .configuration import Context
 
 
-class Policy(AbstractHook, ABC):
+class AbstractPolicy(AbstractHook, ABC):
     """
     Policy extends Hook and throws errors when validation fails.
     """

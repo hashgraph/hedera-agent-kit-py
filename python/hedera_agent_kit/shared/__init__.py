@@ -8,14 +8,15 @@ __all__ = [
     "HederaMCPServer",
     "Context",
     "AbstractHook",
-    "Policy",
+    "AbstractPolicy",
     "PostCoreActionParams",
     "PostParamsNormalizationParams",
     "PostSecondaryActionParams",
     "PreToolExecutionParams",
+    "BaseToolV2",
 ]
 
-from hedera_agent_kit.hooks.abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook,
     PostCoreActionParams,
     PostParamsNormalizationParams,
@@ -25,6 +26,7 @@ from hedera_agent_kit.hooks.abstract_hook import (
 from .api import HederaAgentAPI
 from .configuration import Configuration, AgentMode, HederaMCPServer, Context
 from .plugin import Plugin
-from .policy import Policy
+from .policy import AbstractPolicy
 from .tool import Tool
 from .tool_discovery import ToolDiscovery
+from .tool_v2 import BaseToolV2

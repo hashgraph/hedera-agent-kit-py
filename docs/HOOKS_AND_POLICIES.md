@@ -242,7 +242,7 @@ Hooks are **non-blocking extensions** that observe and modify execution flow. Th
 They should not stop execution unless an error occurs.
 **Example**: `HcsAuditTrailHook` logs execution details to an HCS topic without blocking.
 
-### Policies (`Policy`)
+### Policies (`AbstractPolicy`)
 
 Policies are specialized Hooks designed to **validate** and **block** execution. They use `should_block...` methods that return boolean values. If `True` is returned, the `Policy` base class raises a ValueError, immediately halting the tool's lifecycle.
 
@@ -293,11 +293,12 @@ async def post_params_normalization_hook(
 
 ```python
 from typing import Any
-from hedera_agent_kit.hooks.abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook, PreToolExecutionParams, PostParamsNormalizationParams,
     PostCoreActionParams, PostSecondaryActionParams
 )
 from hedera_agent_kit.shared.configuration import Context
+
 
 class MyCustomHook(AbstractHook):
     @property
@@ -313,7 +314,7 @@ class MyCustomHook(AbstractHook):
         return ['create_account', 'transfer_hbar']
 
     async def pre_tool_execution_hook(
-        self, context: Context, params: PreToolExecutionParams, method: str
+            self, context: Context, params: PreToolExecutionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
             return
@@ -327,11 +328,12 @@ class MyCustomHook(AbstractHook):
 ### Template for New Policy
 
 ```python
-from hedera_agent_kit.shared.policy import Policy
-from hedera_agent_kit.hooks.abstract_hook import PreToolExecutionParams
+from hedera_agent_kit.shared.policy import AbstractPolicy
+from hedera_agent_kit.shared.hook import PreToolExecutionParams
 from hedera_agent_kit.shared.configuration import Context
 
-class MyCustomPolicy(Policy):
+
+class MyCustomPolicy(AbstractPolicy):
     @property
     def name(self) -> str:
         return 'My Custom Policy'
@@ -345,7 +347,7 @@ class MyCustomPolicy(Policy):
         return ['transfer_hbar', 'transfer_fungible_token']
 
     async def should_block_pre_tool_execution(
-        self, context: Context, params: PreToolExecutionParams, method: str
+            self, context: Context, params: PreToolExecutionParams, method: str
     ) -> bool:
         """Return True to BLOCK execution, False to ALLOW."""
         raw_params = params.raw_params

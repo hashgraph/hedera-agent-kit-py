@@ -1,4 +1,4 @@
-from .abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     AbstractHook,
     PostCoreActionParams,
     PostParamsNormalizationParams,

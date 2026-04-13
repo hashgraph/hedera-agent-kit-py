@@ -5,7 +5,7 @@ from typing import Any
 
 from hiero_sdk_python import Client
 
-from hedera_agent_kit.hooks.abstract_hook import (
+from hedera_agent_kit.shared.hook import (
     PostCoreActionParams,
     PostParamsNormalizationParams,
     PostSecondaryActionParams,

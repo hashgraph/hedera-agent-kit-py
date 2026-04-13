@@ -1,10 +1,12 @@
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hedera_agent_kit.hooks.hol_audit_trail_hook.hol_audit_trail_hook import HolAuditTrailHook
-from hedera_agent_kit.hooks.abstract_hook import (
+from hedera_agent_kit.hooks.hol_audit_trail_hook.hol_audit_trail_hook import (
+    HolAuditTrailHook,
+)
+from hedera_agent_kit.shared.hook import (
     PostSecondaryActionParams,
     PreToolExecutionParams,
 )
@@ -104,11 +106,15 @@ class TestGetSessionId:
         assert hook.get_session_id() == "0.0.666"
 
     def test_raises_on_invalid_session_id(self):
-        with pytest.raises(ValueError, match="session_id must be a valid Hedera topic ID"):
+        with pytest.raises(
+            ValueError, match="session_id must be a valid Hedera topic ID"
+        ):
             HolAuditTrailHook(relevant_tools=["test_tool"], session_id="not-a-topic")
 
     def test_raises_on_empty_session_id(self):
-        with pytest.raises(ValueError, match="session_id must be a valid Hedera topic ID"):
+        with pytest.raises(
+            ValueError, match="session_id must be a valid Hedera topic ID"
+        ):
             HolAuditTrailHook(relevant_tools=["test_tool"], session_id="")
 
 
@@ -262,8 +268,8 @@ class TestPostSecondaryActionHook:
     async def test_catches_and_logs_write_errors(
         self, mock_client, mock_registry_builder, mock_file_builder, capsys
     ):
-        mock_registry_builder.register_entry.return_value.execute.side_effect = RuntimeError(
-            "Network error"
+        mock_registry_builder.register_entry.return_value.execute.side_effect = (
+            RuntimeError("Network error")
         )
 
         hook = HolAuditTrailHook(

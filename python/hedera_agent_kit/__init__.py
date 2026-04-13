@@ -7,7 +7,7 @@ __all__ = [
     "HederaMCPServer",
     "Context",
     "AbstractHook",
-    "Policy",
+    "AbstractPolicy",
     "HcsAuditTrailHook",
     "MaxRecipientsPolicy",
     "RejectToolPolicy",
@@ -15,6 +15,7 @@ __all__ = [
     "PostParamsNormalizationParams",
     "PostSecondaryActionParams",
     "PreToolExecutionParams",
+    "BaseToolV2",
 ]
 
 # Re-export key SDK primitives from the shared package
@@ -27,11 +28,12 @@ from .shared import (
     HederaMCPServer,
     Context,
     AbstractHook,
-    Policy,
+    AbstractPolicy,
     PostCoreActionParams,
     PostParamsNormalizationParams,
     PostSecondaryActionParams,
     PreToolExecutionParams,
+    BaseToolV2,
 )
 
 # Re-export concrete hooks
