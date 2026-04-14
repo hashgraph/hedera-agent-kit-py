@@ -6487,14 +6487,14 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "web3"
-version = "7.14.1"
+version = "7.15.0"
 description = "web3: A Python library for interacting with Ethereum"
 optional = false
 python-versions = "<4,>=3.8"
 groups = ["main"]
 files = [
-    {file = "web3-7.14.1-py3-none-any.whl", hash = "sha256:bec367ba44261f874662aed9b5e138aa7bb907700a30a7580b2264534e88ce12"},
-    {file = "web3-7.14.1.tar.gz", hash = "sha256:856dc8517f362aefa75fdc298d975894055565dc866f21279f27fe060b7fb2c3"},
+    {file = "web3-7.15.0-py3-none-any.whl", hash = "sha256:bbeba510aaa4eb3c99662d911db9d2a648ab40f608cf0269065f7db1d1d0b0c0"},
+    {file = "web3-7.15.0.tar.gz", hash = "sha256:2a2bcbab8fcf120c2256ddbdc88fcc80a47c100ad758659a980e9fab66609171"},
 ]
 
 [package.dependencies]
@@ -7026,4 +7026,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "7a67f63ef05f21b1b51e8da04f202d318da654aac20f55dbf29af40891ddfcc5"
+content-hash = "afd8f4eb6f23aafabc7a5830bd4a5874453a5149ed34d67bf26cb40e5a5faf5e"
