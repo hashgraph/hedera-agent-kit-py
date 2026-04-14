@@ -71,6 +71,8 @@ Try out one or more of the example agents:
 * **Option E -** [Preconfigured MCPs Agent (LangChain v1)](#option-e-run-the-preconfigured-mcps-agent-langchain-v1)
 * **Option F -** [Plugin Tool Calling Agent (Google ADK)](#option-f-run-the-plugin-tool-calling-agent-google-adk)
 * **Option G -** [Return Bytes Mode Agents (ADK & LangChain)](#option-g-run-the-return-bytes-mode-agents-human-in-the-loop)
+* **Option H -** [Try out the Audit Hook Agent](#option-h-try-out-the-audit-hook-agent)
+* **Option I -** [Try out the Policy Agent](#option-i-try-out-the-policy-agent)
 
 ### Option A: Run the Plugin Tool Calling Agent (LangChain v1)
 
@@ -324,6 +326,78 @@ poetry run python return_bytes_tool_calling_agent.py
 
 ---
 
+### Option H: Try out the Audit Hook Agent
+
+This example demonstrates how to use the `HcsAuditTrailHook` to create an immutable audit trail of agent actions on the Hedera Consensus Service (HCS). Every tool execution is logged to an HCS topic, providing a transparent and tamper-proof record.
+
+**Found at:**
+- `python/examples/adk/audit_hook_agent` (using ADK dev tools)
+- `python/examples/langchain/audit_hook_agent.py`
+
+For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.md](./HOOKS_AND_POLICIES.md).
+
+#### Running the Example
+
+1. **Create an HCS Topic**: You must create an HCS topic before running this example.
+2. **Configure Environment**: Update `audit_hook_agent.py` and replace `0.0.???` with your actual topic ID.
+Run the LangChain agent using poetry:
+
+```bash
+cd python/examples/langchain
+poetry run python audit_hook_agent.py
+```
+
+Or run the ADK agent using ADK dev tools CLI:
+
+```bash
+cd python/examples/adk
+poetry run adk run audit_hook_agent
+```
+
+Or using the ADK web interface:
+
+```bash
+cd python/examples/adk
+poetry run adk web
+```
+
+---
+
+### Option I: Try out the Policy Agent
+
+This example demonstrates how to use the `MaxRecipientsPolicy` to restrict the number of recipients in transfer and airdrop operations. It enforces the policy by intercepting the operations prior to execution.
+
+**Found at:**
+- `python/examples/adk/policy_tool_calling_agent` (using ADK dev tools)
+- `python/examples/langchain/policy_tool_calling_agent.py`
+
+For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.md](./HOOKS_AND_POLICIES.md).
+
+#### Running the Example
+
+Run the LangChain agent using poetry:
+
+```bash
+cd python/examples/langchain
+poetry run python policy_tool_calling_agent.py
+```
+
+Or run the ADK agent using ADK dev tools CLI:
+
+```bash
+cd python/examples/adk
+poetry run adk run policy_tool_calling_agent
+```
+
+Or using the ADK web interface:
+
+```bash
+cd python/examples/adk
+poetry run adk web
+```
+
+---
+
 ## Additional LLM Providers
 
 The Python examples support multiple LLM providers through LangChain:
@@ -347,6 +421,12 @@ model = ChatAnthropic(model="claude-3-sonnet-20240229")
 from langchain_groq import ChatGroq
 model = ChatGroq(model="llama-3.1-70b-versatile")
 ```
+
+---
+
+## Hooks and Policies
+
+For a deep dive into how hooks and policies work, and how they can enforce security, compliance, and other business rules, see [docs/HOOKS_AND_POLICIES.md](./HOOKS_AND_POLICIES.md).
 
 ---
 

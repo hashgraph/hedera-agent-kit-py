@@ -7,6 +7,9 @@ from .hedera_utils.mirrornode.hedera_mirrornode_service_interface import (
     IHederaMirrornodeService,
 )
 
+if False:  # TYPE_CHECKING
+    from hedera_agent_kit.shared.hook import AbstractHook
+
 
 class AgentMode(str, Enum):
     """Enumeration representing the agent execution mode."""
@@ -27,6 +30,7 @@ class Context:
         account_public_key: Optional[str] = None,
         mode: Optional[AgentMode] = None,
         mirrornode_service: Optional[IHederaMirrornodeService] = None,
+        hooks: Optional[List[AbstractHook]] = None,
     ):
         """
         Args:
@@ -36,6 +40,7 @@ class Context:
             mode (Optional[AgentMode]): Execution mode of the agent (AUTONOMOUS or RETURN_BYTES).
             mirrornode_service (Optional[IHederaMirrornodeService]): Optional service for
                 interacting with Hedera Mirror Node.
+            hooks (Optional[List[AbstractHook]]): List of hooks to enforce.
         """
         # Account is a Connected Account ID.
         self.account_id = account_id
@@ -48,6 +53,9 @@ class Context:
 
         # Mirrornode service
         self.mirrornode_service = mirrornode_service
+
+        # Hooks
+        self.hooks = hooks or []
 
 
 class HederaMCPServer(str, Enum):

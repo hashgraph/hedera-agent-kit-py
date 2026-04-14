@@ -27,7 +27,8 @@ from hedera_agent_kit.shared.parameter_schemas.account_schema import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
+from typing import Any
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
 )
@@ -86,50 +87,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return f"HBAR successfully transferred with allowance. Transaction ID: {response.transaction_id}"
 
 
-async def transfer_hbar_with_allowance(
-    client: Client,
-    context: Context,
-    params: TransferHbarWithAllowanceParameters,
-) -> ToolResponse:
-    """Execute an HBAR transfer using allowance.
-
-    Args:
-        client: Hedera client.
-        context: Runtime context.
-        params: Transfer parameters.
-
-    Returns:
-        A ToolResponse wrapping the transaction result.
-    """
-    try:
-        normalised_params: TransferHbarWithAllowanceParametersNormalised = (
-            await HederaParameterNormaliser.normalise_transfer_hbar_with_allowance(
-                params, context, client
-            )
-        )
-
-        # Assuming HederaBuilder has a corresponding method that accepts the normalized dict
-        tx: TransferTransaction = HederaBuilder.transfer_hbar_with_allowance(
-            normalised_params
-        )
-
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        desc = "Failed to transfer HBAR with allowance"
-        message = f"{desc}: {str(e)}"
-        print("[transfer_hbar_with_allowance_tool]", message)
-        return ExecutedTransactionToolResponse(
-            human_message=message,
-            error=message,
-            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
-        )
-
-
 TRANSFER_HBAR_WITH_ALLOWANCE_TOOL: str = "transfer_hbar_with_allowance_tool"
 
 
-class TransferHbarWithAllowanceTool(Tool):
+class TransferHbarWithAllowanceTool(BaseToolV2):
     """Tool wrapper that exposes the HBAR allowance transfer capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -146,20 +107,32 @@ class TransferHbarWithAllowanceTool(Tool):
         )
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> TransferHbarWithAllowanceParametersNormalised:
+        return await HederaParameterNormaliser.normalise_transfer_hbar_with_allowance(
+            params, context, client
+        )
+
+    async def core_action(
         self,
-        client: Client,
+        normalized_params: TransferHbarWithAllowanceParametersNormalised,
         context: Context,
-        params: TransferHbarWithAllowanceParameters,
+        client: Client,
+    ) -> TransferTransaction:
+        return HederaBuilder.transfer_hbar_with_allowance(normalized_params)
+
+    async def secondary_action(
+        self, transaction: TransferTransaction, client: Client, context: Context
     ) -> ToolResponse:
-        """Execute the transfer using the provided client, context, and params.
+        return await handle_transaction(transaction, client, context, post_process)
 
-        Args:
-            client: Hedera client.
-            context: Runtime context.
-            params: Transfer parameters.
-
-        Returns:
-            The result of the transaction.
-        """
-        return await transfer_hbar_with_allowance(client, context, params)
+    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
+        desc = "Failed to transfer HBAR with allowance"
+        message = f"{desc}: {str(error)}"
+        print("[transfer_hbar_with_allowance_tool]", message)
+        return ExecutedTransactionToolResponse(
+            human_message=message,
+            error=message,
+            raw=RawTransactionResponse(status="INVALID_TRANSACTION", error=message),
+        )

@@ -14,11 +14,12 @@ from hedera_agent_kit.shared.hedera_utils.mirrornode.types import (
     TokenBalancesResponse,
 )
 from hedera_agent_kit.shared.models import ToolResponse
+from typing import Any
 from hedera_agent_kit.shared.parameter_schemas import (
     AccountTokenBalancesQueryParameters,
     AccountTokenBalancesQueryParametersNormalised,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     untyped_query_output_parser,
@@ -67,52 +68,10 @@ The balances are given in display units.
 """
 
 
-async def get_token_balances(
-    client: Client,
-    context: Context,
-    params: AccountTokenBalancesQueryParameters,
-) -> ToolResponse:
-    """Execute a token balances query using the mirror node service."""
-    try:
-        normalised_params: AccountTokenBalancesQueryParametersNormalised = (
-            HederaParameterNormaliser.normalise_account_token_balances_params(
-                params, context, client
-            )
-        )
-
-        # Get mirrornode service
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        # Query token balances
-        token_balances: TokenBalancesResponse = (
-            await mirrornode_service.get_account_token_balances(
-                normalised_params.account_id, normalised_params.token_id
-            )
-        )
-
-        return ToolResponse(
-            human_message=post_process(token_balances, normalised_params.account_id),
-            extra={
-                "account_id": normalised_params.account_id,
-                "token_balances": token_balances,
-            },
-        )
-
-    except Exception as e:
-        message: str = f"Failed to get account token balances: {str(e)}"
-        print("[get_account_token_balances_query_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL: str = "get_account_token_balances_query_tool"
 
 
-class GetTokenBalancesTool(Tool):
+class GetTokenBalancesTool(BaseToolV2):
     """Tool wrapper that exposes the token balances query capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -124,10 +83,43 @@ class GetTokenBalancesTool(Tool):
         )
         self.outputParser = untyped_query_output_parser
 
-    async def execute(
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> AccountTokenBalancesQueryParametersNormalised:
+        return HederaParameterNormaliser.normalise_account_token_balances_params(
+            params, context, client
+        )
+
+    async def core_action(
         self,
-        client: Client,
+        normalized_params: AccountTokenBalancesQueryParametersNormalised,
         context: Context,
-        params: AccountTokenBalancesQueryParameters,
+        client: Client,
     ) -> ToolResponse:
-        return await get_token_balances(client, context, params)
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        token_balances: TokenBalancesResponse = (
+            await mirrornode_service.get_account_token_balances(
+                normalized_params.account_id, normalized_params.token_id
+            )
+        )
+        return ToolResponse(
+            human_message=post_process(token_balances, normalized_params.account_id),
+            extra={
+                "account_id": normalized_params.account_id,
+                "token_balances": token_balances,
+            },
+        )
+
+    async def should_secondary_action(self, core_result: Any, context: Context) -> bool:
+        return False
+
+    async def handle_error(self, error: Exception, context: Context) -> ToolResponse:
+        desc = "Failed to get account token balances"
+        message = f"{desc}: {str(error)}"
+        print("[get_account_token_balances_query_tool]", message)
+        return ToolResponse(
+            human_message=message,
+            error=message,
+        )

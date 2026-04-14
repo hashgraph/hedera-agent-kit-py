@@ -8,7 +8,7 @@ from hedera_agent_kit.plugins.core_evm_query_plugin.get_contract_info_query impo
     post_process,
     format_timestamp,
     format_key,
-    get_contract_info_query,
+    GetContractInfoQueryTool,
 )
 from hedera_agent_kit.shared.configuration import Context
 
@@ -110,8 +110,9 @@ async def test_get_contract_info_query_returns_expected_output():
     params = {"contract_id": "0.0.42"}
 
     # Act
+    tool = GetContractInfoQueryTool(context)
     with patch.object(_gciq_mod, "get_mirrornode_service", mock_get_service):
-        response = await get_contract_info_query(client, context, params)
+        response = await tool.core_action(params, context, client)
 
     # Assert
     assert response.error is None

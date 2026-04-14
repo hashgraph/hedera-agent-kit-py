@@ -8,6 +8,8 @@ This module exposes:
 
 from __future__ import annotations
 
+from typing import Any
+
 from hiero_sdk_python import Client
 from hiero_sdk_python.transaction.transaction import Transaction
 
@@ -28,7 +30,7 @@ from hedera_agent_kit.shared.parameter_schemas import (
 from hedera_agent_kit.shared.strategies.tx_mode_strategy import (
     handle_transaction,
 )
-from hedera_agent_kit.shared.tool import Tool
+from hedera_agent_kit.shared.tool_v2 import BaseToolV2
 from hedera_agent_kit.shared.utils import ledger_id_from_network
 from hedera_agent_kit.shared.utils.default_tool_output_parsing import (
     transaction_tool_output_parser,
@@ -92,44 +94,10 @@ def post_process(response: RawTransactionResponse) -> str:
     return "ERC20 token transferred successfully."
 
 
-async def transfer_erc20(
-    client: Client,
-    context: Context,
-    params: TransferERC20Parameters,
-) -> ToolResponse:
-    """Execute ERC20 transfer transaction."""
-    try:
-        mirrornode_service = get_mirrornode_service(
-            context.mirrornode_service, ledger_id_from_network(client.network)
-        )
-
-        normalised_params: ContractExecuteTransactionParametersNormalised = (
-            await HederaParameterNormaliser.normalise_transfer_erc20_params(
-                params,
-                ERC20_TRANSFER_FUNCTION_ABI,
-                ERC20_TRANSFER_FUNCTION_NAME,
-                context,
-                mirrornode_service,
-                client,
-            )
-        )
-
-        tx: Transaction = HederaBuilder.execute_transaction(normalised_params)
-        return await handle_transaction(tx, client, context, post_process)
-
-    except Exception as e:
-        message = f"Failed to transfer ERC20: {str(e)}"
-        print("[transfer_erc20_tool]", message)
-        return ToolResponse(
-            human_message=message,
-            error=message,
-        )
-
-
 TRANSFER_ERC20_TOOL = "transfer_erc20_tool"
 
 
-class TransferERC20Tool(Tool):
+class TransferERC20Tool(BaseToolV2):
     """Tool wrapper exposing ERC20 transfer capability to the Agent runtime."""
 
     def __init__(self, context: Context):
@@ -139,7 +107,33 @@ class TransferERC20Tool(Tool):
         self.parameters: type[TransferERC20Parameters] = TransferERC20Parameters
         self.outputParser = transaction_tool_output_parser
 
-    async def execute(
-        self, client: Client, context: Context, params: TransferERC20Parameters
+    async def normalize_params(
+        self, params: Any, context: Context, client: Client
+    ) -> ContractExecuteTransactionParametersNormalised:
+        mirrornode_service = get_mirrornode_service(
+            context.mirrornode_service, ledger_id_from_network(client.network)
+        )
+        return await HederaParameterNormaliser.normalise_transfer_erc20_params(
+            params,
+            ERC20_TRANSFER_FUNCTION_ABI,
+            ERC20_TRANSFER_FUNCTION_NAME,
+            context,
+            mirrornode_service,
+            client,
+        )
+
+    async def core_action(
+        self,
+        normalized_params: ContractExecuteTransactionParametersNormalised,
+        client: Client,
+        context: Context,
+    ) -> Transaction:
+        return HederaBuilder.execute_transaction(normalized_params)
+
+    async def secondary_action(
+        self,
+        transaction: Transaction,
+        client: Client,
+        context: Context,
     ) -> ToolResponse:
-        return await transfer_erc20(client, context, params)
+        return await handle_transaction(transaction, client, context, post_process)

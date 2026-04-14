@@ -62,6 +62,23 @@ This example demonstrates how to orchestrate ADK agents using a custom Python sc
 poetry run python return_bytes_tool_calling_agent.py
 ```
 
+### Audit Hook Agent
+
+This agent demonstrates "Hooks" by logging actions using HcsAuditTrailHook.
+> **Note**: You must create an HCS topic before running this agent. You can create one easily using the [Hedera Portal Playground](https://portal.hedera.com/playground) and then set it as the `hcs_topic_id` in the code.
+
+```bash
+poetry run adk run audit_hook_agent
+```
+
+### Policy Tool Calling Agent
+
+This agent demonstrates "Policies" by applying `MaxRecipientsPolicy` on the base set of token and account tools it operates on.
+
+```bash
+poetry run adk run policy_tool_calling_agent
+```
+
 ## Example Interactions
 
 Once running, you can interact with the agent:
