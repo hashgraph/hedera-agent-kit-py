@@ -11,7 +11,7 @@ langchain = "==1.2.15"
 langchain-openai = "==1.1.12"
 langchain-anthropic = "==1.4.0"
 langchain-groq = "==1.1.2"
-python-dotenv = "1.2.1"
+python-dotenv = "1.2.2"
 
 [build-system]
 requires = ["poetry-core"]
