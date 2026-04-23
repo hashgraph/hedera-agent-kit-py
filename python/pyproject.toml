@@ -19,7 +19,7 @@ pydantic = "^2.12.5"
 hiero-sdk-python = "0.2.0"
 google-adk = "1.28.0"
 Brotli = "^1.1.0"
-web3 = "==7.14.1"
+web3 = "==7.15.0"
 mcp = "1.26.0"
 langchain-mcp-adapters = "^0.2.1"
 
