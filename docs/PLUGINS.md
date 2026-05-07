@@ -197,9 +197,26 @@ toolkit = HederaLangchainToolkit(
 
 ## Publish and Register Your Plugin
 
-To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a PyPI package, and provide a description of the functionality included in that plugin.
+To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a PyPI package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
 
-Once you have a repository and published package, you can add it to the Hedera Agent Kit ecosystem by forking and opening a Pull Request to include it in the **Available Third Party Plugins** section of the main README.
+Once you have a repository, published PyPI package, and a README with a description of the functionality included in that plugin in your plugin's repo, as well as the required and optional parameters, you can add it to the Hedera Agent Kit by forking and opening a Pull Request to:
+
+1. Include the plugin as a bullet point under the **Available Third Party Plugin** section under the **Third Party Plugin** section in the [README.md in the hedera-agent-kit-py](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/README.md). Include the name, a brief description, and a link to the repository with the README, as well as the URL linked to the published PyPI package.
+
+2. All commits for your plugin **must be [DCO signed](https://wiki.linuxfoundation.org/dco)**, have the names of the tools & core actions exposed by the plugin, and **point to the exact version of the Python package**. To avoid having pull requests blocked in the future, always include a sign-off:
+
+```text
+Bonzo Plugin is a unified SDK to the Bonzo protocol, exposing the core actions (deposit, withdraw, repay, borrow) for decentralised lending and borrowing on Hedera:
+
+PyPI: https://pypi.org/project/hak-bonzo-plugin/
+Github repository: https://github.com/Bonzo-Labs/bonzoPlugin
+Version: hak-bonzo-plugin==1.0.1
+Status: Not validated by HAK team, v3-compatible release
+```
+
+Feel free to also [reach out to the Hedera Agent Kit maintainers on Discord](https://hedera.com/discord) or another channel so we can test out your plugin, include it in our docs, and let our community know thorough marketing and community channels.
+
+Please also reach out in the Hedera Discord in the Support > developer-help-desk channel create an Issue in this repository for help building, publishing, and promoting your plugin
 
 > [!NOTE]
 > Short descriptions of each tool are required. Please see [docs/HEDERATOOLS.md](HEDERATOOLS.md) for reference on the expected format and level of detail.
