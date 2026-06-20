@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC
 from typing import TYPE_CHECKING, Any, List
 
@@ -13,6 +14,8 @@ from hedera_agent_kit.shared.hook import (
 
 if TYPE_CHECKING:
     from .configuration import Context
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractPolicy(AbstractHook, ABC):
@@ -72,6 +75,13 @@ class AbstractPolicy(AbstractHook, ABC):
         self, context: Context, params: PreToolExecutionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped pre_tool_execution_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
         should_block = await self.should_block_pre_tool_execution(
@@ -85,6 +95,13 @@ class AbstractPolicy(AbstractHook, ABC):
         self, context: Context, params: PostParamsNormalizationParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_params_normalization_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
         should_block = await self.should_block_post_params_normalization(
@@ -98,6 +115,13 @@ class AbstractPolicy(AbstractHook, ABC):
         self, context: Context, params: PostCoreActionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_core_action_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
         should_block = await self.should_block_post_core_action(context, params, method)
@@ -109,6 +133,13 @@ class AbstractPolicy(AbstractHook, ABC):
         self, context: Context, params: PostSecondaryActionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_secondary_action_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
         should_block = await self.should_block_post_secondary_action(
