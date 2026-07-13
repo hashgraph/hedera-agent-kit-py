@@ -11,6 +11,7 @@
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
+- [Framework Adapters](#framework-adapters)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [Agent Execution Modes](#agent-execution-modes)
@@ -26,7 +27,7 @@
 This is the **Python edition** of the [Hedera Agent Kit](https://github.com/hashgraph/hedera-agent-kit-js), providing a flexible and extensible framework for building **AI-powered Hedera agents**.
 
 - 🔌 **Plugin architecture** for easy extensibility
-- 🧠 **LangChain integration** with support for multiple AI frameworks
+- 🧩 **Framework adapters** for **LangChain**, **Google ADK**, and **MCP (Model Context Protocol)** — expose the same Hedera tools to any of them (see [Framework Adapters](#framework-adapters))
 - 🪙 **Comprehensive Hedera tools**, including:
   - Token creation and management (HTS)
   - Smart contract execution (EVM)
@@ -49,6 +50,65 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 
 The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit) and README in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
+
+---
+
+## Framework Adapters
+
+The Hedera Agent Kit exposes the **same set of Hedera tools and plugins** through a dedicated adapter (toolkit) for each supported framework. Every toolkit takes the same `(client, configuration)` arguments, so you can switch frameworks — or run several at once — without changing your tool/plugin configuration.
+
+| Framework | Toolkit | Import |
+|-----------|---------|--------|
+| **LangChain** | `HederaLangchainToolkit` | `from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit` |
+| **Google ADK** | `HederaADKToolkit` | `from hedera_agent_kit.adk.toolkit import HederaADKToolkit` |
+| **MCP (Model Context Protocol)** | `HederaMCPToolkit` | `from hedera_agent_kit.mcp import HederaMCPToolkit` |
+
+### LangChain Adapter
+
+`HederaLangchainToolkit` exposes the Hedera tools as LangChain `BaseTool`s via `get_tools()`, ready to pass to any LangChain agent. It supports both **LangChain v1** and **LangChain Classic**:
+
+```python
+from hedera_agent_kit.langchain.toolkit import HederaLangchainToolkit
+# ... build `client` and `configuration` the same way as in the Quick-Start above ...
+
+hedera_toolkit = HederaLangchainToolkit(client, configuration)
+tools = hedera_toolkit.get_tools()  # plug into create_agent(...) / AgentExecutor
+```
+
+- **Adapter source:** [python/hedera_agent_kit/langchain/toolkit.py](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/python/hedera_agent_kit/langchain/toolkit.py)
+- **Examples:** [LangChain v1](https://github.com/hashgraph/hedera-agent-kit-py/tree/main/python/examples/langchain) · [LangChain Classic](https://github.com/hashgraph/hedera-agent-kit-py/tree/main/python/examples/langchain-classic)
+
+### Google ADK Adapter
+
+`HederaADKToolkit` exposes the Hedera tools as Google ADK `BaseTool`s via `get_tools()`, ready to pass to an ADK `Agent`:
+
+```python
+from hedera_agent_kit.adk.toolkit import HederaADKToolkit
+# ... build `client` and `configuration` the same way as in the Quick-Start above ...
+
+hedera_toolkit = HederaADKToolkit(client, configuration)
+tools = hedera_toolkit.get_tools()  # plug into google.adk.agents.Agent(tools=tools)
+```
+
+- **Adapter source:** [python/hedera_agent_kit/adk/toolkit.py](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/python/hedera_agent_kit/adk/toolkit.py)
+- **Examples:** [Google ADK](https://github.com/hashgraph/hedera-agent-kit-py/tree/main/python/examples/adk)
+
+### MCP (Model Context Protocol) Adapter
+
+`HederaMCPToolkit` turns your configured Hedera tools into a fully functional **MCP server**, so any MCP-compatible client (Antigravity, VS Code, Claude Desktop, etc.) can call them as tools:
+
+```python
+from hedera_agent_kit.mcp import HederaMCPToolkit
+# ... build `client` and `configuration` the same way as in the Quick-Start above ...
+
+server = HederaMCPToolkit(client, configuration)
+server.run()  # serves the Hedera tools over stdio as an MCP server
+```
+
+- **Ready-to-run server & MCP client configuration** (Antigravity / VS Code): [modelcontextprotocol/](https://github.com/hashgraph/hedera-agent-kit-py/tree/main/modelcontextprotocol)
+- **Adapter source:** [python/hedera_agent_kit/mcp/toolkit.py](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/python/hedera_agent_kit/mcp/toolkit.py)
+
+> Note: this MCP adapter **exposes** the Agent Kit's tools as an MCP server. If instead you want an agent that **consumes** external MCP servers, see the [Preconfigured MCPs Agent example](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/DEVEXAMPLES.md#option-e-run-the-preconfigured-mcps-agent-langchain-v1).
 
 ---
 
