@@ -9,7 +9,7 @@ python = ">=3.10,<3.14"
 hedera_agent_kit = { path = "../../", develop = true }
 google-adk = "1.28.0"
 google-genai = "1.65.0"
-python-dotenv = "1.2.1"
+python-dotenv = "1.2.2"
 
 [build-system]
 requires = ["poetry-core"]
