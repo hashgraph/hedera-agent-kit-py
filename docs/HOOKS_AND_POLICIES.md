@@ -89,7 +89,7 @@ Provides an immutable audit trail by logging tool executions to a Hedera Consens
 
 **Parameters**:
 
-- `relevant_tools`: `List[str]` - List of tools to audit (e.g., `['transfer_hbar', 'create_token']`).
+- `relevant_tools`: `List[str]` - List of exact tool method names to audit (e.g., `['transfer_hbar_tool', 'create_token_tool']`). Tool method names often include the `_tool` suffix; use the constants exported by plugin modules when possible.
 - `hcs_topic_id`: `str` - The pre-created Hedera topic ID (e.g., `'0.0.12345'`).
 
 **Example Usage**:
@@ -99,7 +99,7 @@ from hedera_agent_kit.hooks.hcs_audit_trail_hook import HcsAuditTrailHook
 from hedera_agent_kit.shared.configuration import Context
 
 audit_hook = HcsAuditTrailHook(
-    relevant_tools=['transfer_hbar', 'create_token'],
+    relevant_tools=['transfer_hbar_tool', 'create_token_tool'],
     hcs_topic_id='0.0.12345'
 )
 
@@ -118,17 +118,17 @@ A security policy that limits the number of recipients in transfer and airdrop o
 
 **Default Supported Tools**:
 By default, the policy knows how to count recipients for tools matching the following names:
-- `transfer_hbar`
-- `transfer_hbar_with_allowance`
-- `airdrop_fungible_token`
-- `transfer_fungible_token_with_allowance`
-- `transfer_nft_with_allowance`
-- `transfer_non_fungible_token`
+- `transfer_hbar_tool`
+- `transfer_hbar_with_allowance_tool`
+- `airdrop_fungible_token_tool`
+- `transfer_fungible_token_with_allowance_tool`
+- `transfer_nft_with_allowance_tool`
+- `transfer_non_fungible_token_tool`
 
 **Parameters**:
 
 - `max_recipients`: `int` - Maximum number of recipients allowed.
-- `additional_tools`: `List[str]` - (Optional) Extra tools to apply this policy to.
+- `additional_tools`: `List[str]` - (Optional) Extra exact tool method names to apply this policy to.
 - `custom_strategies`: `Dict[str, Callable[[Any], int]]` - (Optional) A mapping of tool names to functions that count recipients. **If you add tools via `additional_tools`, you must provide a strategy for each one**, otherwise the policy will throw an error at runtime.
 
 **Example with Custom Strategies**:
@@ -161,7 +161,7 @@ A restrictive policy used to explicitly disable specific tools. Even if a tool i
 
 **Parameters**:
 
-- `relevant_tools`: `List[str]` - The list of tool methods to be blocked (e.g., `['delete_account', 'freeze_token']`).
+- `relevant_tools`: `List[str]` - The list of exact tool method names to be blocked (e.g., `['delete_account_tool', 'freeze_token_tool']`).
 
 **Example Usage**:
 
@@ -169,7 +169,7 @@ A restrictive policy used to explicitly disable specific tools. Even if a tool i
 from hedera_agent_kit.policies.reject_tool_policy import RejectToolPolicy
 from hedera_agent_kit.shared.configuration import Context
 
-safety_policy = RejectToolPolicy(['delete_account'])
+safety_policy = RejectToolPolicy(['delete_account_tool'])
 
 context = Context(
     account_id="0.0.1234",
@@ -274,7 +274,7 @@ When a hook targets multiple tools, you handle the various parameter structures 
 async def post_params_normalization_hook(
     self, context: Context, params: PostParamsNormalizationParams, method: str
 ) -> Any:
-    if method in ['transfer_hbar', 'transfer_hbar_with_allowance']:
+    if method in ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool']:
         # Shared structure logic
         transfers = params.normalized_params['transfers']
         total = sum(t['amount'] for t in transfers)
@@ -311,7 +311,7 @@ class MyCustomHook(AbstractHook):
 
     @property
     def relevant_tools(self) -> list[str]:
-        return ['create_account', 'transfer_hbar']
+        return ['create_account_tool', 'transfer_hbar_tool']
 
     async def pre_tool_execution_hook(
             self, context: Context, params: PreToolExecutionParams, method: str
@@ -344,7 +344,7 @@ class MyCustomPolicy(AbstractPolicy):
 
     @property
     def relevant_tools(self) -> list[str]:
-        return ['transfer_hbar', 'transfer_fungible_token']
+        return ['transfer_hbar_tool', 'transfer_fungible_token_tool']
 
     async def should_block_pre_tool_execution(
             self, context: Context, params: PreToolExecutionParams, method: str
@@ -368,4 +368,4 @@ When adding a new Hook or Policy:
 2. **Export**: Export it in `__init__.py`.
 3. **Documentation**: Add a new section in [Part 1: Available Hooks and Policies](#available-hooks-and-policies).
 4. **Testing**: Add unit tests in the corresponding test directory.
-5. **Update**: Ensure your `relevant_tools` are clearly defined.
+5. **Update**: Ensure your `relevant_tools` are clearly defined with exact tool method names, including suffixes such as `_tool` where the plugin uses them.
