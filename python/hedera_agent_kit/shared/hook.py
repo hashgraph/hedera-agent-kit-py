@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, List, TypeVar
 
-from hiero_sdk_python import Client
-
 if TYPE_CHECKING:
     from hedera_agent_kit.shared.configuration import Context
+    from hiero_sdk_python import Client
 
 TParams = TypeVar("TParams")
 TNormalizedParams = TypeVar("TNormalizedParams")
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -73,22 +75,50 @@ class AbstractHook(ABC):
         self, context: Context, params: PreToolExecutionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped pre_tool_execution_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
     async def post_params_normalization_hook(
         self, context: Context, params: PostParamsNormalizationParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_params_normalization_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
     async def post_core_action_hook(
         self, context: Context, params: PostCoreActionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_core_action_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
 
     async def post_secondary_action_hook(
         self, context: Context, params: PostSecondaryActionParams, method: str
     ) -> Any:
         if method not in self.relevant_tools:
+            logger.debug(
+                "%s skipped post_secondary_action_hook for tool method %r; "
+                "configured relevant_tools=%s",
+                self.name,
+                method,
+                self.relevant_tools,
+            )
             return
