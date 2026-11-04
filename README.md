@@ -51,6 +51,18 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit) and README in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-py/blob/main/docs/PLUGINS.md)
 
+#### Available Third Party Plugins
+
+- [HAK SaucerSwap Plugin](https://pypi.org/project/hak-saucerswap-plugin/) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
+
+  PyPI: https://pypi.org/project/hak-saucerswap-plugin/
+
+  Github repository: https://github.com/jmgomezl/hak-saucerswap-plugin-py
+
+  Version: hak-saucerswap-plugin==0.1.0
+
+  Status: Not validated by HAK team, BaseToolV2-compatible release
+
 ---
 
 ## Framework Adapters
